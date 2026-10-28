@@ -2,6 +2,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, Menu } from 'lucide-react';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import ThemeSwitcher from '../components/ThemeSwitcher';
 import { useConfirm } from '../components/ConfirmDialog';
 import { selectCurrentUser } from '../features/auth/authSlice';
 import { logout } from '../features/auth/authThunks';
@@ -30,7 +31,7 @@ export default function Topbar({ isSidebarOpen, onToggleSidebar }) {
     .slice(0, 2);
 
   return (
-    <header className="sticky top-0 z-30 flex h-15 items-center gap-3 border-b border-slate-200 bg-white/95 px-3 backdrop-blur sm:px-6">
+    <header className="sticky top-0 z-30 flex h-15 items-center gap-3 border-b border-slate-200 bg-surface/95 px-3 backdrop-blur sm:px-6">
       <button
         type="button"
         className="icon-btn lg:hidden"
@@ -44,6 +45,7 @@ export default function Topbar({ isSidebarOpen, onToggleSidebar }) {
 
       <div className="ml-auto flex items-center gap-3">
         <LanguageSwitcher />
+        <ThemeSwitcher />
         <span className="hidden h-6 w-px bg-slate-200 sm:block" aria-hidden="true" />
         <span className="grid size-8.5 place-items-center rounded-full bg-blue-50 text-[13px] font-bold text-blue-700" aria-hidden="true">
           {initials}

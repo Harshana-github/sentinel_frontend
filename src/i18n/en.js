@@ -22,6 +22,8 @@ const en = {
     example: 'Example: {value}',
     filterByStatus: 'Status',
     language: 'Language',
+    switchToDark: 'Switch to dark mode',
+    switchToLight: 'Switch to light mode',
     loading: 'Loading…',
     name: 'Name',
     never: 'Never',

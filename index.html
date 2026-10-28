@@ -11,6 +11,16 @@
       rel="stylesheet"
     />
     <title>Sentinel | AI Vulnerability Scanner</title>
+    <script>
+      // Apply the saved theme, or the OS setting, before the first paint (see src/utils/theme.js).
+      try {
+        const saved = localStorage.getItem('sentinel_theme');
+        const dark = saved ? saved === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.classList.toggle('dark', dark);
+      } catch {
+        // Storage can be blocked; the light theme is used then.
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

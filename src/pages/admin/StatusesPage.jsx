@@ -26,7 +26,7 @@ export default function StatusesPage() {
       <div className="fill-grow grid gap-5 lg:grid-cols-[240px_1fr] lg:grid-rows-[minmax(0,1fr)]">
         <nav
           aria-label={t('statuses.categoriesLabel')}
-          className="self-start rounded-lg border border-slate-200 bg-white p-2 shadow-sm lg:max-h-full lg:overflow-y-auto"
+          className="self-start rounded-lg border border-slate-200 bg-surface p-2 shadow-sm lg:max-h-full lg:overflow-y-auto"
         >
           <p className="px-2.5 pt-1 pb-2 text-xs font-semibold tracking-wide text-slate-500 uppercase">{t('statuses.categoriesLabel')}</p>
           <ul className="flex flex-col gap-0.5">

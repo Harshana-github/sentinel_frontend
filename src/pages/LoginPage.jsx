@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { CircleCheck, Eye, EyeOff, Globe, Mail, Phone } from 'lucide-react';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import ThemeSwitcher from '../components/ThemeSwitcher';
 import ScanField from '../components/ScanField';
 import ProductLogo from '../components/ProductLogo';
 import { selectBranding } from '../features/branding/brandingSlice';
@@ -68,15 +69,15 @@ export default function LoginPage() {
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       <section
-        className="relative hidden flex-col justify-center gap-3.5 overflow-hidden bg-linear-to-br from-slate-950 via-slate-900 to-blue-950 p-14 text-slate-300 lg:flex"
+        className="relative hidden flex-col justify-center gap-3.5 overflow-hidden bg-linear-to-br from-ink-950 via-ink-900 to-blue-950 p-14 text-ink-300 lg:flex"
         aria-label={t('auth.aboutProduct')}
       >
         {/* Background: the network the mouse scans, darkened behind the text so it stays readable. */}
         <ScanField />
-        <div className="pointer-events-none absolute inset-0 bg-linear-to-r from-slate-950/85 via-slate-950/40 to-transparent" aria-hidden="true" />
+        <div className="pointer-events-none absolute inset-0 bg-linear-to-r from-ink-950/85 via-ink-950/40 to-transparent" aria-hidden="true" />
 
         <div className="relative z-10 flex flex-col gap-3.5">
-          <span className="inline-flex w-fit items-center gap-2 rounded-full border border-blue-400/25 bg-blue-400/10 px-3 py-1 text-xs font-medium text-blue-200">
+          <span className="inline-flex w-fit items-center gap-2 rounded-full border border-blue-400/25 bg-blue-400/10 px-3 py-1 text-xs font-medium text-ink-200">
             <span className="relative flex size-2" aria-hidden="true">
               <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-60 motion-reduce:animate-none" />
               <span className="relative inline-flex size-2 rounded-full bg-emerald-400" />
@@ -96,10 +97,10 @@ export default function LoginPage() {
           </ul>
 
           {branding.company.name && (
-            <div className="mt-10 max-w-sm border-t border-slate-700 pt-5 text-[13px] text-slate-400">
+            <div className="mt-10 max-w-sm border-t border-ink-700 pt-5 text-[13px] text-ink-400">
               <p className="mb-2 flex items-center gap-2">
                 {branding.company.logo && <img src={branding.company.logo} alt="" className="size-6 object-contain" />}
-                {t('footer.developedBy')} <span className="font-semibold text-slate-200">{branding.company.name}</span>
+                {t('footer.developedBy')} <span className="font-semibold text-ink-200">{branding.company.name}</span>
               </p>
               <ul className="flex flex-col gap-1">
                 {[
@@ -120,9 +121,10 @@ export default function LoginPage() {
         </div>
       </section>
 
-      <main className="relative grid place-items-center bg-white px-4 py-16">
-        <div className="absolute top-4 right-4">
+      <main className="relative grid place-items-center bg-surface px-4 py-16">
+        <div className="absolute top-4 right-4 flex items-center gap-2">
           <LanguageSwitcher />
+          <ThemeSwitcher />
         </div>
         <div className="w-full max-w-100">
           <h1 className="text-2xl font-bold">{t('auth.signIn')}</h1>
@@ -177,7 +179,7 @@ export default function LoginPage() {
           </form>
 
           {USE_MOCK_DATA && (
-            <aside className="mt-6 rounded-lg border border-dashed border-slate-300 bg-white p-3.5" aria-label={t('auth.demoAccounts')}>
+            <aside className="mt-6 rounded-lg border border-dashed border-slate-300 bg-surface p-3.5" aria-label={t('auth.demoAccounts')}>
               <p className="mb-2.5">
                 <strong>{t('auth.demoAccounts')}</strong> <span className="text-slate-500">{t('auth.demoOnly')}</span>
               </p>

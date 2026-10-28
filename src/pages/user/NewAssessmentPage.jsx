@@ -251,7 +251,11 @@ export default function NewAssessmentPage() {
               <p className="px-5 py-8 text-center text-slate-500">
                 {t('targets.emptyTitle')}{' '}
                 {can(user, 'targets.add') ? (
-                  <button type="button" className="cursor-pointer font-medium text-blue-600 hover:underline" onClick={() => setIsAddTargetOpen(true)}>
+                  <button
+                    type="button"
+                    className="cursor-pointer font-medium text-blue-600 hover:underline dark:text-blue-400"
+                    onClick={() => setIsAddTargetOpen(true)}
+                  >
                     {t('targets.addFirst')}
                   </button>
                 ) : (

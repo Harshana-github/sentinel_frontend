@@ -143,7 +143,7 @@ export default function StartScanModal({ onClose, onStarted, initialProjectId = 
             {project && can(user, 'targets.add') && (
               <button
                 type="button"
-                className="mt-1.5 flex cursor-pointer items-center gap-1 self-start text-[13px] font-medium text-blue-600 hover:underline"
+                className="mt-1.5 flex cursor-pointer items-center gap-1 self-start text-[13px] font-medium text-blue-600 hover:underline dark:text-blue-400"
                 onClick={() => setIsAddTargetOpen(true)}
               >
                 <Plus size={14} aria-hidden="true" />

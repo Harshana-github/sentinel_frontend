@@ -137,7 +137,7 @@ function RolePermissions({ role, catalog, canEdit }) {
     <>
       <div className="fill-scroll flex flex-col gap-4 bg-slate-50/60 p-4">
         {role.system && (
-          <p className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-[13px] text-slate-600">
+          <p className="flex items-center gap-2 rounded-md border border-slate-200 bg-surface px-3 py-2 text-[13px] text-slate-600">
             <Lock size={14} aria-hidden="true" className="shrink-0 text-slate-400" />
             {t('roles.adminNotice')}
           </p>
@@ -151,7 +151,7 @@ function RolePermissions({ role, catalog, canEdit }) {
           const allChosen = chosen === keys.length;
 
           return (
-            <section key={module.key} className="rounded-lg border border-slate-200 bg-white" aria-labelledby={`module-${module.key}`}>
+            <section key={module.key} className="rounded-lg border border-slate-200 bg-surface" aria-labelledby={`module-${module.key}`}>
               <header className="flex items-center gap-3 border-b border-slate-200 px-4 py-2.5">
                 <div className="min-w-0 flex-1">
                   <h3 id={`module-${module.key}`} className="font-semibold">
@@ -178,7 +178,7 @@ function RolePermissions({ role, catalog, canEdit }) {
               </header>
               <ul className="grid gap-px bg-slate-100 sm:grid-cols-2">
                 {permissions.map((permission) => (
-                  <li key={permission.key} className="bg-white">
+                  <li key={permission.key} className="bg-surface">
                     <label className={`flex h-full items-start gap-2.5 px-4 py-2.5 ${locked ? '' : 'cursor-pointer hover:bg-blue-50/50'}`}>
                       <input
                         type="checkbox"
@@ -285,7 +285,7 @@ export default function RolesPage() {
         <div className="fill-grow grid gap-5 lg:grid-cols-[260px_1fr] lg:grid-rows-[minmax(0,1fr)]">
           <nav
             aria-label={t('roles.title')}
-            className="self-start rounded-lg border border-slate-200 bg-white p-2 shadow-sm lg:max-h-full lg:overflow-y-auto"
+            className="self-start rounded-lg border border-slate-200 bg-surface p-2 shadow-sm lg:max-h-full lg:overflow-y-auto"
           >
             <p className="px-2.5 pt-1 pb-2 text-xs font-semibold tracking-wide text-slate-500 uppercase">
               {t('roles.listCount', { count: items.length })}

@@ -20,7 +20,7 @@ import { useTranslation } from '../../i18n';
 
 function SummaryTile({ icon: Icon, label, value }) {
   return (
-    <div className="flex items-center gap-3.5 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+    <div className="flex items-center gap-3.5 rounded-lg border border-slate-200 bg-surface p-4 shadow-sm">
       <span className="grid size-10.5 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-600" aria-hidden="true">
         <Icon size={20} />
       </span>
@@ -46,7 +46,7 @@ function EnabledSwitch({ plugin, disabled, onToggle }) {
       className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors disabled:cursor-wait ${plugin.enabled ? 'bg-blue-600' : 'bg-slate-300'}`}
     >
       <span
-        className={`inline-block size-4 rounded-full bg-white shadow transition-transform ${plugin.enabled ? 'translate-x-4.5' : 'translate-x-0.5'}`}
+        className={`inline-block size-4 rounded-full bg-surface shadow transition-transform ${plugin.enabled ? 'translate-x-4.5' : 'translate-x-0.5'}`}
       />
     </button>
   );
@@ -65,7 +65,7 @@ function PluginCard({ plugin, names, busy, onToggle, onEdit, onDelete }) {
 
   return (
     <article
-      className={`flex w-full flex-col rounded-lg border bg-white shadow-sm transition-colors ${plugin.enabled ? 'border-slate-200 hover:border-blue-300' : 'border-dashed border-slate-300 bg-slate-50/60'}`}
+      className={`flex w-full flex-col rounded-lg border bg-surface shadow-sm transition-colors ${plugin.enabled ? 'border-slate-200 hover:border-blue-300' : 'border-dashed border-slate-300 bg-slate-50/60'}`}
     >
       <div className="flex items-start gap-3 p-4 pb-3">
         <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-600" aria-hidden="true">
@@ -118,13 +118,13 @@ function PluginCard({ plugin, names, busy, onToggle, onEdit, onDelete }) {
           )}
         </ul>
 
-        <div className="mt-auto rounded-md bg-slate-900 text-[11px] text-slate-300">
-          <div className="flex items-center gap-1 border-b border-slate-700/70 py-1 pr-1 pl-2.5">
-            <Terminal size={12} aria-hidden="true" className="text-slate-400" />
-            <span className="font-semibold text-slate-400">{names.interfaces.nameOf(plugin.interface)}</span>
+        <div className="mt-auto rounded-md bg-ink-900 text-[11px] text-ink-300">
+          <div className="flex items-center gap-1 border-b border-ink-700/70 py-1 pr-1 pl-2.5">
+            <Terminal size={12} aria-hidden="true" className="text-ink-400" />
+            <span className="font-semibold text-ink-400">{names.interfaces.nameOf(plugin.interface)}</span>
             <button
               type="button"
-              className="ml-auto cursor-pointer rounded px-1.5 py-0.5 text-slate-400 hover:bg-slate-800 hover:text-white"
+              className="ml-auto cursor-pointer rounded px-1.5 py-0.5 text-ink-400 hover:bg-ink-800 hover:text-white"
               aria-expanded={showFullCommand}
               onClick={() => setShowFullCommand((shown) => !shown)}
             >
@@ -133,11 +133,11 @@ function PluginCard({ plugin, names, busy, onToggle, onEdit, onDelete }) {
             <CopyButton
               value={plugin.command}
               label={t('plugins.copyCommand', { name: plugin.name })}
-              className="grid size-6 cursor-pointer place-items-center rounded text-slate-400 hover:bg-slate-800 hover:text-white"
+              className="grid size-6 cursor-pointer place-items-center rounded text-ink-400 hover:bg-ink-800 hover:text-white"
             />
           </div>
           <code
-            className={`block bg-transparent px-2.5 py-2 font-mono text-slate-100 ${showFullCommand ? 'break-all whitespace-pre-wrap' : 'truncate'}`}
+            className={`block bg-transparent px-2.5 py-2 font-mono text-ink-100 ${showFullCommand ? 'break-all whitespace-pre-wrap' : 'truncate'}`}
             title={plugin.command}
           >
             {plugin.command}

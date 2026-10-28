@@ -32,7 +32,7 @@ function Toast({ toast }) {
   return (
     <div
       role={isError ? 'alert' : undefined}
-      className={`flex items-start gap-2.5 rounded-lg border border-l-4 border-slate-200 bg-white py-3 pr-2.5 pl-3.5 shadow-lg ${isError ? 'border-l-red-600' : 'border-l-green-600'}`}
+      className={`flex items-start gap-2.5 rounded-lg border border-l-4 border-slate-200 bg-surface py-3 pr-2.5 pl-3.5 shadow-lg ${isError ? 'border-l-red-600' : 'border-l-green-600'}`}
     >
       <Icon size={18} aria-hidden="true" className={`mt-px shrink-0 ${isError ? 'text-red-600' : 'text-green-600'}`} />
       <p className="flex-1">{toast.message}</p>

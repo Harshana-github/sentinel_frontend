@@ -38,7 +38,7 @@ export function ConfirmProvider({ children }) {
             </button>
             <button
               type="button"
-              className={request.danger ? 'btn bg-red-600 text-white enabled:hover:bg-red-700' : 'btn btn-primary'}
+              className={request.danger ? 'btn bg-red-600 text-white enabled:hover:bg-red-700 dark:enabled:hover:bg-red-500' : 'btn btn-primary'}
               autoFocus
               onClick={() => close(true)}
             >

@@ -7,6 +7,109 @@
    fonts. Japanese reads better with a little more line height and letter spacing. */
 @theme {
   --font-sans: 'Inter', 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Yu Gothic UI', Meiryo, system-ui, sans-serif;
+
+  /* Background of cards, inputs, menus and the top bar (bg-surface). Use it instead of bg-white. */
+  --color-surface: #fff;
+
+  /* "Ink": panels that are dark in both themes, such as code blocks, the login hero and modal
+     backdrops (bg-ink-900, text-ink-300). The same values as Tailwind's slate. */
+  --color-ink-100: oklch(96.8% 0.007 247.896);
+  --color-ink-200: oklch(92.9% 0.013 255.508);
+  --color-ink-300: oklch(86.9% 0.022 252.894);
+  --color-ink-400: oklch(70.4% 0.04 256.788);
+  --color-ink-700: oklch(37.2% 0.044 257.287);
+  --color-ink-800: oklch(27.9% 0.041 260.031);
+  --color-ink-900: oklch(20.8% 0.042 265.755);
+  --color-ink-950: oklch(12.9% 0.042 264.695);
+}
+
+/* `dark:` classes apply while <html> has the `dark` class (see src/utils/theme.js). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Dark theme.
+   Components are written once, with light-theme classes. Each colour step keeps its role in
+   both themes, and the dark theme only changes the values behind the steps:
+   - slate: 50 is the page, surface the cards, 100 subtle fills, 200–300 borders, 400 icons,
+     500–700 secondary text and 800–900 main text. The scale is inverted, from a dark blue-grey
+     page to soft off-white text. Pure black and pure white are avoided: they tire the eyes and
+     make dense kanji strokes glare.
+   - colours: 50–300 (tinted backgrounds and borders) become dark tints, and 700–900 (text)
+     become light, so badges, alerts and active items keep their contrast. 400–600 and 950
+     stay as they are, so solid fills such as primary buttons keep white text readable.
+   Only a step used for both text and a fill needs a `dark:` class, e.g. text-blue-600 links. */
+@layer base {
+  .dark {
+    color-scheme: dark;
+
+    --color-surface: oklch(21% 0.02 262);
+    --color-slate-50: oklch(17% 0.018 262);
+    --color-slate-100: oklch(24.5% 0.022 262);
+    --color-slate-200: oklch(29.5% 0.024 262);
+    --color-slate-300: oklch(37% 0.026 262);
+    --color-slate-400: oklch(58% 0.026 262);
+    --color-slate-500: oklch(70% 0.022 262);
+    --color-slate-600: oklch(76% 0.018 262);
+    --color-slate-700: oklch(82% 0.014 262);
+    --color-slate-800: oklch(88% 0.01 262);
+    --color-slate-900: oklch(94% 0.006 262);
+    --color-slate-950: oklch(97% 0.004 262);
+
+    --color-blue-50: color-mix(in oklab, var(--color-blue-500) 10%, var(--color-surface));
+    --color-blue-100: color-mix(in oklab, var(--color-blue-500) 18%, var(--color-surface));
+    --color-blue-200: color-mix(in oklab, var(--color-blue-500) 30%, var(--color-surface));
+    --color-blue-300: color-mix(in oklab, var(--color-blue-500) 45%, var(--color-surface));
+    --color-blue-700: var(--color-blue-400);
+    --color-blue-800: color-mix(in oklab, var(--color-blue-400) 70%, white);
+    --color-blue-900: color-mix(in oklab, var(--color-blue-400) 55%, white);
+
+    --color-red-50: color-mix(in oklab, var(--color-red-500) 10%, var(--color-surface));
+    --color-red-100: color-mix(in oklab, var(--color-red-500) 18%, var(--color-surface));
+    --color-red-200: color-mix(in oklab, var(--color-red-500) 30%, var(--color-surface));
+    --color-red-300: color-mix(in oklab, var(--color-red-500) 45%, var(--color-surface));
+    --color-red-700: var(--color-red-400);
+    --color-red-800: color-mix(in oklab, var(--color-red-400) 70%, white);
+    --color-red-900: color-mix(in oklab, var(--color-red-400) 55%, white);
+
+    --color-orange-50: color-mix(in oklab, var(--color-orange-500) 10%, var(--color-surface));
+    --color-orange-100: color-mix(in oklab, var(--color-orange-500) 18%, var(--color-surface));
+    --color-orange-200: color-mix(in oklab, var(--color-orange-500) 30%, var(--color-surface));
+    --color-orange-300: color-mix(in oklab, var(--color-orange-500) 45%, var(--color-surface));
+    --color-orange-700: var(--color-orange-400);
+    --color-orange-800: color-mix(in oklab, var(--color-orange-400) 70%, white);
+    --color-orange-900: color-mix(in oklab, var(--color-orange-400) 55%, white);
+
+    --color-amber-50: color-mix(in oklab, var(--color-amber-500) 10%, var(--color-surface));
+    --color-amber-100: color-mix(in oklab, var(--color-amber-500) 18%, var(--color-surface));
+    --color-amber-200: color-mix(in oklab, var(--color-amber-500) 30%, var(--color-surface));
+    --color-amber-300: color-mix(in oklab, var(--color-amber-500) 45%, var(--color-surface));
+    --color-amber-700: var(--color-amber-400);
+    --color-amber-800: color-mix(in oklab, var(--color-amber-400) 70%, white);
+    --color-amber-900: color-mix(in oklab, var(--color-amber-400) 55%, white);
+
+    --color-yellow-50: color-mix(in oklab, var(--color-yellow-500) 10%, var(--color-surface));
+    --color-yellow-100: color-mix(in oklab, var(--color-yellow-500) 18%, var(--color-surface));
+    --color-yellow-200: color-mix(in oklab, var(--color-yellow-500) 30%, var(--color-surface));
+    --color-yellow-300: color-mix(in oklab, var(--color-yellow-500) 45%, var(--color-surface));
+    --color-yellow-700: var(--color-yellow-400);
+    --color-yellow-800: color-mix(in oklab, var(--color-yellow-400) 70%, white);
+    --color-yellow-900: color-mix(in oklab, var(--color-yellow-400) 55%, white);
+
+    --color-green-50: color-mix(in oklab, var(--color-green-500) 10%, var(--color-surface));
+    --color-green-100: color-mix(in oklab, var(--color-green-500) 18%, var(--color-surface));
+    --color-green-200: color-mix(in oklab, var(--color-green-500) 30%, var(--color-surface));
+    --color-green-300: color-mix(in oklab, var(--color-green-500) 45%, var(--color-surface));
+    --color-green-700: var(--color-green-400);
+    --color-green-800: color-mix(in oklab, var(--color-green-400) 70%, white);
+    --color-green-900: color-mix(in oklab, var(--color-green-400) 55%, white);
+
+    --color-violet-50: color-mix(in oklab, var(--color-violet-500) 10%, var(--color-surface));
+    --color-violet-100: color-mix(in oklab, var(--color-violet-500) 18%, var(--color-surface));
+    --color-violet-200: color-mix(in oklab, var(--color-violet-500) 30%, var(--color-surface));
+    --color-violet-300: color-mix(in oklab, var(--color-violet-500) 45%, var(--color-surface));
+    --color-violet-700: var(--color-violet-400);
+    --color-violet-800: color-mix(in oklab, var(--color-violet-400) 70%, white);
+    --color-violet-900: color-mix(in oklab, var(--color-violet-400) 55%, white);
+  }
 }
 
 @layer base {
@@ -26,7 +129,7 @@
   }
 
   a {
-    @apply text-blue-600 hover:underline;
+    @apply text-blue-600 hover:underline dark:text-blue-400;
   }
 
   :focus-visible {
@@ -44,15 +147,15 @@
   }
 
   .btn-primary {
-    @apply bg-blue-600 text-white shadow-sm enabled:hover:bg-blue-700;
+    @apply bg-blue-600 text-white shadow-sm enabled:hover:bg-blue-700 dark:enabled:hover:bg-blue-500;
   }
 
   .btn-secondary {
-    @apply border-slate-300 bg-white text-slate-900 enabled:hover:bg-slate-50;
+    @apply border-slate-300 bg-surface text-slate-900 enabled:hover:bg-slate-50;
   }
 
   .btn-danger {
-    @apply border-red-300 bg-white text-red-700 enabled:hover:bg-red-50;
+    @apply border-red-300 bg-surface text-red-700 enabled:hover:bg-red-50;
   }
 
   .btn-sm {
@@ -65,7 +168,7 @@
 
   /* Shared by <input>, <select> and <textarea>. */
   .input {
-    @apply h-9.5 w-full rounded-md border border-slate-300 bg-white px-2.5 text-slate-900 transition-colors placeholder:text-slate-400 hover:border-slate-400 focus:border-blue-600 aria-invalid:border-red-600 aria-invalid:bg-red-50/40 disabled:bg-slate-50 disabled:text-slate-500;
+    @apply h-9.5 w-full rounded-md border border-slate-300 bg-surface px-2.5 text-slate-900 transition-colors placeholder:text-slate-400 hover:border-slate-400 focus:border-blue-600 aria-invalid:border-red-600 aria-invalid:bg-red-50/40 disabled:bg-slate-50 disabled:text-slate-500;
   }
 
   /* 必須 / 任意 tags next to form labels, as Japanese forms usually show. */

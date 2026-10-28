@@ -8,7 +8,7 @@ export default function LanguageSwitcher() {
   const { t, language } = useTranslation();
 
   return (
-    <div role="group" aria-label={t('common.language')} className="inline-flex rounded-md border border-slate-200 bg-white p-0.5">
+    <div role="group" aria-label={t('common.language')} className="inline-flex rounded-md border border-slate-200 bg-surface p-0.5">
       {LANGUAGES.map(({ code, label }) => (
         <button
           key={code}
@@ -17,7 +17,7 @@ export default function LanguageSwitcher() {
           aria-pressed={language === code}
           onClick={() => dispatch(changeLanguage(code))}
           className={`cursor-pointer rounded px-2.5 py-1 text-xs font-semibold ${
-            language === code ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-slate-900'
+            language === code ? 'bg-slate-900 text-slate-50' : 'text-slate-500 hover:text-slate-900'
           }`}
         >
           {label}

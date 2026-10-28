@@ -46,22 +46,22 @@ function Preview({ form }) {
 
       <div>
         <p className="mb-1.5 text-xs text-slate-500">{t('branding.sidebar')}</p>
-        <div className="flex items-center gap-2.5 rounded-lg bg-slate-900 px-4 py-3 text-white">
+        <div className="flex items-center gap-2.5 rounded-lg bg-ink-900 px-4 py-3 text-white">
           <ProductLogo src={form.productLogo} className="text-blue-400" />
           <div className="min-w-0">
-            <strong className="block truncate text-[15px]">{form.productName || t('branding.productName')}</strong>
-            <span className="text-xs text-slate-500">{t('nav.adminPanel')}</span>
+            <strong className="block truncate text-[15px] text-white">{form.productName || t('branding.productName')}</strong>
+            <span className="text-xs text-ink-400">{t('nav.adminPanel')}</span>
           </div>
         </div>
       </div>
 
       <div>
         <p className="mb-1.5 text-xs text-slate-500">{t('branding.loginPage')}</p>
-        <div className="flex flex-col gap-2 rounded-lg bg-slate-900 p-4 text-slate-300">
+        <div className="flex flex-col gap-2 rounded-lg bg-ink-900 p-4 text-ink-300">
           <ProductLogo src={form.productLogo} size={32} className="text-blue-400" />
           <strong className="text-lg text-white">{form.productName || t('branding.productName')}</strong>
           {form.tagline && <span className="text-[13px]">{form.tagline}</span>}
-          <div className="mt-3 flex items-center gap-2 border-t border-slate-700 pt-3 text-xs text-slate-400">
+          <div className="mt-3 flex items-center gap-2 border-t border-ink-700 pt-3 text-xs text-ink-400">
             {company.logo && <img src={company.logo} alt="" className="size-5 object-contain" />}
             <span>
               {t('footer.developedBy')} {company.name || t('branding.companyName')}

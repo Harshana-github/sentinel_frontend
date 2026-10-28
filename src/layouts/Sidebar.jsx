@@ -22,7 +22,7 @@ export default function Sidebar({ navSections, panelLabel, isAdminPanel, isOpen,
     <aside
       id="app-sidebar"
       onKeyDown={(event) => event.key === 'Escape' && onClose()}
-      className={`fixed inset-y-0 left-0 z-40 flex w-62 flex-col border-r border-slate-200 bg-white transition-[translate,width] duration-200 lg:visible lg:translate-x-0 ${whenCollapsed('lg:w-17')} ${
+      className={`fixed inset-y-0 left-0 z-40 flex w-62 flex-col border-r border-slate-200 bg-surface transition-[translate,width] duration-200 lg:visible lg:translate-x-0 ${whenCollapsed('lg:w-17')} ${
         isOpen ? 'visible translate-x-0 shadow-xl' : 'invisible -translate-x-full'
       }`}
     >

@@ -204,7 +204,7 @@ export default function FeatureModulesPage() {
         <div className="fill-grow grid gap-5 lg:grid-cols-[240px_1fr] lg:grid-rows-[minmax(0,1fr)]">
           <nav
             aria-label={t('modules.modules')}
-            className="self-start rounded-lg border border-slate-200 bg-white p-2 shadow-sm lg:max-h-full lg:overflow-y-auto"
+            className="self-start rounded-lg border border-slate-200 bg-surface p-2 shadow-sm lg:max-h-full lg:overflow-y-auto"
           >
             <div className="flex items-center justify-between px-2.5 pt-1 pb-2">
               <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">{t('modules.modules')}</p>

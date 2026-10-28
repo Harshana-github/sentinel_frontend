@@ -32,7 +32,7 @@ export default function Modal({ title, onClose, size = 'md', children }) {
       ref={dialogRef}
       aria-labelledby={titleId}
       onCancel={handleCancel}
-      className={`m-auto max-h-[calc(100vh-3rem)] rounded-xl p-0 text-slate-800 shadow-2xl backdrop:bg-slate-900/50 ${WIDTHS[size]}`}
+      className={`m-auto max-h-[calc(100vh-3rem)] rounded-xl bg-surface p-0 text-slate-800 shadow-2xl backdrop:bg-ink-900/50 ${WIDTHS[size]}`}
     >
       <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
         <h2 id={titleId} className="text-base font-bold">

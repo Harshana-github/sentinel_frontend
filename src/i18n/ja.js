@@ -22,6 +22,8 @@ const ja = {
     example: '例: {value}',
     filterByStatus: 'ステータス',
     language: '表示言語',
+    switchToDark: 'ダークモードに切り替え',
+    switchToLight: 'ライトモードに切り替え',
     loading: '読み込んでいます…',
     name: '名前',
     never: '未実施',

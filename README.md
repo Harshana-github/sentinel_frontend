@@ -249,7 +249,7 @@ src/
 ├── i18n/                    Translations: index.js (useTranslation, translate), ja.js (default), en.js
 ├── services/api.js          Axios instance, error handling, mock/API switch
 ├── mocks/                   Demonstration data and the in-memory mock API
-├── utils/                   Constants, formatting, session storage, roles, slugs, project codes, target addresses, chart colours
+├── utils/                   Constants, formatting, session storage, theme, roles, slugs, project codes, target addresses, chart colours
 ├── App.jsx                  Routes
 ├── main.jsx                 Entry point
 └── index.css                Tailwind import, base styles and shared primitives (buttons, inputs)
@@ -262,6 +262,22 @@ Styling uses **Tailwind CSS v4** through the `@tailwindcss/vite` plugin. There i
 - Components use Tailwind utility classes directly in their JSX.
 - `src/index.css` imports Tailwind and defines only base styles plus a few primitives used in many places: `btn`, `btn-primary`, `btn-secondary`, `btn-danger`, `btn-sm`, `icon-btn` and `input`.
 - Colours that depend on data (status, severity, chart bars) are kept in lookup maps, for example in `StatusBadge.jsx`, `SeverityBadge.jsx` and `utils/colors.js`. The class names are written out in full so Tailwind can find them. Do not build them with string templates such as `bg-${color}-500`.
+
+### Light and dark theme
+
+The sun/moon button in the top bar (and on the login page) switches the theme. Until the user picks one, the OS setting is used. The choice is saved in `localStorage` (`sentinel_theme`), and a small script in `index.html` applies it before the first paint so the page never flashes.
+
+Write components with light-theme classes only. The dark theme is a block in `src/index.css` that changes the colour values behind the class names, so each step keeps its role in both themes:
+
+- `slate`: `50` page, `100` subtle fills, `200`–`300` borders, `400` icons, `500`–`700` secondary text, `800`–`900` main text.
+- `blue`, `red`, `green`, `amber`, `yellow`, `orange`, `violet`: `50`–`300` for tinted backgrounds and borders, `700`–`900` for text. `400`–`600` are not changed, so solid fills such as `bg-blue-600` keep white text readable.
+
+Rules:
+
+- Use `bg-surface` for cards, inputs and panels, never `bg-white`. `text-white` is fine on solid colour fills.
+- Use `ink` (`bg-ink-900`, `text-ink-300`, …) for anything that must stay dark in both themes: code blocks, the login hero, previews and modal backdrops.
+- Text in a `400`–`600` colour, such as a `text-blue-600` link, needs a `dark:` class (`dark:text-blue-400`) to stay readable on the dark background. A hover fill on a `700` step needs one too, e.g. `dark:enabled:hover:bg-blue-500`.
+- Other Tailwind colours (`teal`, `pink`, …) are not part of the dark theme. Add them to the block in `index.css` first.
 
 Data flow: **page → dispatch(thunk) → callApi → mock API or Axios → slice → useSelector → page**.
 

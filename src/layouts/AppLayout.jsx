@@ -47,7 +47,7 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-screen">
-      <a href="#main-content" className="absolute -top-10 left-2 z-50 rounded-md bg-white px-3 py-2 focus:top-2">
+      <a href="#main-content" className="absolute -top-10 left-2 z-50 rounded-md bg-surface px-3 py-2 focus:top-2">
         {t('nav.skipToContent')}
       </a>
       <Sidebar
@@ -59,7 +59,7 @@ export default function AppLayout() {
         collapsed={isCollapsed}
         onToggleCollapsed={toggleCollapsed}
       />
-      {isSidebarOpen && <div className="fixed inset-0 z-35 bg-slate-900/45 lg:hidden" aria-hidden="true" onClick={() => setIsSidebarOpen(false)} />}
+      {isSidebarOpen && <div className="fixed inset-0 z-35 bg-ink-900/45 lg:hidden" aria-hidden="true" onClick={() => setIsSidebarOpen(false)} />}
 
       {/* pb-8 keeps the last content clear of the fixed footer. */}
       <div className={`flex min-h-screen flex-col pb-8 transition-[margin] duration-200 ${isCollapsed ? 'lg:ml-17' : 'lg:ml-62'}`}>

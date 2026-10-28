@@ -112,9 +112,7 @@ export default function FindingDetailPage() {
                     {t('findings.demoEvidence')}
                   </p>
                 )}
-                <pre className="rounded-md bg-slate-900 p-3 font-mono text-[13px] break-words whitespace-pre-wrap text-slate-200">
-                  {finding.evidence}
-                </pre>
+                <pre className="rounded-md bg-ink-900 p-3 font-mono text-[13px] break-words whitespace-pre-wrap text-ink-200">{finding.evidence}</pre>
               </Card>
               <Card title={t('findings.remediation')}>
                 <p>{finding.remediation}</p>
