@@ -1,10 +1,12 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from '../i18n';
 
 export default function PageHeader({ title, description, breadcrumbs, actions }) {
+  const { t } = useTranslation();
   return (
     <header className="mb-5">
       {breadcrumbs && (
-        <nav aria-label="Breadcrumb">
+        <nav aria-label={t('common.breadcrumb')}>
           <ol className="mb-1.5 flex flex-wrap gap-1.5 text-[13px] text-slate-500">
             {breadcrumbs.map((crumb, index) => (
               <li key={crumb.label} className="flex gap-1.5">

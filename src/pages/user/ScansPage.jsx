@@ -16,9 +16,11 @@ import { useMasterList } from '../../features/masters/useMasterList';
 import { useStatusList } from '../../features/masters/useStatusList';
 import { SCAN_STATUSES } from '../../utils/constants';
 import { includesText } from '../../utils/format';
+import { useTranslation } from '../../i18n';
 import { can } from '../../utils/roles';
 
 export default function ScansPage() {
+  const { t } = useTranslation();
   const targetTypes = useMasterList('target-types');
   const scanStatuses = useStatusList('scan-statuses');
   const dispatch = useDispatch();
@@ -54,22 +56,22 @@ export default function ScansPage() {
   return (
     <div className="fill-page">
       <PageHeader
-        title="Scans"
-        description="Scan history and live progress. Running scans refresh automatically."
+        title={t('scans.title')}
+        description={t('scans.description')}
         actions={
           can(user, 'scans.start') && (
             <>
               <Link to="/assessments/new" className="btn btn-secondary hover:no-underline">
                 <Layers size={16} aria-hidden="true" />
-                New assessment
+                {t('assessments.new')}
               </Link>
               <button type="button" className="btn btn-secondary" onClick={() => setIsStartScanOpen(true)}>
                 <Play size={16} aria-hidden="true" />
-                Single scan
+                {t('scans.singleScan')}
               </button>
               <Link to="/quick-scan" className="btn btn-primary hover:no-underline">
                 <Zap size={16} aria-hidden="true" />
-                Quick scan
+                {t('nav.quickScan')}
               </Link>
             </>
           )
@@ -77,34 +79,34 @@ export default function ScansPage() {
       />
       <Card flush fill>
         <FilterBar resultCount={items.length > 0 || status === 'succeeded' ? visibleScans.length : undefined}>
-          <SearchInput label="Search scans" placeholder="Search by scan ID, target or project" value={search} onChange={setSearch} />
+          <SearchInput label={t('common.search')} placeholder={t('scans.searchPlaceholder')} value={search} onChange={setSearch} />
           <SelectFilter
-            label="Filter by status"
-            allLabel="All statuses"
+            label={t('common.filterByStatus')}
+            allLabel={t('common.allStatuses')}
             value={statusFilter}
             onChange={setStatusFilter}
             options={scanStatuses.options(SCAN_STATUSES)}
           />
           <SelectFilter
-            label="Filter by target type"
-            allLabel="All target types"
+            label={t('targets.type')}
+            allLabel={t('scans.allTargetTypes')}
             value={typeFilter}
             onChange={setTypeFilter}
-            options={targetTypes.items.map((type) => ({ value: type.id, label: type.name }))}
+            options={targetTypes.items.map((type) => ({ value: type.id, label: targetTypes.nameOf(type.id) }))}
           />
           <SelectFilter
-            label="Filter by kind"
-            allLabel="Single scans and assessments"
+            label={t('scans.kind')}
+            allLabel={t('scans.allKinds')}
             value={kindFilter}
             onChange={setKindFilter}
             options={[
-              { value: 'single', label: 'Single scans' },
-              { value: 'assessment', label: 'Assessment jobs' },
+              { value: 'single', label: t('scans.kindSingle') },
+              { value: 'assessment', label: t('scans.kindAssessment') },
             ]}
           />
         </FilterBar>
         <AsyncContent status={status} error={error} hasData={items.length > 0} onRetry={() => dispatch(fetchScans())}>
-          <ScansTable scans={visibleScans} showActions emptyMessage="No scans match your filters." />
+          <ScansTable scans={visibleScans} showActions emptyMessage={items.length ? t('common.noMatches') : t('scans.empty')} />
         </AsyncContent>
       </Card>
 

@@ -9,35 +9,35 @@ import Alert from './Alert';
 import CopyButton from './CopyButton';
 import FormField, { errorProps } from './FormField';
 import Modal from './Modal';
+import { useTranslation } from '../i18n';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 8;
 
-function validate(form, isNew) {
+function validate(form, isNew, t) {
   const errors = {};
-  if (form.name.trim().length < 2) errors.name = 'Enter the full name.';
-  if (!form.role) errors.role = 'Choose a role.';
+  if (form.name.trim().length < 2) errors.name = t('team.nameRequired');
+  if (!form.role) errors.role = t('team.roleRequired');
   if (isNew) {
-    if (!EMAIL_PATTERN.test(form.email.trim())) errors.email = 'Enter a valid email address.';
-    if (form.password.length < MIN_PASSWORD_LENGTH) errors.password = `Use at least ${MIN_PASSWORD_LENGTH} characters.`;
+    if (!EMAIL_PATTERN.test(form.email.trim())) errors.email = t('auth.emailInvalid');
+    if (form.password.length < MIN_PASSWORD_LENGTH) errors.password = t('validation.passwordLength', { min: MIN_PASSWORD_LENGTH });
   }
   return errors;
 }
 
 // Shown once after a user is created, so the details can be sent to them by hand.
 function LoginDetails({ member, password, organizationName, onDone }) {
-  const message = buildLoginMessage({ name: organizationName }, { ...member, password });
+  const { t } = useTranslation();
+  const message = buildLoginMessage({ name: organizationName }, { ...member, password }, t);
   return (
     <div>
-      <p className="mb-4">
-        <strong>{member.name}</strong> was added as <strong>{member.roleName}</strong>. Send them these login details.
-      </p>
+      <p className="mb-4">{t('team.addedMessage', { name: member.name, role: member.roleName })}</p>
       <pre className="mb-4 rounded-md border border-slate-200 bg-slate-50 p-4 font-mono text-[13px] whitespace-pre-wrap">{message}</pre>
-      <Alert className="mb-4">The password is not shown again. Copy the message before you close this window.</Alert>
+      <Alert className="mb-4">{t('team.passwordOnce')}</Alert>
       <div className="flex justify-end gap-2">
-        <CopyButton value={message} label="Copy the login details" text="Copy message" />
+        <CopyButton value={message} label={t('copy.loginDetails')} text={t('copy.copyMessage')} />
         <button type="button" className="btn btn-primary" onClick={onDone}>
-          Done
+          {t('common.done')}
         </button>
       </div>
     </div>
@@ -47,6 +47,7 @@ function LoginDetails({ member, password, organizationName, onDone }) {
 // Add a person with a role, or change a person's name and role when `member` is set.
 export default function MemberFormModal({ member, onClose }) {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const user = useSelector(selectCurrentUser);
   const isNew = !member;
   const isSelf = member?.id === user.id;
@@ -77,7 +78,7 @@ export default function MemberFormModal({ member, onClose }) {
   async function handleSubmit(event) {
     event.preventDefault();
     if (isSaving) return;
-    const validationErrors = validate(form, isNew);
+    const validationErrors = validate(form, isNew, t);
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) return;
 
@@ -86,12 +87,12 @@ export default function MemberFormModal({ member, onClose }) {
     try {
       if (isNew) {
         const saved = await dispatch(createMember(form)).unwrap();
-        dispatch(showToast({ message: `${saved.name} was added.` }));
+        dispatch(showToast({ message: t('team.added', { name: saved.name }) }));
         setCreated(saved);
       } else {
         const changes = { name: form.name, ...(isSelf ? {} : { role: form.role }) };
         const saved = await dispatch(updateMember({ id: member.id, changes })).unwrap();
-        dispatch(showToast({ message: `${saved.name} updated.` }));
+        dispatch(showToast({ message: t('common.updatedToast', { name: saved.name }) }));
         onClose();
       }
     } catch (saveError) {
@@ -102,14 +103,14 @@ export default function MemberFormModal({ member, onClose }) {
 
   if (created) {
     return (
-      <Modal title="User added" onClose={onClose}>
+      <Modal title={t('team.addedTitle')} onClose={onClose}>
         <LoginDetails member={created} password={form.password} organizationName={user.organizationName} onDone={onClose} />
       </Modal>
     );
   }
 
   return (
-    <Modal title={isNew ? 'Add user' : `Edit ${member.name}`} onClose={onClose}>
+    <Modal title={isNew ? t('team.add') : t('common.editItem', { name: member.name })} onClose={onClose}>
       <form onSubmit={handleSubmit} noValidate>
         {submitError && (
           <Alert tone="error" className="mb-4">
@@ -117,7 +118,7 @@ export default function MemberFormModal({ member, onClose }) {
           </Alert>
         )}
 
-        <FormField id="member-name" label="Full name" error={errors.name}>
+        <FormField id="member-name" label={t('team.fullName')} required error={errors.name}>
           <input
             id="member-name"
             className="input"
@@ -128,7 +129,13 @@ export default function MemberFormModal({ member, onClose }) {
           />
         </FormField>
 
-        <FormField id="member-email" label="Email (used to sign in)" error={errors.email} hint={isNew ? undefined : 'The email cannot be changed.'}>
+        <FormField
+          id="member-email"
+          label={t('team.email')}
+          required={isNew}
+          error={errors.email}
+          hint={isNew ? t('team.emailHint') : t('team.emailLocked')}
+        >
           <input
             id="member-email"
             type="email"
@@ -143,8 +150,9 @@ export default function MemberFormModal({ member, onClose }) {
         {isNew && (
           <FormField
             id="member-password"
-            label="Password"
-            hint={`At least ${MIN_PASSWORD_LENGTH} characters. You send it to them yourself.`}
+            label={t('auth.password')}
+            required
+            hint={t('team.passwordHint', { min: MIN_PASSWORD_LENGTH })}
             error={errors.password}
           >
             <div className="relative">
@@ -160,7 +168,7 @@ export default function MemberFormModal({ member, onClose }) {
               <button
                 type="button"
                 className="icon-btn absolute top-0.5 right-0.5"
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
                 aria-pressed={showPassword}
                 onClick={() => setShowPassword((visible) => !visible)}
               >
@@ -172,14 +180,15 @@ export default function MemberFormModal({ member, onClose }) {
 
         <FormField
           id="member-role"
-          label="Role"
+          label={t('team.role')}
+          required
           error={errors.role ?? roleOptions.error}
           hint={
             isSelf
-              ? 'You cannot change your own role.'
+              ? t('team.ownRoleLocked')
               : selectedRole
-                ? `${selectedRole.description || selectedRole.name} · ${selectedRole.permissionCount} permissions`
-                : 'Decides what this person can do.'
+                ? t('team.roleSummary', { description: selectedRole.description || selectedRole.name, count: selectedRole.permissionCount })
+                : t('team.roleHint')
           }
         >
           <select
@@ -190,10 +199,10 @@ export default function MemberFormModal({ member, onClose }) {
             onChange={(event) => setField('role', event.target.value)}
             {...errorProps('member-role', errors.role)}
           >
-            <option value="">{roleOptions.status === 'loading' ? 'Loading roles…' : 'Choose a role'}</option>
+            <option value="">{roleOptions.status === 'loading' ? t('common.loading') : t('common.selectPlaceholder')}</option>
             {roles.map((role) => (
               <option key={role.slug} value={role.slug}>
-                {role.system ? `${role.name} (full access)` : role.name}
+                {role.system ? t('roles.fullAccessName', { name: role.name }) : role.name}
               </option>
             ))}
           </select>
@@ -201,10 +210,10 @@ export default function MemberFormModal({ member, onClose }) {
 
         <div className="mt-2 flex justify-end gap-2">
           <button type="button" className="btn btn-secondary" onClick={onClose}>
-            Cancel
+            {t('common.cancel')}
           </button>
           <button type="submit" className="btn btn-primary" disabled={isSaving}>
-            {isSaving ? 'Saving…' : isNew ? 'Add user' : 'Save changes'}
+            {isSaving ? t('common.saving') : isNew ? t('team.add') : t('common.saveChanges')}
           </button>
         </div>
       </form>

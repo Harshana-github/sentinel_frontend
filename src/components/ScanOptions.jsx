@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { useMasterList } from '../features/masters/useMasterList';
 import { SCAN_PROFILES } from '../utils/constants';
+import { useTranslation } from '../i18n';
 import { errorProps, FieldError } from './FormField';
 
 // Form pieces shared by the scan forms (the Single scan dialog and the Quick scan page).
@@ -20,18 +22,19 @@ export function OptionCard({ type = 'radio', name, checked, onChange, title, des
 const cardGrid = 'grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-2';
 
 export function ScanProfilePicker({ value, onChange }) {
+  const { t } = useTranslation();
   return (
     <fieldset className="mb-4">
-      <legend className="mb-2 font-medium">Scan profile</legend>
+      <legend className="mb-2 font-medium text-slate-900">{t('scanProfiles.legend')}</legend>
       <div className={cardGrid}>
         {SCAN_PROFILES.map((option) => (
           <OptionCard
-            key={option.value}
+            key={option}
             name="scan-profile"
-            checked={value === option.value}
-            onChange={() => onChange(option.value)}
-            title={option.value}
-            description={option.description}
+            checked={value === option}
+            onChange={() => onChange(option)}
+            title={t(`scanProfiles.${option}.name`)}
+            description={t(`scanProfiles.${option}.description`)}
           />
         ))}
       </div>
@@ -51,12 +54,14 @@ export function useToolSelection(tools) {
   };
 }
 
-export function ToolPicker({ legend = 'Tools', tools, selection, error, emptyMessage = 'No enabled tool can scan this target type yet.', onChange }) {
+export function ToolPicker({ legend, tools, selection, error, emptyMessage, onChange }) {
+  const { t, localName } = useTranslation();
+  const categories = useMasterList('plugin-categories');
   return (
     <fieldset className="mb-4">
-      <legend className="mb-2 font-medium">{legend}</legend>
+      <legend className="mb-2 font-medium text-slate-900">{legend ?? t('scanOptions.tools')}</legend>
       {tools.length === 0 ? (
-        <p className="text-[13px] text-slate-500">{emptyMessage}</p>
+        <p className="text-[13px] text-slate-500">{emptyMessage ?? t('scanOptions.noTools')}</p>
       ) : (
         <div className={cardGrid}>
           {tools.map((tool) => (
@@ -69,7 +74,7 @@ export function ToolPicker({ legend = 'Tools', tools, selection, error, emptyMes
                 onChange?.();
               }}
               title={tool.name}
-              description={tool.categoryName}
+              description={localName(categories.find(tool.category)) || tool.categoryName}
             />
           ))}
         </div>
@@ -81,11 +86,12 @@ export function ToolPicker({ legend = 'Tools', tools, selection, error, emptyMes
 
 // The consent gate every scan needs. The API checks it again.
 export function AuthorizationCheckbox({ id, checked, onChange, error, plural = false }) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="flex cursor-pointer items-start gap-2 font-medium">
-        <input className="mt-1" type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} {...errorProps(id, error)} />I
-        confirm that I am authorized to scan {plural ? 'these targets' : 'this target'}.
+      <label className="flex cursor-pointer items-start gap-2.5 rounded-md border border-amber-200 bg-amber-50/60 p-3 font-medium text-slate-900">
+        <input className="mt-1" type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} {...errorProps(id, error)} />
+        {plural ? t('scanOptions.authorizedPlural') : t('scanOptions.authorized')}
       </label>
       {error && <FieldError id={`${id}-error`}>{error}</FieldError>}
     </div>

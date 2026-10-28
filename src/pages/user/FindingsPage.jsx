@@ -11,6 +11,7 @@ import FindingsTable from '../../components/FindingsTable';
 import PageHeader from '../../components/PageHeader';
 import { FINDING_STATUSES, SEVERITIES } from '../../utils/constants';
 import { includesText } from '../../utils/format';
+import { useTranslation } from '../../i18n';
 
 // Most severe first, then newest first.
 function bySeverityThenDate(a, b) {
@@ -18,6 +19,7 @@ function bySeverityThenDate(a, b) {
 }
 
 export default function FindingsPage() {
+  const { t } = useTranslation();
   const findingStatuses = useStatusList('finding-statuses');
   const dispatch = useDispatch();
   const [searchParams] = useSearchParams();
@@ -50,34 +52,34 @@ export default function FindingsPage() {
 
   return (
     <div className="fill-page">
-      <PageHeader title="Vulnerability findings" description="Issues reported by scanner modules across all projects." />
+      <PageHeader title={t('findings.title')} description={t('findings.description')} />
       <Card flush fill>
         <FilterBar resultCount={items.length > 0 || status === 'succeeded' ? visibleFindings.length : undefined}>
-          <SearchInput label="Search findings" placeholder="Search by title, CVE, ID, target or project" value={search} onChange={setSearch} />
+          <SearchInput label={t('common.search')} placeholder={t('findings.searchPlaceholder')} value={search} onChange={setSearch} />
           <SelectFilter
-            label="Filter by severity"
-            allLabel="All severities"
+            label={t('findings.severity')}
+            allLabel={t('findings.allSeverities')}
             value={severityFilter}
             onChange={setSeverityFilter}
-            options={SEVERITIES}
+            options={SEVERITIES.map((severity) => ({ value: severity, label: t(`severity.${severity}`) }))}
           />
           <SelectFilter
-            label="Filter by status"
-            allLabel="All statuses"
+            label={t('common.filterByStatus')}
+            allLabel={t('common.allStatuses')}
             value={statusFilter}
             onChange={setStatusFilter}
             options={findingStatuses.options(FINDING_STATUSES)}
           />
           <SelectFilter
-            label="Filter by scanner"
-            allLabel="All scanners"
+            label={t('findings.scanner')}
+            allLabel={t('findings.allScanners')}
             value={scannerFilter}
             onChange={setScannerFilter}
             options={scannerOptions}
           />
         </FilterBar>
         <AsyncContent status={status} error={error} hasData={items.length > 0} onRetry={() => dispatch(fetchFindings())}>
-          <FindingsTable findings={visibleFindings} emptyMessage="No findings match your filters." />
+          <FindingsTable findings={visibleFindings} emptyMessage={items.length ? t('common.noMatches') : t('findings.empty')} />
         </AsyncContent>
       </Card>
     </div>

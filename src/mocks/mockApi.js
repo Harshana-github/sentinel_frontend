@@ -23,6 +23,10 @@ import { isSuperAdmin } from '../utils/roles';
 import { projectCodeError } from '../utils/projectCode';
 import { slugError, slugify } from '../utils/slug';
 import { targetAddressError } from '../utils/target';
+import { translate } from '../i18n';
+
+// The validation helpers return translation keys; the API answers in English.
+const english = (key) => (key ? translate('en', key) : '');
 import {
   activities,
   demoAccounts,
@@ -492,7 +496,7 @@ export async function createProject({ name, code, environment, description }) {
   );
   if (duplicate) throw new Error(`Your organization already has a project named "${trimmedName}".`);
   const projectCode = (code ?? '').trim().toUpperCase();
-  const codeProblem = projectCodeError(projectCode);
+  const codeProblem = english(projectCodeError(projectCode));
   if (codeProblem) throw new Error(`Project code: ${codeProblem}`);
   if (db.projects.some((project) => project.organizationId === user.organizationId && project.code === projectCode)) {
     throw new Error(`The project code ${projectCode} is already used in your organization.`);
@@ -522,7 +526,7 @@ export async function addScanTarget(projectId, { name, type, value }) {
   if (project.status === 'Archived') throw new Error('Archived projects cannot get new targets.');
   const targetType = db.masters['target-types'].find((item) => item.id === type);
   if (!targetType) throw new Error('Choose a target type.');
-  const addressError = targetAddressError(value, targetType);
+  const addressError = english(targetAddressError(value, targetType));
   if (addressError) throw new Error(addressError);
   const trimmedValue = value.trim();
   if (project.targets.some((target) => target.value.toLowerCase() === trimmedValue.toLowerCase())) {
@@ -710,7 +714,6 @@ function withAssessmentDetails(assessment) {
   const jobFindings = db.findings.filter((finding) => jobIds.includes(finding.scanId));
   return copy({
     ...assessment,
-    profileName: ASSESSMENT_PROFILES.find((profile) => profile.key === assessment.profile)?.name ?? assessment.profile,
     projectName: project.name,
     projectCode: project.code,
     organizationId: project.organizationId,
@@ -769,7 +772,7 @@ export async function startAssessment({ projectId, profile: profileKey, name, ta
   const assessment = {
     id: `ASM-${nextAssessmentNumber++}`,
     projectId: project.id,
-    name: (name ?? '').trim() || `${profile.name} · ${project.name}`,
+    name: (name ?? '').trim() || project.name,
     profile: profile.key,
     createdBy: user.name,
     createdAt: nowIso(),
@@ -779,7 +782,8 @@ export async function startAssessment({ projectId, profile: profileKey, name, ta
       .map((target) => ({
         targetId: target.id,
         targetName: target.name,
-        reason: assessmentPlugins(profile, target.type).length ? 'Not selected' : 'No enabled plugin can scan this target type',
+        // A code the UI translates: assessments.skipReasons.<reason>.
+        reason: assessmentPlugins(profile, target.type).length ? 'notSelected' : 'noPlugin',
       })),
   };
   db.assessments.push(assessment);
@@ -839,7 +843,7 @@ function quickScanTarget(project, { type, value }) {
 // { mode: 'single' | 'full', inputs: [{ type, value }], profile, tools, authorized }
 // Single runs one target with the chosen tools. Full runs every input as an assessment job,
 // with every enabled plugin for its type and the Deep profile.
-export async function startQuickScan({ mode, inputs, profile, tools, authorized }) {
+export async function startQuickScan({ mode, inputs, profile, tools, name, authorized }) {
   await simulateLatency(600);
   const user = requirePermission('scans.start');
   if (!authorized) throw new Error('Confirm that you are authorized to test these targets.');
@@ -849,7 +853,7 @@ export async function startQuickScan({ mode, inputs, profile, tools, authorized 
   for (const input of filled) {
     const targetType = db.masters['target-types'].find((item) => item.id === input.type);
     if (!targetType) throw new Error('Choose a target type.');
-    const addressError = targetAddressError(input.value, targetType);
+    const addressError = english(targetAddressError(input.value, targetType));
     if (addressError) throw new Error(`${targetType.name}: ${addressError}`);
   }
 
@@ -875,7 +879,7 @@ export async function startQuickScan({ mode, inputs, profile, tools, authorized 
   const assessment = {
     id: `ASM-${nextAssessmentNumber++}`,
     projectId: project.id,
-    name: `Full scan · ${filled[0].value.trim()}${filled.length > 1 ? ` +${filled.length - 1}` : ''}`,
+    name: (name ?? '').trim() || filled[0].value.trim(),
     profile: fullProfile.key,
     createdBy: user.name,
     createdAt: nowIso(),
@@ -1124,10 +1128,13 @@ const MODULE_NAME_MAX = 40;
 // The slug the user typed, or one made from the name. Throws if it is not valid.
 function resolveSlug(slug, name) {
   const value = (slug ?? '').trim() || slugify(name);
-  const error = slugError(value);
+  const error = english(slugError(value));
   if (error) throw new Error(`Slug: ${error}`);
   return value;
 }
+
+// Optional Japanese versions of a name and description, shown when the UI is in Japanese.
+const japaneseFields = (input) => ({ nameJa: input.nameJa?.trim() ?? '', descriptionJa: input.descriptionJa?.trim() ?? '' });
 
 function validateModule(name, description, ignoreKey) {
   const trimmed = name?.trim() ?? '';
@@ -1147,7 +1154,7 @@ export async function getModules() {
 export async function createModule(input) {
   await simulateLatency();
   requireSuperAdmin();
-  const fields = validateModule(input.name, input.description);
+  const fields = { ...validateModule(input.name, input.description), ...japaneseFields(input) };
   const key = resolveSlug(input.slug, fields.name);
   if (db.modules.some((module) => module.key === key)) throw new Error(`The slug "${key}" is already used by another module.`);
   const module = { key, ...fields, builtIn: false };
@@ -1155,12 +1162,12 @@ export async function createModule(input) {
   return copy(module);
 }
 
-export async function updateModule(key, { name, description }) {
+export async function updateModule(key, input) {
   await simulateLatency();
   requireSuperAdmin();
   const module = db.modules.find((item) => item.key === key);
   if (!module) throw new Error('Module not found.');
-  Object.assign(module, validateModule(name, description, key));
+  Object.assign(module, validateModule(input.name, input.description, key), japaneseFields(input));
   return copy(module);
 }
 
@@ -1198,7 +1205,7 @@ export async function getPermissions() {
 export async function createPermission(input) {
   await simulateLatency();
   requireSuperAdmin();
-  const fields = validatePermission(input);
+  const fields = { ...validatePermission(input), ...japaneseFields(input) };
   // The permission key is "<module slug>.<permission slug>", e.g. "projects.create".
   const key = `${fields.module}.${resolveSlug(input.slug, fields.name)}`;
   if (db.permissions.some((item) => item.key === key)) throw new Error(`The key "${key}" is already used by another permission.`);
@@ -1208,12 +1215,12 @@ export async function createPermission(input) {
 }
 
 // The module cannot be changed after creation, because the key is built from it.
-export async function updatePermission(key, { name, description }) {
+export async function updatePermission(key, input) {
   await simulateLatency();
   requireSuperAdmin();
   const permission = db.permissions.find((item) => item.key === key);
   if (!permission) throw new Error('Permission not found.');
-  Object.assign(permission, validatePermission({ module: permission.module, name, description }, key));
+  Object.assign(permission, validatePermission({ ...input, module: permission.module }, key), japaneseFields(input));
   return copy(permission);
 }
 
@@ -1240,15 +1247,15 @@ function validateMasterItem(list, input, ignoreId) {
   const trimmed = name?.trim() ?? '';
   if (trimmed.length < 2 || trimmed.length > MODULE_NAME_MAX) throw new Error(`Name must be 2 to ${MODULE_NAME_MAX} characters.`);
   if (db.masters[list].some((item) => item.id !== ignoreId && item.name.toLowerCase() === trimmed.toLowerCase())) {
-    throw new Error(`A ${masterList(list).singular} with this name already exists.`);
+    throw new Error('This list already has an item with this name.');
   }
   const extras = {};
   for (const field of masterList(list).extraFields ?? []) {
     const value = (input[field.key] ?? '').trim();
-    if (field.options && !field.options.some((option) => option.value === value)) throw new Error(`Choose a value for ${field.label}.`);
+    if (field.options && !field.options.includes(value)) throw new Error(`Choose a value for ${field.key}.`);
     extras[field.key] = value;
   }
-  return { name: trimmed, description: description?.trim() ?? '', ...extras };
+  return { name: trimmed, description: description?.trim() ?? '', ...japaneseFields(input), ...extras };
 }
 
 // What uses an item, as { plugins, targets, organizations, users } counts.
@@ -1299,8 +1306,7 @@ export async function getMasterItems(list) {
 export async function createMasterItem(list, input) {
   await simulateLatency();
   requireSuperAdmin();
-  if (masterList(list).fixed)
-    throw new Error(`${masterList(list).title} are set by Sentinel. You can rename or recolour them, but not add new ones.`);
+  if (masterList(list).fixed) throw new Error('These statuses are set by Sentinel. You can rename or recolour them, but not add new ones.');
   const fields = validateMasterItem(list, input);
   const id = resolveSlug(input.slug, fields.name);
   if (db.masters[list].some((item) => item.id === id)) throw new Error(`The slug "${id}" is already used in this list.`);

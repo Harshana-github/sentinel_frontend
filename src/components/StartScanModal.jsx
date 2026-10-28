@@ -10,6 +10,7 @@ import { fetchScannerModules } from '../features/scanners/scannersThunks';
 import { startScan } from '../features/scans/scansThunks';
 import { showToast } from '../features/ui/uiSlice';
 import { USE_MOCK_DATA } from '../services/api';
+import { useTranslation } from '../i18n';
 import { can } from '../utils/roles';
 import AddTargetModal from './AddTargetModal';
 import Alert from './Alert';
@@ -20,6 +21,7 @@ import { AuthorizationCheckbox, ScanProfilePicker, ToolPicker, useToolSelection 
 // Starts one scan of one target of a project.
 export default function StartScanModal({ onClose, onStarted, initialProjectId = '', initialTargetId = '' }) {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const user = useSelector(selectCurrentUser);
   const projects = useSelector(selectProjectsState);
   const scanners = useSelector(selectScannersState);
@@ -62,10 +64,10 @@ export default function StartScanModal({ onClose, onStarted, initialProjectId = 
 
   function validate() {
     const found = {};
-    if (!project) found.projectId = 'Select a project.';
-    if (!target) found.targetId = 'Select a target.';
-    if (target && toolSelection.selected.length === 0) found.tools = 'Select at least one scanner module.';
-    if (!isAuthorized) found.authorized = 'Confirm that you are authorized to scan this target.';
+    if (!project) found.projectId = t('scans.projectRequired');
+    if (!target) found.targetId = t('scans.targetRequired');
+    if (target && toolSelection.selected.length === 0) found.tools = t('scans.toolsRequired');
+    if (!isAuthorized) found.authorized = t('scans.authorizationRequired');
     return found;
   }
 
@@ -80,7 +82,7 @@ export default function StartScanModal({ onClose, onStarted, initialProjectId = 
     setSubmitError('');
     try {
       const scan = await dispatch(startScan({ projectId, targetId, profile, tools: toolSelection.selected })).unwrap();
-      dispatch(showToast({ message: `Scan ${scan.id} was queued for ${scan.targetName}.` }));
+      dispatch(showToast({ message: t('scans.queuedFor', { id: scan.id, target: scan.targetName }) }));
       onStarted(scan);
     } catch (error) {
       setSubmitError(error.message);
@@ -90,16 +92,16 @@ export default function StartScanModal({ onClose, onStarted, initialProjectId = 
 
   return (
     <>
-      <Modal title="Start a scan" onClose={onClose}>
+      <Modal title={t('scans.startTitle')} onClose={onClose}>
         <form onSubmit={handleSubmit} noValidate>
-          {USE_MOCK_DATA && <Alert className="mb-4">Demo mode: the scan is simulated and no traffic is sent to the target.</Alert>}
+          {USE_MOCK_DATA && <Alert className="mb-4">{t('scans.demoNotice')}</Alert>}
           {submitError && (
             <Alert tone="error" className="mb-4">
               {submitError}
             </Alert>
           )}
 
-          <FormField id="scan-project" label="Project" error={errors.projectId}>
+          <FormField id="scan-project" label={t('projects.project')} required error={errors.projectId}>
             <select
               id="scan-project"
               className="input"
@@ -107,7 +109,7 @@ export default function StartScanModal({ onClose, onStarted, initialProjectId = 
               onChange={(event) => selectProject(event.target.value)}
               {...errorProps('scan-project', errors.projectId)}
             >
-              <option value="">{projects.status === 'loading' ? 'Loading projects…' : 'Select a project'}</option>
+              <option value="">{projects.status === 'loading' ? t('common.loading') : t('common.selectPlaceholder')}</option>
               {scannableProjects.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name} ({item.organizationName})
@@ -118,9 +120,10 @@ export default function StartScanModal({ onClose, onStarted, initialProjectId = 
 
           <FormField
             id="scan-target"
-            label="Target"
+            label={t('scans.target')}
+            required
             error={errors.targetId}
-            hint={project && project.targets.length === 0 ? 'This project has no targets yet. Add one below.' : undefined}
+            hint={project && project.targets.length === 0 ? t('scans.noTargetsHint') : undefined}
           >
             <select
               id="scan-target"
@@ -130,7 +133,7 @@ export default function StartScanModal({ onClose, onStarted, initialProjectId = 
               disabled={!project}
               {...errorProps('scan-target', errors.targetId)}
             >
-              <option value="">Select a target</option>
+              <option value="">{t('common.selectPlaceholder')}</option>
               {project?.targets.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}: {item.value}
@@ -144,7 +147,7 @@ export default function StartScanModal({ onClose, onStarted, initialProjectId = 
                 onClick={() => setIsAddTargetOpen(true)}
               >
                 <Plus size={14} aria-hidden="true" />
-                New target for {project.name}
+                {t('scans.newTargetFor', { project: project.name })}
               </button>
             )}
           </FormField>
@@ -153,7 +156,7 @@ export default function StartScanModal({ onClose, onStarted, initialProjectId = 
 
           {target && (
             <ToolPicker
-              legend={`Scanner modules for ${targetTypes.nameOf(target.type).toLowerCase()}`}
+              legend={t('scans.toolsFor', { type: targetTypes.nameOf(target.type) })}
               tools={tools}
               selection={toolSelection}
               error={errors.tools}
@@ -173,10 +176,10 @@ export default function StartScanModal({ onClose, onStarted, initialProjectId = 
 
           <div className="mt-6 flex justify-end gap-2">
             <button type="button" className="btn btn-secondary" onClick={onClose}>
-              Cancel
+              {t('common.cancel')}
             </button>
             <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
-              {isSubmitting ? 'Starting…' : 'Start scan'}
+              {isSubmitting ? t('common.starting') : t('scans.start')}
             </button>
           </div>
         </form>

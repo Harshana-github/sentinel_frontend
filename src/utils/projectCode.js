@@ -12,10 +12,10 @@ export function suggestProjectCode(name) {
   return code.replace(/^[0-9]+/, '').slice(0, PROJECT_CODE_MAX);
 }
 
-// Returns an error message, or '' when the code is valid.
+// Returns the translation key of the problem, or '' when the code is valid.
 export function projectCodeError(code) {
-  if (!code) return 'Enter a project code.';
-  if (code.length < PROJECT_CODE_MIN || code.length > PROJECT_CODE_MAX) return `Use ${PROJECT_CODE_MIN} to ${PROJECT_CODE_MAX} characters.`;
-  if (!PROJECT_CODE_PATTERN.test(code)) return 'Use uppercase letters, numbers and single hyphens, starting with a letter.';
+  if (!code) return 'validation.projectCodeRequired';
+  if (code.length < PROJECT_CODE_MIN || code.length > PROJECT_CODE_MAX) return 'validation.projectCodeLength';
+  if (!PROJECT_CODE_PATTERN.test(code)) return 'validation.projectCodeFormat';
   return '';
 }

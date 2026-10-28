@@ -10,10 +10,13 @@ import PageHeader from '../components/PageHeader';
 import { CategoryStatusBadge } from '../components/StatusBadge';
 import { API_BASE_URL, USE_MOCK_DATA } from '../services/api';
 import { isSuperAdmin } from '../utils/roles';
+import LanguageSwitcher from '../components/LanguageSwitcher';
+import { useTranslation } from '../i18n';
 
 // Shared by both panels. The organization card is only shown to organization users.
 export default function SettingsPage() {
   const dispatch = useDispatch();
+  const { t, roleName } = useTranslation();
   const user = useSelector(selectCurrentUser);
   const organizations = useSelector(selectOrganizationsState);
   const organization = useSelector((state) => selectOrganizationById(state, user?.organizationId));
@@ -25,22 +28,27 @@ export default function SettingsPage() {
 
   return (
     <>
-      <PageHeader title="Settings" description="Your profile and how this frontend is configured." />
+      <PageHeader title={t('settings.title')} description={t('settings.description')} />
       <div className="grid gap-5 xl:grid-cols-2">
-        <Card title="Profile">
+        <Card title={t('settings.profile')}>
           <DetailList
             items={[
-              { label: 'Name', value: user?.name },
-              { label: 'Email', value: user?.email },
-              { label: 'Username', value: user?.username },
-              { label: 'Role', value: user?.role },
-              { label: 'Panel', value: isSuperAdmin(user) ? 'Super Admin (Sentinel company)' : 'User panel' },
+              { label: t('common.name'), value: user?.name },
+              { label: t('team.email'), value: user?.email },
+              { label: t('settings.username'), value: user?.username },
+              { label: t('team.role'), value: roleName(user) },
+              { label: t('settings.panel'), value: isSuperAdmin(user) ? t('nav.adminPanel') : t('settings.userPanel') },
             ]}
           />
         </Card>
 
+        <Card title={t('settings.language')}>
+          <p className="mb-3 text-slate-500">{t('settings.languageHelp')}</p>
+          <LanguageSwitcher />
+        </Card>
+
         {showOrganization && (
-          <Card title="Organization">
+          <Card title={t('common.organization')}>
             <AsyncContent
               status={organizations.status}
               error={organizations.error}
@@ -50,9 +58,9 @@ export default function SettingsPage() {
               {organization && (
                 <DetailList
                   items={[
-                    { label: 'Name', value: organization.name },
-                    { label: 'Status', value: <CategoryStatusBadge category="organization-statuses" value={organization.status} /> },
-                    { label: 'Contact', value: organization.contactEmail },
+                    { label: t('common.name'), value: organization.name },
+                    { label: t('common.status'), value: <CategoryStatusBadge category="organization-statuses" value={organization.status} /> },
+                    { label: t('settings.contact'), value: organization.contactEmail },
                   ]}
                 />
               )}
@@ -60,17 +68,15 @@ export default function SettingsPage() {
           </Card>
         )}
 
-        <Card title="Application">
+        <Card title={t('settings.application')}>
           <DetailList
             items={[
-              { label: 'Mode', value: USE_MOCK_DATA ? 'Mock data (no backend needed)' : 'API' },
-              { label: 'API base URL', value: <code>{API_BASE_URL}</code> },
-              { label: 'Session storage', value: 'Browser localStorage (demo only)' },
+              { label: t('settings.mode'), value: USE_MOCK_DATA ? t('settings.mockMode') : 'API' },
+              { label: t('settings.apiUrl'), value: <code>{API_BASE_URL}</code> },
+              { label: t('settings.sessionStorage'), value: t('settings.sessionStorageValue') },
             ]}
           />
-          <p className="text-slate-500 text-xs mt-3.5">
-            These values come from the <code>.env</code> file and can be changed there. Restart the dev server after editing it.
-          </p>
+          <p className="mt-3.5 text-xs text-slate-500">{t('settings.envNote')}</p>
         </Card>
       </div>
     </>

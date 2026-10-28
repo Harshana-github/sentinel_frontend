@@ -7,19 +7,21 @@ import FormField, { errorProps } from './FormField';
 import Modal from './Modal';
 import Alert from './Alert';
 import { targetAddressError } from '../utils/target';
+import { useTranslation } from '../i18n';
 
-function validate(form, targetType) {
+function validate(form, targetType, t) {
   const errors = {};
-  if (!form.type) errors.type = 'Choose a target type.';
-  if (!form.name.trim()) errors.name = 'Enter a name for the target.';
+  if (!form.type) errors.type = t('targets.typeRequired');
+  if (!form.name.trim()) errors.name = t('targets.nameRequired');
   const addressError = targetAddressError(form.value, targetType);
-  if (addressError) errors.value = addressError;
+  if (addressError) errors.value = t(addressError);
   return errors;
 }
 
 // `onAdded(target)` is called with the new target, e.g. to select it in a scan form.
 export default function AddTargetModal({ project, onClose, onAdded }) {
   const dispatch = useDispatch();
+  const { t, localName } = useTranslation();
   const targetTypes = useMasterList('target-types');
   const [form, setForm] = useState({ type: '', name: '', value: '' });
   const targetType = targetTypes.find(form.type);
@@ -41,7 +43,7 @@ export default function AddTargetModal({ project, onClose, onAdded }) {
   async function handleSubmit(event) {
     event.preventDefault();
     if (isSubmitting) return;
-    const validationErrors = validate(form, targetType);
+    const validationErrors = validate(form, targetType, t);
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) return;
 
@@ -49,7 +51,7 @@ export default function AddTargetModal({ project, onClose, onAdded }) {
     setSubmitError('');
     try {
       const updated = await dispatch(addScanTarget({ projectId: project.id, target: form })).unwrap();
-      dispatch(showToast({ message: `Target "${form.name.trim()}" was added to ${project.name}.` }));
+      dispatch(showToast({ message: t('targets.addedToast', { name: form.name.trim(), project: project.name }) }));
       // Addresses are unique within a project, so this finds the target just added.
       const added = updated.targets.find((target) => target.value.toLowerCase() === form.value.trim().toLowerCase());
       if (added) onAdded?.(added);
@@ -61,24 +63,24 @@ export default function AddTargetModal({ project, onClose, onAdded }) {
   }
 
   return (
-    <Modal title={`Add scan target to ${project.name}`} onClose={onClose}>
+    <Modal title={t('targets.addTitle', { project: project.name })} onClose={onClose}>
       <form onSubmit={handleSubmit} noValidate>
         {submitError && (
           <Alert tone="error" className="mb-4">
             {submitError}
           </Alert>
         )}
-        <FormField id="target-type" label="Target type" error={errors.type}>
+        <FormField id="target-type" label={t('targets.type')} required error={errors.type}>
           <select id="target-type" name="type" className="input" value={form.type} onChange={updateField}>
-            {targetTypes.items.length === 0 && <option value="">Loading target types…</option>}
+            {targetTypes.items.length === 0 && <option value="">{t('common.loading')}</option>}
             {targetTypes.items.map((type) => (
               <option key={type.id} value={type.id}>
-                {type.name}
+                {localName(type)}
               </option>
             ))}
           </select>
         </FormField>
-        <FormField id="target-name" label="Name" error={errors.name} hint="A short label, for example “Production website”.">
+        <FormField id="target-name" label={t('common.name')} required error={errors.name} hint={t('targets.nameHint')}>
           <input
             id="target-name"
             name="name"
@@ -91,9 +93,10 @@ export default function AddTargetModal({ project, onClose, onAdded }) {
         </FormField>
         <FormField
           id="target-value"
-          label="Address"
+          label={t('targets.address')}
+          required
           error={errors.value}
-          hint={targetType?.placeholder ? `Example: ${targetType.placeholder}` : undefined}
+          hint={targetType?.placeholder ? t('common.example', { value: targetType.placeholder }) : undefined}
         >
           <input
             id="target-value"
@@ -107,10 +110,10 @@ export default function AddTargetModal({ project, onClose, onAdded }) {
         </FormField>
         <div className="mt-2 flex justify-end gap-2">
           <button type="button" className="btn btn-secondary" onClick={onClose}>
-            Cancel
+            {t('common.cancel')}
           </button>
           <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
-            {isSubmitting ? 'Adding…' : 'Add target'}
+            {isSubmitting ? t('common.adding') : t('targets.add')}
           </button>
         </div>
       </form>

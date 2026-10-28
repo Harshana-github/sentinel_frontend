@@ -7,17 +7,26 @@ import { showToast } from '../../features/ui/uiSlice';
 import AsyncContent from '../../components/AsyncContent';
 import Card from '../../components/Card';
 import DataTable from '../../components/DataTable';
-import FormField, { errorProps } from '../../components/FormField';
+import BilingualFields from '../../components/BilingualFields';
+import { useConfirm } from '../../components/ConfirmDialog';
 import Modal from '../../components/Modal';
 import PageHeader from '../../components/PageHeader';
 import PermissionFormModal from '../../components/PermissionFormModal';
 import SlugField from '../../components/SlugField';
 import { slugError } from '../../utils/slug';
+import { useTranslation } from '../../i18n';
 
 // One form for both create and edit. `module` is set when editing.
 function ModuleFormModal({ module, onClose, onSaved }) {
   const dispatch = useDispatch();
-  const [form, setForm] = useState({ name: module?.name ?? '', slug: module?.key ?? '', description: module?.description ?? '' });
+  const { t } = useTranslation();
+  const [form, setForm] = useState({
+    name: module?.name ?? '',
+    nameJa: module?.nameJa ?? '',
+    slug: module?.key ?? '',
+    description: module?.description ?? '',
+    descriptionJa: module?.descriptionJa ?? '',
+  });
   const [error, setError] = useState('');
   const [slugProblem, setSlugProblem] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -26,17 +35,17 @@ function ModuleFormModal({ module, onClose, onSaved }) {
     event.preventDefault();
     if (isSaving) return;
     if (form.name.trim().length < 2) {
-      setError('Enter a module name (at least 2 characters).');
+      setError(t('bilingual.nameRequired'));
       return;
     }
     if (!module && slugError(form.slug)) {
-      setSlugProblem(slugError(form.slug));
+      setSlugProblem(t(slugError(form.slug)));
       return;
     }
     setIsSaving(true);
     try {
       const saved = module ? await dispatch(updateModule({ key: module.key, changes: form })).unwrap() : await dispatch(createModule(form)).unwrap();
-      dispatch(showToast({ message: `Module "${saved.name}" ${module ? 'updated' : 'created'}.` }));
+      dispatch(showToast({ message: t(module ? 'common.updatedToast' : 'common.createdToast', { name: saved.name }) }));
       onSaved?.(saved);
       onClose();
     } catch (saveError) {
@@ -46,21 +55,17 @@ function ModuleFormModal({ module, onClose, onSaved }) {
   }
 
   return (
-    <Modal title={module ? 'Edit module' : 'New module'} onClose={onClose}>
+    <Modal title={module ? t('modules.edit') : t('modules.new')} size="lg" onClose={onClose}>
       <form onSubmit={handleSubmit} noValidate>
-        <FormField id="module-name" label="Name" error={error}>
-          <input
-            id="module-name"
-            className="input"
-            value={form.name}
-            autoFocus
-            onChange={(event) => {
-              setForm({ ...form, name: event.target.value });
-              setError('');
-            }}
-            {...errorProps('module-name', error)}
-          />
-        </FormField>
+        <BilingualFields
+          id="module"
+          form={form}
+          nameError={error}
+          onChange={(field, value) => {
+            setForm((current) => ({ ...current, [field]: value }));
+            if (field === 'name') setError('');
+          }}
+        />
         <SlugField
           id="module-slug"
           source={form.name}
@@ -72,21 +77,12 @@ function ModuleFormModal({ module, onClose, onSaved }) {
             setSlugProblem('');
           }}
         />
-        <FormField id="module-description" label="Description (optional)">
-          <textarea
-            id="module-description"
-            className="input h-auto py-2"
-            rows={3}
-            value={form.description}
-            onChange={(event) => setForm({ ...form, description: event.target.value })}
-          />
-        </FormField>
         <div className="flex justify-end gap-2">
           <button type="button" className="btn btn-secondary" onClick={onClose}>
-            Cancel
+            {t('common.cancel')}
           </button>
           <button type="submit" className="btn btn-primary" disabled={isSaving}>
-            {isSaving ? 'Saving…' : module ? 'Save changes' : 'Create module'}
+            {isSaving ? t('common.saving') : module ? t('common.saveChanges') : t('modules.create')}
           </button>
         </div>
       </form>
@@ -98,6 +94,8 @@ const SYSTEM_TAG = 'ml-2 rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-med
 
 export default function FeatureModulesPage() {
   const dispatch = useDispatch();
+  const { t, localName } = useTranslation();
+  const confirm = useConfirm();
   const { items, status, error } = useSelector(selectModules);
   const { items: permissions } = useSelector(selectPermissions);
   const [selectedKey, setSelectedKey] = useState(null);
@@ -116,20 +114,32 @@ export default function FeatureModulesPage() {
   const permissionsOf = (key) => permissions.filter((permission) => permission.module === key);
 
   async function handleDeleteModule(module) {
-    if (!window.confirm(`Delete the "${module.name}" module and its permissions? This cannot be undone.`)) return;
+    const confirmed = await confirm({
+      title: t('modules.deleteTitle'),
+      message: t('modules.deleteMessage', { name: localName(module) }),
+      confirmLabel: t('common.delete'),
+      danger: true,
+    });
+    if (!confirmed) return;
     try {
       await dispatch(deleteModule(module.key)).unwrap();
-      dispatch(showToast({ message: `Module "${module.name}" deleted.` }));
+      dispatch(showToast({ message: t('common.deletedToast', { name: localName(module) }) }));
     } catch (deleteError) {
       dispatch(showToast({ type: 'error', message: deleteError.message }));
     }
   }
 
   async function handleDeletePermission(permission) {
-    if (!window.confirm(`Delete the "${permission.name}" permission? This cannot be undone.`)) return;
+    const confirmed = await confirm({
+      title: t('modules.deletePermissionTitle'),
+      message: t('modules.deletePermissionMessage', { name: localName(permission) }),
+      confirmLabel: t('common.delete'),
+      danger: true,
+    });
+    if (!confirmed) return;
     try {
       await dispatch(deletePermission(permission.key)).unwrap();
-      dispatch(showToast({ message: `Permission "${permission.name}" deleted.` }));
+      dispatch(showToast({ message: t('common.deletedToast', { name: localName(permission) }) }));
     } catch (deleteError) {
       dispatch(showToast({ type: 'error', message: deleteError.message }));
     }
@@ -138,33 +148,33 @@ export default function FeatureModulesPage() {
   const permissionColumns = [
     {
       key: 'name',
-      header: 'Permission',
+      header: t('modules.permission'),
       render: (permission) => (
         <div className="flex min-w-48 flex-col gap-0.5">
           <span className="font-semibold">
-            {permission.name}
-            {permission.builtIn && <span className={SYSTEM_TAG}>System</span>}
+            {localName(permission)}
+            {permission.builtIn && <span className={SYSTEM_TAG}>{t('masters.system')}</span>}
           </span>
-          <span className="text-xs text-slate-500">{permission.description || 'No description.'}</span>
+          <span className="text-xs text-slate-500">{localName(permission, 'description') || t('common.noDescription')}</span>
         </div>
       ),
     },
     {
       key: 'key',
-      header: 'Key',
+      header: t('modules.key'),
       render: (permission) => <code className="text-xs whitespace-nowrap text-slate-500">{permission.key}</code>,
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('common.actions'),
       className: 'w-28 text-right',
       render: (permission) => (
         <div className="flex justify-end gap-1">
           <button
             type="button"
             className="icon-btn"
-            aria-label={`Edit ${permission.name}`}
-            title="Edit"
+            aria-label={t('common.editItem', { name: localName(permission) })}
+            title={t('common.edit')}
             onClick={() => setPermissionForm({ module: selected, permission })}
           >
             <Pencil size={16} aria-hidden="true" />
@@ -172,8 +182,8 @@ export default function FeatureModulesPage() {
           <button
             type="button"
             className="icon-btn"
-            aria-label={`Delete ${permission.name}`}
-            title={permission.builtIn ? 'Used by Sentinel itself, so it cannot be deleted' : 'Delete'}
+            aria-label={t('common.deleteItem', { name: localName(permission) })}
+            title={permission.builtIn ? t('masters.builtInLocked') : t('common.delete')}
             disabled={permission.builtIn}
             onClick={() => handleDeletePermission(permission)}
           >
@@ -188,17 +198,23 @@ export default function FeatureModulesPage() {
 
   return (
     <div className="fill-page">
-      <PageHeader
-        title="Modules & permissions"
-        description="Each module of the user panel has its own permissions. The Admin role of every organization automatically gets all of them."
-      />
+      <PageHeader title={t('nav.modules')} description={t('modules.description')} />
 
       <AsyncContent status={status} error={error} hasData={items.length > 0} onRetry={() => dispatch(fetchModules())}>
         <div className="fill-grow grid gap-5 lg:grid-cols-[240px_1fr] lg:grid-rows-[minmax(0,1fr)]">
-          <nav aria-label="Modules" className="self-start rounded-lg border border-slate-200 bg-white p-2 shadow-sm lg:max-h-full lg:overflow-y-auto">
+          <nav
+            aria-label={t('modules.modules')}
+            className="self-start rounded-lg border border-slate-200 bg-white p-2 shadow-sm lg:max-h-full lg:overflow-y-auto"
+          >
             <div className="flex items-center justify-between px-2.5 pt-1 pb-2">
-              <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">Modules</p>
-              <button type="button" className="icon-btn size-7" aria-label="New module" title="New module" onClick={() => setEditingModule(null)}>
+              <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">{t('modules.modules')}</p>
+              <button
+                type="button"
+                className="icon-btn size-7"
+                aria-label={t('modules.new')}
+                title={t('modules.new')}
+                onClick={() => setEditingModule(null)}
+              >
                 <Plus size={16} aria-hidden="true" />
               </button>
             </div>
@@ -214,7 +230,7 @@ export default function FeatureModulesPage() {
                       className={`flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-sm ${isSelected ? 'bg-blue-50 font-semibold text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
                     >
                       <LayoutGrid size={16} aria-hidden="true" />
-                      <span className="flex-1 truncate">{module.name}</span>
+                      <span className="flex-1 truncate">{localName(module)}</span>
                       <span
                         className={`rounded-full px-1.5 text-[11px] font-semibold ${isSelected ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'}`}
                       >
@@ -229,18 +245,18 @@ export default function FeatureModulesPage() {
 
           {selected && (
             <Card
-              title={`${selected.name} permissions (${selectedPermissions.length})`}
+              title={t('modules.permissionsOf', { name: localName(selected), count: selectedPermissions.length })}
               actions={
                 <div className="flex items-center gap-1">
                   <button type="button" className="btn btn-primary" onClick={() => setPermissionForm({ module: selected })}>
                     <Plus size={16} aria-hidden="true" />
-                    Add permission
+                    {t('modules.addPermission')}
                   </button>
                   <button
                     type="button"
                     className="icon-btn"
-                    aria-label={`Edit module ${selected.name}`}
-                    title="Edit module"
+                    aria-label={t('common.editItem', { name: localName(selected) })}
+                    title={t('modules.edit')}
                     onClick={() => setEditingModule(selected)}
                   >
                     <Pencil size={16} aria-hidden="true" />
@@ -248,8 +264,8 @@ export default function FeatureModulesPage() {
                   <button
                     type="button"
                     className="icon-btn"
-                    aria-label={`Delete module ${selected.name}`}
-                    title={selected.builtIn ? 'Used by Sentinel itself, so it cannot be deleted' : 'Delete module'}
+                    aria-label={t('common.deleteItem', { name: localName(selected) })}
+                    title={selected.builtIn ? t('masters.builtInLocked') : t('common.delete')}
                     disabled={selected.builtIn}
                     onClick={() => handleDeleteModule(selected)}
                   >
@@ -262,18 +278,18 @@ export default function FeatureModulesPage() {
             >
               <p className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-5 py-2.5 text-xs text-slate-500">
                 <span>
-                  {selected.description || 'No description.'}
-                  {selected.builtIn && <span className={SYSTEM_TAG}>System module</span>}
+                  {localName(selected, 'description') || t('common.noDescription')}
+                  {selected.builtIn && <span className={SYSTEM_TAG}>{t('masters.system')}</span>}
                 </span>
                 <span>
-                  Slug <code className="rounded bg-slate-100 px-1.5 py-0.5 text-slate-600">{selected.key}</code>
+                  {t('slug.label')} <code className="rounded bg-slate-100 px-1.5 py-0.5 text-slate-600">{selected.key}</code>
                 </span>
               </p>
               <DataTable
                 columns={permissionColumns}
                 rows={selectedPermissions}
-                caption={`${selected.name} permissions`}
-                emptyMessage="No permissions yet. Use Add permission."
+                caption={t('modules.permissionsOf', { name: localName(selected), count: selectedPermissions.length })}
+                emptyMessage={t('modules.noPermissions')}
               />
             </Card>
           )}

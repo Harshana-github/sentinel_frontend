@@ -1,4 +1,5 @@
 import { Route, Routes } from 'react-router-dom';
+import { ConfirmProvider } from './components/ConfirmDialog';
 import Toasts from './components/Toasts';
 import BrandingEffect from './features/branding/BrandingEffect';
 import AppLayout from './layouts/AppLayout';
@@ -33,7 +34,7 @@ import PublicOnlyRoute from './routes/PublicOnlyRoute';
 
 export default function App() {
   return (
-    <>
+    <ConfirmProvider>
       <BrandingEffect />
       <Routes>
         <Route path="/" element={<HomeRedirect />} />
@@ -88,6 +89,6 @@ export default function App() {
         </Route>
       </Routes>
       <Toasts />
-    </>
+    </ConfirmProvider>
   );
 }

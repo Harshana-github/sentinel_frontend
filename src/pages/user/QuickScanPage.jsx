@@ -16,18 +16,21 @@ import PageHeader from '../../components/PageHeader';
 import { AuthorizationCheckbox, OptionCard, ScanProfilePicker, ToolPicker, useToolSelection } from '../../components/ScanOptions';
 import { EmptyState } from '../../components/StateMessage';
 import { USE_MOCK_DATA } from '../../services/api';
+import { useTranslation } from '../../i18n';
 import { can } from '../../utils/roles';
 import { targetAddressError } from '../../utils/target';
 
+// Labels: quickScan.modes.<value>.
 const MODES = [
-  { value: 'single', icon: Play, title: 'Single scan', description: 'One target. You choose the profile and the tools.' },
-  { value: 'full', icon: Layers, title: 'Full scan', description: 'One or more targets. Every available tool runs with the Deep profile.' },
+  { value: 'single', icon: Play },
+  { value: 'full', icon: Layers },
 ];
 
 // Scan straight from an address, without setting up a project or targets first.
 // The API keeps these targets in the organization's "Quick scans" project.
 export default function QuickScanPage() {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const user = useSelector(selectCurrentUser);
   const scanners = useSelector(selectScannersState);
@@ -59,8 +62,8 @@ export default function QuickScanPage() {
   if (!can(user, 'scans.start')) {
     return (
       <>
-        <PageHeader title="Quick scan" />
-        <EmptyState title="You do not have permission to start scans." />
+        <PageHeader title={t('nav.quickScan')} />
+        <EmptyState title={t('scans.noPermission')} />
       </>
     );
   }
@@ -71,15 +74,15 @@ export default function QuickScanPage() {
   function validate() {
     const found = {};
     if (mode === 'single') {
-      found.address = targetAddressError(address, targetTypes.find(type));
-      if (toolSelection.selected.length === 0) found.tools = 'Select at least one tool.';
+      found.address = t(targetAddressError(address, targetTypes.find(type)));
+      if (toolSelection.selected.length === 0) found.tools = t('scans.toolsRequired');
     } else {
-      if (filledTypes.length === 0) found.full = 'Enter at least one target.';
+      if (filledTypes.length === 0) found.full = t('quickScan.targetRequired');
       filledTypes.forEach((item) => {
-        found[item.id] = targetAddressError(addresses[item.id], item);
+        found[item.id] = t(targetAddressError(addresses[item.id], item));
       });
     }
-    if (!authorized) found.authorized = 'Confirm that you are authorized to scan these targets.';
+    if (!authorized) found.authorized = t('scans.authorizationRequired');
     return found;
   }
 
@@ -94,11 +97,12 @@ export default function QuickScanPage() {
     setIsSubmitting(true);
     setSubmitError('');
     try {
-      const started = await dispatch(startQuickScan({ mode, inputs, profile, tools: toolSelection.selected, authorized })).unwrap();
+      const name = t('quickScan.defaultName', { target: inputs[0].value.trim() });
+      const started = await dispatch(startQuickScan({ mode, inputs, profile, tools: toolSelection.selected, name, authorized })).unwrap();
       // The "Quick scans" project may be new or have new targets.
       dispatch(fetchProjects({ silent: true }));
       const isScan = started.kind === 'scan';
-      dispatch(showToast({ message: isScan ? `Scan ${started.id} was queued.` : `Full scan ${started.id} was started.` }));
+      dispatch(showToast({ message: isScan ? t('scans.queued', { id: started.id }) : t('quickScan.fullStarted', { id: started.id }) }));
       navigate(isScan ? `/scans/${started.id}` : `/assessments/${started.id}`);
     } catch (error) {
       setSubmitError(error.message);
@@ -108,142 +112,146 @@ export default function QuickScanPage() {
 
   return (
     <>
-      <PageHeader
-        title="Quick scan"
-        description="Enter what you want to scan and start. No project or target setup needed; results appear under Scans and Findings as usual."
-      />
+      <PageHeader title={t('nav.quickScan')} description={t('quickScan.description')} />
 
-      <form onSubmit={handleSubmit} noValidate className="flex max-w-3xl flex-col gap-5">
-        {USE_MOCK_DATA && <Alert>Demo mode: scans are simulated and no traffic is sent to the target.</Alert>}
+      {/* Steps 1 and 2 on the left; on wide screens step 3 stays in view on the right. */}
+      <form onSubmit={handleSubmit} noValidate className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="flex min-w-0 flex-col gap-5">
+          {USE_MOCK_DATA && <Alert>{t('scans.demoNotice')}</Alert>}
 
-        <Card title="1 · What do you want to run?">
-          <div className="grid gap-2.5 sm:grid-cols-2">
-            {MODES.map((option) => (
-              <OptionCard
-                key={option.value}
-                name="mode"
-                checked={mode === option.value}
-                onChange={() => setMode(option.value)}
-                title={
-                  <>
-                    <option.icon size={15} aria-hidden="true" className="text-blue-600" />
-                    {option.title}
-                  </>
-                }
-                description={option.description}
-              />
-            ))}
-          </div>
-        </Card>
-
-        {mode === 'single' ? (
-          <Card title="2 · Target and tools">
-            <div className="grid gap-x-4 sm:grid-cols-[200px_1fr]">
-              <FormField id="quick-type" label="Target type">
-                <select
-                  id="quick-type"
-                  className="input"
-                  value={type}
-                  onChange={(event) => {
-                    setType(event.target.value);
-                    toolSelection.reset();
-                    clearError('address');
-                    clearError('tools');
-                  }}
-                >
-                  {targetTypes.items.length === 0 && <option value="">Loading…</option>}
-                  {targetTypes.items.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name}
-                    </option>
-                  ))}
-                </select>
-              </FormField>
-              <FormField id="quick-address" label="Address" error={errors.address}>
-                <input
-                  id="quick-address"
-                  className="input font-mono"
-                  value={address}
-                  placeholder={targetTypes.find(type)?.placeholder}
-                  autoFocus
-                  onChange={(event) => {
-                    setAddress(event.target.value);
-                    clearError('address');
-                  }}
-                  {...errorProps('quick-address', errors.address)}
+          <Card title={t('quickScan.step1')}>
+            <div className="grid gap-2.5 sm:grid-cols-2">
+              {MODES.map((option) => (
+                <OptionCard
+                  key={option.value}
+                  name="mode"
+                  checked={mode === option.value}
+                  onChange={() => setMode(option.value)}
+                  title={
+                    <>
+                      <option.icon size={15} aria-hidden="true" className="text-blue-600" />
+                      {t(`quickScan.modes.${option.value}.title`)}
+                    </>
+                  }
+                  description={t(`quickScan.modes.${option.value}.description`)}
                 />
-              </FormField>
+              ))}
             </div>
-            <ScanProfilePicker value={profile} onChange={setProfile} />
-            <ToolPicker
-              tools={toolsFor(type)}
-              selection={toolSelection}
-              error={errors.tools}
-              emptyMessage={scanners.status === 'loading' ? 'Loading tools…' : undefined}
-              onChange={() => clearError('tools')}
-            />
           </Card>
-        ) : (
-          <Card title="2 · Targets">
-            <p className="mb-4 text-[13px] text-slate-500">Fill in the ones you have and leave the rest empty. Each target runs as its own job.</p>
-            {errors.full && (
-              <Alert tone="error" className="mb-4">
-                {errors.full}
-              </Alert>
-            )}
-            {targetTypes.items.map((item) => {
-              const tools = toolsFor(item.id);
-              const id = `quick-full-${item.id}`;
-              return (
-                <FormField
-                  key={item.id}
-                  id={id}
-                  label={item.name}
-                  error={errors[item.id]}
-                  hint={tools.length ? `Runs ${tools.map((tool) => tool.name).join(', ')}` : 'No enabled tool can scan this type yet.'}
-                >
-                  <input
-                    id={id}
-                    className="input font-mono"
-                    value={addresses[item.id] ?? ''}
-                    placeholder={item.placeholder}
-                    disabled={tools.length === 0}
+
+          {mode === 'single' ? (
+            <Card title={t('quickScan.step2Single')}>
+              <div className="grid gap-x-4 sm:grid-cols-[200px_1fr]">
+                <FormField id="quick-type" label={t('targets.type')} required>
+                  <select
+                    id="quick-type"
+                    className="input"
+                    value={type}
                     onChange={(event) => {
-                      setAddresses((current) => ({ ...current, [item.id]: event.target.value }));
-                      clearError(item.id);
-                      clearError('full');
+                      setType(event.target.value);
+                      toolSelection.reset();
+                      clearError('address');
+                      clearError('tools');
                     }}
-                    {...errorProps(id, errors[item.id])}
+                  >
+                    {targetTypes.items.length === 0 && <option value="">{t('common.loading')}</option>}
+                    {targetTypes.items.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {targetTypes.nameOf(item.id)}
+                      </option>
+                    ))}
+                  </select>
+                </FormField>
+                <FormField id="quick-address" label={t('targets.address')} required error={errors.address}>
+                  <input
+                    id="quick-address"
+                    className="input font-mono"
+                    value={address}
+                    placeholder={targetTypes.find(type)?.placeholder}
+                    autoFocus
+                    onChange={(event) => {
+                      setAddress(event.target.value);
+                      clearError('address');
+                    }}
+                    {...errorProps('quick-address', errors.address)}
                   />
                 </FormField>
-              );
-            })}
-          </Card>
-        )}
-
-        <Card>
-          {submitError && (
-            <Alert tone="error" className="mb-4">
-              {submitError}
-            </Alert>
+              </div>
+              <ScanProfilePicker value={profile} onChange={setProfile} />
+              <ToolPicker
+                tools={toolsFor(type)}
+                selection={toolSelection}
+                error={errors.tools}
+                emptyMessage={scanners.status === 'loading' ? t('common.loading') : undefined}
+                onChange={() => clearError('tools')}
+              />
+            </Card>
+          ) : (
+            <Card title={t('quickScan.step2Full')}>
+              <p className="mb-4 text-[13px] text-slate-500">{t('quickScan.fullHelp')}</p>
+              {errors.full && (
+                <Alert tone="error" className="mb-4">
+                  {errors.full}
+                </Alert>
+              )}
+              <div className="grid gap-x-4 lg:grid-cols-2">
+                {targetTypes.items.map((item) => {
+                  const tools = toolsFor(item.id);
+                  const id = `quick-full-${item.id}`;
+                  return (
+                    <FormField
+                      key={item.id}
+                      id={id}
+                      label={targetTypes.nameOf(item.id)}
+                      error={errors[item.id]}
+                      hint={tools.length ? t('quickScan.runs', { tools: tools.map((tool) => tool.name).join(', ') }) : t('scanOptions.noTools')}
+                    >
+                      <input
+                        id={id}
+                        className="input font-mono"
+                        value={addresses[item.id] ?? ''}
+                        placeholder={item.placeholder}
+                        disabled={tools.length === 0}
+                        onChange={(event) => {
+                          setAddresses((current) => ({ ...current, [item.id]: event.target.value }));
+                          clearError(item.id);
+                          clearError('full');
+                        }}
+                        {...errorProps(id, errors[item.id])}
+                      />
+                    </FormField>
+                  );
+                })}
+              </div>
+            </Card>
           )}
-          <AuthorizationCheckbox
-            id="quick-authorized"
-            plural={mode === 'full'}
-            checked={authorized}
-            error={errors.authorized}
-            onChange={(checked) => {
-              setAuthorized(checked);
-              clearError('authorized');
-            }}
-          />
-          <div className="mt-4 flex justify-end">
-            <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
-              <Play size={16} aria-hidden="true" />
-              {isSubmitting ? 'Starting…' : mode === 'single' ? 'Start scan' : 'Start full scan'}
-            </button>
-          </div>
-        </Card>
+        </div>
+
+        <aside className="xl:sticky xl:top-20">
+          <Card title={t('quickScan.step3')}>
+            {submitError && (
+              <Alert tone="error" className="mb-4">
+                {submitError}
+              </Alert>
+            )}
+            <AuthorizationCheckbox
+              id="quick-authorized"
+              plural={mode === 'full'}
+              checked={authorized}
+              error={errors.authorized}
+              onChange={(checked) => {
+                setAuthorized(checked);
+                clearError('authorized');
+              }}
+            />
+            <div className="mt-4 flex justify-end">
+              <button type="submit" className="btn btn-primary h-10 xl:w-full" disabled={isSubmitting}>
+                <Play size={16} aria-hidden="true" />
+                {isSubmitting ? t('common.starting') : mode === 'single' ? t('scans.start') : t('quickScan.startFull')}
+              </button>
+            </div>
+          </Card>
+        </aside>
       </form>
     </>
   );

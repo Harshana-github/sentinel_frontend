@@ -1,3 +1,4 @@
+import { useTranslation } from '../i18n';
 import Pagination, { usePagination } from './Pagination';
 
 // A plain table driven by a column list: [{ key, header, render?, className? }].
@@ -6,7 +7,8 @@ import Pagination, { usePagination } from './Pagination';
 // (10, 25 or 50 per page); the pager only shows when there is more than one small page.
 // `onRowClick(row)` makes the whole row clickable. Clicks on links, buttons and form controls
 // inside the row keep their own behaviour. Keyboard users use the link in the row instead.
-export default function DataTable({ columns, rows, caption, emptyMessage = 'No records found.', onRowClick }) {
+export default function DataTable({ columns, rows, caption, emptyMessage, onRowClick }) {
+  const { t } = useTranslation();
   const pagination = usePagination(rows);
 
   return (
@@ -31,7 +33,7 @@ export default function DataTable({ columns, rows, caption, emptyMessage = 'No r
             {rows.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className="px-5 py-8 text-center text-slate-500">
-                  {emptyMessage}
+                  {emptyMessage ?? t('common.noRecords')}
                 </td>
               </tr>
             ) : (
@@ -58,7 +60,7 @@ export default function DataTable({ columns, rows, caption, emptyMessage = 'No r
           </tbody>
         </table>
       </div>
-      <Pagination pagination={pagination} label={caption?.toLowerCase() ?? 'rows'} />
+      <Pagination pagination={pagination} />
     </>
   );
 }

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getLanguage, translate } from '../i18n';
 import { clearStoredAuth, loadStoredAuth } from '../utils/authStorage';
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
@@ -36,17 +37,20 @@ api.interceptors.response.use(
   },
 );
 
+// Error messages for the user, in the UI language.
+const t = (key, values) => translate(getLanguage(), key, values);
+
 export function getErrorMessage(error) {
   if (error.response) {
     // FastAPI returns errors as { detail: "..." } or, for validation errors, { detail: [{ msg }] }.
     const detail = error.response.data?.detail;
     if (typeof detail === 'string') return detail;
     if (Array.isArray(detail) && detail[0]?.msg) return detail[0].msg;
-    return `Request failed with status ${error.response.status}.`;
+    return t('apiErrors.status', { status: error.response.status });
   }
-  if (error.code === 'ECONNABORTED') return 'The request timed out. Please try again.';
-  if (error.request) return `Cannot reach the API at ${API_BASE_URL}.`;
-  return error.message || 'Something went wrong.';
+  if (error.code === 'ECONNABORTED') return t('apiErrors.timeout');
+  if (error.request) return t('apiErrors.unreachable', { url: API_BASE_URL });
+  return error.message || t('common.somethingWentWrong');
 }
 
 // Runs the mock handler in mock mode, otherwise the real request, and returns the response body.

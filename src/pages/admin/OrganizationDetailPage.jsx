@@ -18,11 +18,13 @@ import { EmptyState } from '../../components/StateMessage';
 import StatusBadge, { CategoryStatusBadge } from '../../components/StatusBadge';
 import { buildLoginMessage } from '../../utils/loginMessage';
 import { formatDate, formatRelativeTime } from '../../utils/format';
+import { useConfirm } from '../../components/ConfirmDialog';
+import { useTranslation } from '../../i18n';
 
-const MEMBER_COLUMNS = [
+const memberColumns = (t) => [
   {
     key: 'name',
-    header: 'Name',
+    header: t('common.name'),
     render: (member) => (
       <div className="flex min-w-40 flex-col gap-0.5">
         <span>{member.name}</span>
@@ -30,21 +32,27 @@ const MEMBER_COLUMNS = [
       </div>
     ),
   },
-  { key: 'status', header: 'Status', render: (member) => <CategoryStatusBadge category="user-statuses" value={member.status} /> },
-  { key: 'lastActiveAt', header: 'Last active', render: (member) => (member.lastActiveAt ? formatRelativeTime(member.lastActiveAt) : 'Never') },
+  { key: 'status', header: t('common.status'), render: (member) => <CategoryStatusBadge category="user-statuses" value={member.status} /> },
+  {
+    key: 'lastActiveAt',
+    header: t('team.lastActive'),
+    render: (member) => (member.lastActiveAt ? formatRelativeTime(member.lastActiveAt) : t('common.never')),
+  },
 ];
 
 // Customer projects are listed for support only; they are managed in the user panel.
-const PROJECT_COLUMNS = [
-  { key: 'name', header: 'Project' },
-  { key: 'environment', header: 'Environment' },
-  { key: 'targets', header: 'Targets', className: 'text-right', render: (project) => project.targets.length },
-  { key: 'openFindingCount', header: 'Open findings', className: 'text-right' },
-  { key: 'status', header: 'Status', render: (project) => <StatusBadge status={project.status} category="project-statuses" /> },
+const projectColumns = (t) => [
+  { key: 'name', header: t('projects.project') },
+  { key: 'environment', header: t('projects.environment'), render: (project) => t(`environments.${project.environment}`) },
+  { key: 'targets', header: t('projects.targets'), className: 'text-right', render: (project) => project.targets.length },
+  { key: 'openFindingCount', header: t('projects.openFindings'), className: 'text-right' },
+  { key: 'status', header: t('common.status'), render: (project) => <StatusBadge status={project.status} category="project-statuses" /> },
 ];
 
 function StatusAction({ organization }) {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
+  const confirm = useConfirm();
   const [isSaving, setIsSaving] = useState(false);
   const statuses = useMasterList('organization-statuses');
   const isSuspended = organization.status === 'suspended';
@@ -52,11 +60,19 @@ function StatusAction({ organization }) {
 
   async function handleClick() {
     if (isSaving) return;
-    if (!isSuspended && !window.confirm(`Suspend ${organization.name}? Its users will not be able to sign in.`)) return;
+    if (!isSuspended) {
+      const confirmed = await confirm({
+        title: t('organizations.suspendTitle'),
+        message: t('organizations.suspendMessage', { name: organization.name }),
+        confirmLabel: t('organizations.suspend'),
+        danger: true,
+      });
+      if (!confirmed) return;
+    }
     setIsSaving(true);
     try {
       await dispatch(updateOrganization({ organizationId: organization.id, changes: { status: nextStatus } })).unwrap();
-      dispatch(showToast({ message: `${organization.name} is now ${statuses.nameOf(nextStatus).toLowerCase()}.` }));
+      dispatch(showToast({ message: t('organizations.statusChanged', { name: organization.name, status: statuses.nameOf(nextStatus) }) }));
     } catch (error) {
       dispatch(showToast({ type: 'error', message: error.message }));
     } finally {
@@ -66,7 +82,7 @@ function StatusAction({ organization }) {
 
   return (
     <button type="button" className={`btn ${isSuspended ? 'btn-primary' : 'btn-danger'}`} onClick={handleClick} disabled={isSaving}>
-      {isSaving ? 'Saving…' : isSuspended ? 'Reactivate organization' : 'Suspend organization'}
+      {isSaving ? t('common.saving') : isSuspended ? t('organizations.reactivate') : t('organizations.suspend')}
     </button>
   );
 }
@@ -74,20 +90,18 @@ function StatusAction({ organization }) {
 // Lets the Super Admin copy what they need to support or contact the admin.
 // Passwords are never stored in readable form, so they cannot be shown here.
 function AdminCard({ organization, admin }) {
+  const { t } = useTranslation();
   const loginUrl = `${window.location.origin}/login`;
-  const summary = buildLoginMessage(organization, admin);
+  const summary = buildLoginMessage(organization, admin, t);
   const [showPassword, setShowPassword] = useState(false);
   const rows = [
-    { label: 'Name', value: admin.name },
-    { label: 'Email', value: admin.email },
-    { label: 'Password', value: admin.password, secret: true },
-    { label: 'Sign-in page', value: loginUrl },
+    { label: t('common.name'), value: admin.name },
+    { label: t('team.email'), value: admin.email },
+    { label: t('auth.password'), value: admin.password, secret: true },
+    { label: t('organizations.signInPage'), value: loginUrl },
   ];
   return (
-    <Card
-      title="Organization admin"
-      actions={<CopyButton value={summary} label="Copy a ready-to-send message with the login details" text="Copy message to send" />}
-    >
+    <Card title={t('organizations.admin')} actions={<CopyButton value={summary} label={t('copy.loginDetails')} text={t('copy.copyMessage')} />}>
       <dl className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
         {rows.map((row) => (
           <div key={row.label}>
@@ -101,7 +115,7 @@ function AdminCard({ organization, admin }) {
                     '••••••••'
                   )
                 ) : (
-                  <span className="font-sans text-slate-500">Not available</span>
+                  <span className="font-sans text-slate-500">{t('organizations.notAvailable')}</span>
                 )
               ) : (
                 row.value
@@ -110,7 +124,7 @@ function AdminCard({ organization, admin }) {
                 <button
                   type="button"
                   className="icon-btn"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
                   aria-pressed={showPassword}
                   onClick={() => setShowPassword((v) => !v)}
                 >
@@ -121,15 +135,13 @@ function AdminCard({ organization, admin }) {
           </div>
         ))}
       </dl>
-      <p className="mt-3 text-xs text-slate-500">
-        Demo data only. A real backend stores hashed passwords, so it could not show them; it would need a reset or a one-time temporary password
-        instead.
-      </p>
+      <p className="mt-3 text-xs text-slate-500">{t('organizations.passwordNote')}</p>
     </Card>
   );
 }
 
 export default function OrganizationDetailPage() {
+  const { t } = useTranslation();
   const { organizationId } = useParams();
   const dispatch = useDispatch();
   const organizations = useSelector(selectOrganizationsState);
@@ -143,13 +155,13 @@ export default function OrganizationDetailPage() {
     dispatch(fetchOrganizationMembers(organizationId));
   }, [dispatch, organizationId]);
 
-  const breadcrumbs = [{ label: 'Organizations', to: '/admin/organizations' }, { label: organization?.name ?? organizationId }];
+  const breadcrumbs = [{ label: t('nav.organizations'), to: '/admin/organizations' }, { label: organization?.name ?? organizationId }];
 
   if (organizations.status === 'succeeded' && !organization) {
     return (
       <>
-        <PageHeader title="Organization not found" breadcrumbs={breadcrumbs} />
-        <EmptyState title="This organization does not exist." action={<Link to="/admin/organizations">Back to organizations</Link>} />
+        <PageHeader title={t('organizations.notFound')} breadcrumbs={breadcrumbs} />
+        <EmptyState title={t('organizations.notFoundMessage')} action={<Link to="/admin/organizations">{t('organizations.backToList')}</Link>} />
       </>
     );
   }
@@ -159,7 +171,7 @@ export default function OrganizationDetailPage() {
   return (
     <>
       <PageHeader
-        title={organization?.name ?? 'Organization'}
+        title={organization?.name ?? t('common.organization')}
         description={organization?.description}
         breadcrumbs={breadcrumbs}
         actions={organization && <StatusAction organization={organization} />}
@@ -172,33 +184,33 @@ export default function OrganizationDetailPage() {
       >
         {organization && (
           <div className="flex flex-col gap-5">
-            <Card title="Overview">
+            <Card title={t('common.overview')}>
               <DetailList
                 items={[
-                  { label: 'Slug', value: <code className="text-[13px]">{organization.slug}</code> },
-                  { label: 'Status', value: <CategoryStatusBadge category="organization-statuses" value={organization.status} /> },
-                  { label: 'Contact', value: organization.contactEmail },
-                  { label: 'Members', value: organization.memberCount },
-                  { label: 'Projects', value: organization.projectCount },
-                  { label: 'Created', value: formatDate(organization.createdAt) },
+                  { label: t('slug.label'), value: <code className="text-[13px]">{organization.slug}</code> },
+                  { label: t('common.status'), value: <CategoryStatusBadge category="organization-statuses" value={organization.status} /> },
+                  { label: t('settings.contact'), value: organization.contactEmail },
+                  { label: t('organizations.members'), value: organization.memberCount },
+                  { label: t('nav.projects'), value: organization.projectCount },
+                  { label: t('common.created'), value: formatDate(organization.createdAt) },
                 ]}
               />
             </Card>
 
             {organization.admin && <AdminCard organization={organization} admin={organization.admin} />}
 
-            <Card title={`Members (${members.items.length})`} flush>
+            <Card title={t('team.membersCount', { count: members.items.length })} flush>
               <AsyncContent
                 status={members.status}
                 error={members.error}
                 hasData={members.items.length > 0}
                 onRetry={() => dispatch(fetchOrganizationMembers(organizationId))}
               >
-                <DataTable columns={MEMBER_COLUMNS} rows={members.items} caption="Members" emptyMessage="No members yet." />
+                <DataTable columns={memberColumns(t)} rows={members.items} caption={t('organizations.members')} emptyMessage={t('team.empty')} />
               </AsyncContent>
             </Card>
 
-            <Card title={`Projects (${organizationProjects.length})`} flush>
+            <Card title={t('organizations.projectsCount', { count: organizationProjects.length })} flush>
               <AsyncContent
                 status={projects.status}
                 error={projects.error}
@@ -206,10 +218,10 @@ export default function OrganizationDetailPage() {
                 onRetry={() => dispatch(fetchProjects())}
               >
                 <DataTable
-                  columns={PROJECT_COLUMNS}
+                  columns={projectColumns(t)}
                   rows={organizationProjects}
-                  caption="Projects"
-                  emptyMessage="This organization has no projects yet."
+                  caption={t('nav.projects')}
+                  emptyMessage={t('organizations.noProjects')}
                 />
               </AsyncContent>
             </Card>

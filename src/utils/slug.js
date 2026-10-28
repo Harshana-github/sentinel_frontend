@@ -13,10 +13,10 @@ export function slugify(text) {
     .replace(/-+$/, '');
 }
 
-// Returns an error message, or '' when the slug is valid.
+// Returns the translation key of the problem, or '' when the slug is valid.
 export function slugError(slug) {
-  if (!slug) return 'Enter a slug.';
-  if (slug.length > SLUG_MAX_LENGTH) return `Use at most ${SLUG_MAX_LENGTH} characters.`;
-  if (!SLUG_PATTERN.test(slug)) return 'Use lowercase letters, numbers and single hyphens only.';
+  if (!slug) return 'validation.slugRequired';
+  if (slug.length > SLUG_MAX_LENGTH) return 'validation.slugLength';
+  if (!SLUG_PATTERN.test(slug)) return 'validation.slugFormat';
   return '';
 }

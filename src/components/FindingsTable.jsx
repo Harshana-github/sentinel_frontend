@@ -3,13 +3,15 @@ import { formatRelativeTime } from '../utils/format';
 import DataTable from './DataTable';
 import SeverityBadge from './SeverityBadge';
 import StatusBadge from './StatusBadge';
+import { useTranslation } from '../i18n';
 
-export default function FindingsTable({ findings, showTarget = true, emptyMessage = 'No findings found.' }) {
+export default function FindingsTable({ findings, showTarget = true, emptyMessage }) {
+  const { t } = useTranslation();
   const columns = [
-    { key: 'severity', header: 'Severity', render: (finding) => <SeverityBadge severity={finding.severity} /> },
+    { key: 'severity', header: t('findings.severity'), render: (finding) => <SeverityBadge severity={finding.severity} /> },
     {
       key: 'title',
-      header: 'Finding',
+      header: t('findings.finding'),
       render: (finding) => (
         <div className="flex min-w-40 flex-col gap-0.5">
           <Link to={`/findings/${finding.id}`} className="font-semibold">
@@ -24,7 +26,7 @@ export default function FindingsTable({ findings, showTarget = true, emptyMessag
     },
     showTarget && {
       key: 'target',
-      header: 'Affected target',
+      header: t('findings.affectedTarget'),
       render: (finding) => (
         <div className="flex min-w-40 flex-col gap-0.5">
           <span>{finding.targetName}</span>
@@ -32,10 +34,10 @@ export default function FindingsTable({ findings, showTarget = true, emptyMessag
         </div>
       ),
     },
-    { key: 'scanner', header: 'Scanner', render: (finding) => finding.scannerName },
-    { key: 'status', header: 'Status', render: (finding) => <StatusBadge status={finding.status} category="finding-statuses" /> },
-    { key: 'discovered', header: 'Discovered', render: (finding) => formatRelativeTime(finding.discoveredAt) },
+    { key: 'scanner', header: t('findings.scanner'), render: (finding) => finding.scannerName },
+    { key: 'status', header: t('common.status'), render: (finding) => <StatusBadge status={finding.status} category="finding-statuses" /> },
+    { key: 'discovered', header: t('findings.discovered'), render: (finding) => formatRelativeTime(finding.discoveredAt) },
   ].filter(Boolean);
 
-  return <DataTable columns={columns} rows={findings} caption="Vulnerability findings" emptyMessage={emptyMessage} />;
+  return <DataTable columns={columns} rows={findings} caption={t('nav.findings')} emptyMessage={emptyMessage ?? t('findings.empty')} />;
 }

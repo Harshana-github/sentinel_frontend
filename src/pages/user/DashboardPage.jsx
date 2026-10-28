@@ -17,6 +17,7 @@ import usePolling from '../../hooks/usePolling';
 import { SCAN_STATUSES, SEVERITIES } from '../../utils/constants';
 import { SCAN_STATUS_BAR_CLASSES, SEVERITY_BAR_CLASSES } from '../../utils/colors';
 import { formatRelativeTime } from '../../utils/format';
+import { useTranslation } from '../../i18n';
 import { can } from '../../utils/roles';
 
 const ACTIVITY_DOT_CLASSES = {
@@ -30,6 +31,7 @@ const ACTIVITY_DOT_CLASSES = {
 export default function DashboardPage() {
   const dispatch = useDispatch();
   const user = useSelector(selectCurrentUser);
+  const { t } = useTranslation();
   const scanStatuses = useStatusList('scan-statuses');
   const navigate = useNavigate();
   const { summary, status, error } = useSelector(selectDashboardState);
@@ -48,18 +50,18 @@ export default function DashboardPage() {
   return (
     <>
       <PageHeader
-        title="Dashboard"
-        description="Security overview for your organization."
+        title={t('dashboard.title')}
+        description={t('dashboard.description')}
         actions={
           can(user, 'scans.start') && (
             <>
               <button type="button" className="btn btn-secondary" onClick={() => setIsStartScanOpen(true)}>
                 <Play size={16} aria-hidden="true" />
-                Start scan
+                {t('scans.singleScan')}
               </button>
               <Link to="/quick-scan" className="btn btn-primary hover:no-underline">
                 <Zap size={16} aria-hidden="true" />
-                Quick scan
+                {t('nav.quickScan')}
               </Link>
             </>
           )
@@ -70,40 +72,40 @@ export default function DashboardPage() {
         {summary && (
           <div className="flex flex-col gap-5">
             <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
-              <StatCard icon={FolderKanban} label="Projects" value={summary.totals.projects} to="/projects" />
+              <StatCard icon={FolderKanban} label={t('nav.projects')} value={summary.totals.projects} to="/projects" />
               <StatCard
                 icon={Radar}
-                label="Scans"
+                label={t('nav.scans')}
                 value={summary.totals.scans}
-                detail={`${summary.scanStatusCounts.Running} running, ${summary.scanStatusCounts.Queued} queued`}
+                detail={t('dashboard.scanDetail', { running: summary.scanStatusCounts.Running, queued: summary.scanStatusCounts.Queued })}
                 to="/scans"
               />
               <StatCard
                 icon={ShieldAlert}
-                label="Vulnerabilities"
+                label={t('dashboard.vulnerabilities')}
                 value={summary.totals.vulnerabilities}
-                detail={`${summary.totals.openVulnerabilities} open`}
+                detail={t('dashboard.openDetail', { count: summary.totals.openVulnerabilities })}
                 to="/findings"
               />
-              <StatCard icon={Users} label="Team members" value={summary.totals.members} to="/team" />
+              <StatCard icon={Users} label={t('dashboard.members')} value={summary.totals.members} to="/team" />
             </div>
 
             <div className="grid gap-5 xl:grid-cols-2">
-              <Card title="Open vulnerabilities by severity">
+              <Card title={t('dashboard.openBySeverity')}>
                 <BarList
-                  label="Open vulnerabilities by severity"
+                  label={t('dashboard.openBySeverity')}
                   items={SEVERITIES.map((severity) => ({
                     key: severity,
-                    label: severity,
+                    label: t(`severity.${severity}`),
                     count: summary.openSeverityCounts[severity],
                     barClass: SEVERITY_BAR_CLASSES[severity],
                     to: `/findings?severity=${severity}`,
                   }))}
                 />
               </Card>
-              <Card title="Scan status overview">
+              <Card title={t('dashboard.scanStatus')}>
                 <BarList
-                  label="Scans by status"
+                  label={t('dashboard.scanStatus')}
                   items={SCAN_STATUSES.map((scanStatus) => ({
                     key: scanStatus,
                     label: scanStatuses.labelOf(scanStatus),
@@ -115,12 +117,12 @@ export default function DashboardPage() {
               </Card>
             </div>
 
-            <Card title="Recent scans" flush actions={<Link to="/scans">View all scans</Link>}>
-              <ScansTable scans={summary.recentScans} emptyMessage="No scans yet." />
+            <Card title={t('dashboard.recentScans')} flush actions={<Link to="/scans">{t('dashboard.viewAllScans')}</Link>}>
+              <ScansTable scans={summary.recentScans} emptyMessage={t('dashboard.noScans')} />
             </Card>
-            <Card title="Recent activity">
+            <Card title={t('dashboard.recentActivity')}>
               {summary.recentActivity.length === 0 ? (
-                <p className="text-slate-500">No activity yet.</p>
+                <p className="text-slate-500">{t('dashboard.noActivity')}</p>
               ) : (
                 <ol className="flex flex-col gap-3.5">
                   {summary.recentActivity.map((activity) => (

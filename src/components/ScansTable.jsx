@@ -5,13 +5,15 @@ import { formatRelativeTime } from '../utils/format';
 import CancelScanButton from './CancelScanButton';
 import DataTable from './DataTable';
 import ScanStatus from './ScanStatus';
+import { useTranslation } from '../i18n';
 
-export default function ScansTable({ scans, showProject = true, showActions = false, emptyMessage = 'No scans found.' }) {
+export default function ScansTable({ scans, showProject = true, showActions = false, emptyMessage }) {
+  const { t } = useTranslation();
   const targetTypes = useMasterList('target-types');
   const columns = [
     {
       key: 'id',
-      header: 'Scan',
+      header: t('scans.scan'),
       className: 'whitespace-nowrap',
       render: (scan) => (
         <div className="flex flex-col gap-0.5">
@@ -20,17 +22,17 @@ export default function ScansTable({ scans, showProject = true, showActions = fa
           </Link>
           {scan.assessmentId ? (
             <Link to={`/assessments/${scan.assessmentId}`} className="text-[11px] font-normal" title={scan.assessmentName}>
-              Part of {scan.assessmentId}
+              {t('scans.partOf', { id: scan.assessmentId })}
             </Link>
           ) : (
-            <span className="text-[11px] text-slate-500">Single scan</span>
+            <span className="text-[11px] text-slate-500">{t('scans.singleScan')}</span>
           )}
         </div>
       ),
     },
     {
       key: 'target',
-      header: 'Target',
+      header: t('scans.target'),
       render: (scan) => (
         <div className="flex min-w-40 flex-col gap-0.5">
           <span>{scan.targetName}</span>
@@ -43,7 +45,7 @@ export default function ScansTable({ scans, showProject = true, showActions = fa
     },
     showProject && {
       key: 'project',
-      header: 'Project',
+      header: t('projects.project'),
       render: (scan) => (
         <span className="flex items-center gap-1.5 whitespace-nowrap">
           {scan.projectCode && <code className="text-[11px] text-slate-500">{scan.projectCode}</code>}
@@ -51,20 +53,20 @@ export default function ScansTable({ scans, showProject = true, showActions = fa
         </span>
       ),
     },
-    { key: 'status', header: 'Status', render: (scan) => <ScanStatus scan={scan} /> },
+    { key: 'status', header: t('common.status'), render: (scan) => <ScanStatus scan={scan} /> },
     {
       key: 'findings',
-      header: 'Findings',
+      header: t('nav.findings'),
       className: 'text-right',
       render: (scan) => (scan.status === 'Completed' ? scan.findingCount : '—'),
     },
-    { key: 'created', header: 'Requested', className: 'whitespace-nowrap', render: (scan) => formatRelativeTime(scan.createdAt) },
+    { key: 'created', header: t('scans.requested'), className: 'whitespace-nowrap', render: (scan) => formatRelativeTime(scan.createdAt) },
     showActions && {
       key: 'actions',
-      header: <span className="sr-only">Actions</span>,
+      header: <span className="sr-only">{t('common.actions')}</span>,
       render: (scan) => (isActiveScan(scan) ? <CancelScanButton scan={scan} small /> : null),
     },
   ].filter(Boolean);
 
-  return <DataTable columns={columns} rows={scans} caption="Scans" emptyMessage={emptyMessage} />;
+  return <DataTable columns={columns} rows={scans} caption={t('nav.scans')} emptyMessage={emptyMessage ?? t('scans.empty')} />;
 }

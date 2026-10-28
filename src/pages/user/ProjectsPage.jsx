@@ -15,12 +15,13 @@ import PageHeader from '../../components/PageHeader';
 import StatusBadge from '../../components/StatusBadge';
 import { PROJECT_STATUSES } from '../../utils/constants';
 import { formatRelativeTime, includesText } from '../../utils/format';
+import { useTranslation } from '../../i18n';
 import { can } from '../../utils/roles';
 
-const COLUMNS = [
+const projectColumns = (t) => [
   {
     key: 'name',
-    header: 'Project',
+    header: t('projects.project'),
     render: (project) => (
       <div className="flex min-w-40 flex-col gap-0.5">
         <span className="flex items-center gap-2">
@@ -29,20 +30,25 @@ const COLUMNS = [
             {project.name}
           </Link>
         </span>
-        <span className="text-slate-500 text-xs block max-w-50 truncate sm:max-w-80">{project.description || 'No description'}</span>
+        <span className="text-slate-500 text-xs block max-w-50 truncate sm:max-w-80">{project.description || t('common.noDescription')}</span>
       </div>
     ),
   },
-  { key: 'environment', header: 'Environment' },
-  { key: 'targets', header: 'Targets', className: 'text-right', render: (project) => project.targets.length },
-  { key: 'openFindingCount', header: 'Open findings', className: 'text-right' },
-  { key: 'lastScanAt', header: 'Last scan', render: (project) => (project.lastScanAt ? formatRelativeTime(project.lastScanAt) : 'Never') },
-  { key: 'status', header: 'Status', render: (project) => <StatusBadge status={project.status} category="project-statuses" /> },
+  { key: 'environment', header: t('projects.environment'), render: (project) => t(`environments.${project.environment}`) },
+  { key: 'targets', header: t('projects.targets'), className: 'text-right', render: (project) => project.targets.length },
+  { key: 'openFindingCount', header: t('projects.openFindings'), className: 'text-right' },
+  {
+    key: 'lastScanAt',
+    header: t('projects.lastScan'),
+    render: (project) => (project.lastScanAt ? formatRelativeTime(project.lastScanAt) : t('common.never')),
+  },
+  { key: 'status', header: t('common.status'), render: (project) => <StatusBadge status={project.status} category="project-statuses" /> },
   // Shows that the whole row opens the project, where its targets are set up.
   { key: 'open', header: '', className: 'w-10 text-right', render: () => <ChevronRight size={16} aria-hidden="true" className="text-slate-400" /> },
 ];
 
 export default function ProjectsPage() {
+  const { t } = useTranslation();
   const projectStatuses = useStatusList('project-statuses');
   const dispatch = useDispatch();
   const user = useSelector(selectCurrentUser);
@@ -65,23 +71,23 @@ export default function ProjectsPage() {
   return (
     <div className="fill-page">
       <PageHeader
-        title="Projects"
-        description="Applications and environments your organization scans."
+        title={t('projects.title')}
+        description={t('projects.description')}
         actions={
           can(user, 'projects.create') && (
             <button type="button" className="btn btn-primary" onClick={() => setIsCreateOpen(true)}>
               <Plus size={16} aria-hidden="true" />
-              New project
+              {t('projects.new')}
             </button>
           )
         }
       />
       <Card flush fill>
         <FilterBar resultCount={items.length > 0 || status === 'succeeded' ? visibleProjects.length : undefined}>
-          <SearchInput label="Search projects" placeholder="Search by code, name or description" value={search} onChange={setSearch} />
+          <SearchInput label={t('common.search')} placeholder={t('projects.searchPlaceholder')} value={search} onChange={setSearch} />
           <SelectFilter
-            label="Filter by status"
-            allLabel="All statuses"
+            label={t('common.filterByStatus')}
+            allLabel={t('common.allStatuses')}
             value={statusFilter}
             onChange={setStatusFilter}
             options={projectStatuses.options(PROJECT_STATUSES)}
@@ -89,11 +95,11 @@ export default function ProjectsPage() {
         </FilterBar>
         <AsyncContent status={status} error={error} hasData={items.length > 0} onRetry={() => dispatch(fetchProjects())}>
           <DataTable
-            columns={COLUMNS}
+            columns={projectColumns(t)}
             rows={visibleProjects}
-            caption="Projects"
+            caption={t('projects.title')}
             onRowClick={(project) => navigate(`/projects/${project.id}`)}
-            emptyMessage="No projects match your filters."
+            emptyMessage={items.length ? t('common.noMatches') : t('projects.empty')}
           />
         </AsyncContent>
       </Card>

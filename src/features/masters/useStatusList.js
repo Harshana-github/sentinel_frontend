@@ -6,12 +6,11 @@ import { useMasterList } from './useMasterList';
 // its status item has the slug of that value. Falls back to the value while loading.
 export function useStatusList(category) {
   const statuses = useMasterList(category);
-  const find = (value) => statuses.find(slugify(value ?? ''));
-  const labelOf = (value) => find(value)?.name ?? value;
+  const idOf = (value) => slugify(value ?? '');
+  const labelOf = (value) => (statuses.find(idOf(value)) ? statuses.nameOf(idOf(value)) : value);
   return {
-    find,
     labelOf,
-    toneOf: (value) => find(value)?.tone,
+    toneOf: (value) => statuses.find(idOf(value))?.tone,
     // SelectFilter / <option> entries for a list of values, e.g. SCAN_STATUSES.
     options: (values) => values.map((value) => ({ value, label: labelOf(value) })),
   };

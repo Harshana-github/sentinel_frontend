@@ -15,11 +15,12 @@ import { CategoryStatusBadge } from '../../components/StatusBadge';
 import { useMasterList } from '../../features/masters/useMasterList';
 import { buildLoginMessage } from '../../utils/loginMessage';
 import { formatDate, includesText } from '../../utils/format';
+import { useTranslation } from '../../i18n';
 
-const COLUMNS = [
+const organizationColumns = (t) => [
   {
     key: 'name',
-    header: 'Organization',
+    header: t('common.organization'),
     render: (organization) => (
       <div className="flex min-w-40 flex-col gap-0.5">
         <Link to={`/admin/organizations/${organization.id}`} className="font-semibold">
@@ -31,16 +32,16 @@ const COLUMNS = [
   },
   {
     key: 'admin',
-    header: 'Organization admin',
+    header: t('organizations.admin'),
     render: (organization) =>
       organization.admin ? (
         <div className="flex min-w-48 flex-col gap-0.5">
           <span>{organization.admin.name}</span>
           <span className="text-xs text-slate-500">{organization.admin.email}</span>
           <CopyButton
-            value={buildLoginMessage(organization, organization.admin)}
-            label={`Copy login message for ${organization.admin.name}`}
-            text="Copy message"
+            value={buildLoginMessage(organization, organization.admin, t)}
+            label={t('organizations.copyLoginFor', { name: organization.admin.name })}
+            text={t('copy.copyMessage')}
             small
           />
         </div>
@@ -48,13 +49,18 @@ const COLUMNS = [
         <span className="text-slate-500">—</span>
       ),
   },
-  { key: 'memberCount', header: 'Members', className: 'text-right' },
-  { key: 'projectCount', header: 'Projects', className: 'text-right' },
-  { key: 'status', header: 'Status', render: (organization) => <CategoryStatusBadge category="organization-statuses" value={organization.status} /> },
-  { key: 'createdAt', header: 'Created', render: (organization) => formatDate(organization.createdAt) },
+  { key: 'memberCount', header: t('organizations.members'), className: 'text-right' },
+  { key: 'projectCount', header: t('nav.projects'), className: 'text-right' },
+  {
+    key: 'status',
+    header: t('common.status'),
+    render: (organization) => <CategoryStatusBadge category="organization-statuses" value={organization.status} />,
+  },
+  { key: 'createdAt', header: t('common.created'), render: (organization) => formatDate(organization.createdAt) },
 ];
 
 export default function OrganizationsPage() {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const { items, status, error } = useSelector(selectOrganizationsState);
   const [search, setSearch] = useState('');
@@ -79,28 +85,33 @@ export default function OrganizationsPage() {
   return (
     <div className="fill-page">
       <PageHeader
-        title="Organizations"
-        description="Customer organizations using Sentinel."
+        title={t('nav.organizations')}
+        description={t('organizations.description')}
         actions={
           <button type="button" className="btn btn-primary" onClick={() => setIsCreateOpen(true)}>
             <Plus size={16} aria-hidden="true" />
-            New organization
+            {t('organizations.new')}
           </button>
         }
       />
       <Card flush fill>
         <FilterBar resultCount={items.length > 0 || status === 'succeeded' ? visibleOrganizations.length : undefined}>
-          <SearchInput label="Search organizations" placeholder="Search by name, admin or email" value={search} onChange={setSearch} />
+          <SearchInput label={t('common.search')} placeholder={t('organizations.searchPlaceholder')} value={search} onChange={setSearch} />
           <SelectFilter
-            label="Filter by status"
-            allLabel="All statuses"
+            label={t('common.filterByStatus')}
+            allLabel={t('common.allStatuses')}
             value={statusFilter}
             onChange={setStatusFilter}
-            options={organizationStatuses.items.map((item) => ({ value: item.id, label: item.name }))}
+            options={organizationStatuses.items.map((item) => ({ value: item.id, label: organizationStatuses.nameOf(item.id) }))}
           />
         </FilterBar>
         <AsyncContent status={status} error={error} hasData={items.length > 0} onRetry={() => dispatch(fetchOrganizations())}>
-          <DataTable columns={COLUMNS} rows={visibleOrganizations} caption="Organizations" emptyMessage="No organizations match your search." />
+          <DataTable
+            columns={organizationColumns(t)}
+            rows={visibleOrganizations}
+            caption={t('nav.organizations')}
+            emptyMessage={items.length ? t('common.noMatches') : t('organizations.empty')}
+          />
         </AsyncContent>
       </Card>
 

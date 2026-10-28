@@ -36,35 +36,96 @@ export const platformStaff = [
 
 // User panel modules, the same for every organization. `builtIn` modules have screens in
 // the app, so the Super Admin can rename them but not delete them.
+// `nameJa` and `descriptionJa` are shown when the UI is in Japanese.
 export const featureModules = [
-  { key: 'projects', name: 'Projects', description: 'Create projects and manage scan targets.', builtIn: true },
-  { key: 'scans', name: 'Scans', description: 'Run security scans and follow their progress.', builtIn: true },
-  { key: 'findings', name: 'Findings', description: 'Review and triage vulnerability findings.', builtIn: true },
-  { key: 'team', name: 'Users', description: 'See and manage the people in the organization.', builtIn: true },
+  {
+    key: 'projects',
+    name: 'Projects',
+    nameJa: 'プロジェクト',
+    description: 'Create projects and manage scan targets.',
+    descriptionJa: 'プロジェクトの作成とスキャン対象の管理',
+    builtIn: true,
+  },
+  {
+    key: 'scans',
+    name: 'Scans',
+    nameJa: 'スキャン',
+    description: 'Run security scans and follow their progress.',
+    descriptionJa: 'セキュリティスキャンの実行と進捗の確認',
+    builtIn: true,
+  },
+  {
+    key: 'findings',
+    name: 'Findings',
+    nameJa: '検出結果',
+    description: 'Review and triage vulnerability findings.',
+    descriptionJa: '脆弱性の検出結果の確認と対応',
+    builtIn: true,
+  },
+  {
+    key: 'team',
+    name: 'Users',
+    nameJa: 'ユーザー',
+    description: 'See and manage the people in the organization.',
+    descriptionJa: '組織のメンバーの確認と管理',
+    builtIn: true,
+  },
 ];
 
 // Permissions belong to a module. The Admin role has all of them. `builtIn` ones are
 // checked by the app, so the Super Admin can edit them but not delete them.
+const permission = (key, module, name, nameJa, description, descriptionJa) => ({
+  key,
+  module,
+  name,
+  nameJa,
+  description,
+  descriptionJa,
+  builtIn: true,
+});
+
 export const featurePermissions = [
-  { key: 'projects.create', name: 'Create project', description: 'Add a new project.', module: 'projects', builtIn: true },
-  { key: 'targets.add', name: 'Add scan target', description: 'Add a target to a project.', module: 'projects', builtIn: true },
-  { key: 'scans.start', name: 'Start scan', description: 'Run a new scan on a target.', module: 'scans', builtIn: true },
-  { key: 'scans.cancel', name: 'Cancel scan', description: 'Stop a queued or running scan.', module: 'scans', builtIn: true },
-  {
-    key: 'findings.update',
-    name: 'Update finding status',
-    description: 'Mark findings as in progress, resolved or ignored.',
-    module: 'findings',
-    builtIn: true,
-  },
-  { key: 'users.read', name: 'View users', description: 'See the list of users in the organization.', module: 'team', builtIn: true },
-  { key: 'users.create', name: 'Create user', description: 'Add or invite a new user.', module: 'team', builtIn: true },
-  { key: 'users.update', name: 'Update user', description: "Change a user's name, role or status.", module: 'team', builtIn: true },
-  { key: 'users.delete', name: 'Delete user', description: 'Remove a user from the organization.', module: 'team', builtIn: true },
-  { key: 'roles.read', name: 'View roles', description: 'See the roles and what each one can do.', module: 'team', builtIn: true },
-  { key: 'roles.create', name: 'Create role', description: 'Add a new role.', module: 'team', builtIn: true },
-  { key: 'roles.update', name: 'Update role', description: 'Rename a role or change its permissions.', module: 'team', builtIn: true },
-  { key: 'roles.delete', name: 'Delete role', description: 'Remove a role that nobody has.', module: 'team', builtIn: true },
+  permission('projects.create', 'projects', 'Create project', 'プロジェクトの作成', 'Add a new project.', '新しいプロジェクトを作成できます。'),
+  permission('targets.add', 'projects', 'Add scan target', 'スキャン対象の追加', 'Add a target to a project.', 'プロジェクトに対象を追加できます。'),
+  permission('scans.start', 'scans', 'Start scan', 'スキャンの開始', 'Run a new scan on a target.', '対象のスキャンを開始できます。'),
+  permission('scans.cancel', 'scans', 'Cancel scan', 'スキャンの停止', 'Stop a queued or running scan.', '待機中・実行中のスキャンを停止できます。'),
+  permission(
+    'findings.update',
+    'findings',
+    'Update finding status',
+    '検出結果のステータス更新',
+    'Mark findings as in progress, resolved or ignored.',
+    '検出結果を対応中・解決済みなどに更新できます。',
+  ),
+  permission(
+    'users.read',
+    'team',
+    'View users',
+    'ユーザーの閲覧',
+    'See the list of users in the organization.',
+    '組織のユーザー一覧を閲覧できます。',
+  ),
+  permission('users.create', 'team', 'Create user', 'ユーザーの追加', 'Add or invite a new user.', '新しいユーザーを追加できます。'),
+  permission(
+    'users.update',
+    'team',
+    'Update user',
+    'ユーザーの編集',
+    "Change a user's name, role or status.",
+    'ユーザーの名前・ロール・ステータスを変更できます。',
+  ),
+  permission('users.delete', 'team', 'Delete user', 'ユーザーの削除', 'Remove a user from the organization.', '組織からユーザーを削除できます。'),
+  permission('roles.read', 'team', 'View roles', 'ロールの閲覧', 'See the roles and what each one can do.', 'ロールと各ロールの権限を閲覧できます。'),
+  permission('roles.create', 'team', 'Create role', 'ロールの作成', 'Add a new role.', '新しいロールを作成できます。'),
+  permission('roles.update', 'team', 'Update role', 'ロールの編集', 'Rename a role or change its permissions.', 'ロール名や権限を変更できます。'),
+  permission(
+    'roles.delete',
+    'team',
+    'Delete role',
+    'ロールの削除',
+    'Remove a role that nobody has.',
+    '誰も割り当てられていないロールを削除できます。',
+  ),
 ];
 
 // Product and software development company details, shown on the login page, in the
@@ -427,112 +488,178 @@ export const projects = [
   },
 ];
 
-// Scanner integrations planned for the platform. None of these engines runs in the
-// browser: in mock mode, scans and their findings are simulated.
-// Master data: where a scanner plugin comes from. The Super Admin manages this list.
+// Master data and statuses. Every item has an English `name` and `description` and a Japanese
+// `nameJa` and `descriptionJa`, shown when the UI is in Japanese.
+const item = (id, name, nameJa, description, descriptionJa, extra = {}) => ({ id, name, nameJa, description, descriptionJa, ...extra });
+
+// Where a scanner plugin comes from.
 export const pluginSources = [
-  { id: 'open-source', name: 'Open source', description: 'Public tool, e.g. Trivy' },
-  { id: 'in-house', name: 'In-house', description: 'Built by our company' },
+  item('open-source', 'Open source', 'オープンソース', 'Public tool, e.g. Trivy', '公開されているツール（例: Trivy）'),
+  item('in-house', 'In-house', '自社開発', 'Built by our company', '自社で開発したツール'),
 ];
 
-// Master data: the kind of check a scanner plugin performs.
+// The kind of check a scanner plugin performs.
 export const pluginCategories = [
-  { id: 'dast', name: 'DAST', description: 'Tests running web applications from the outside.' },
-  { id: 'vulnerability-misconfiguration', name: 'Vulnerability & misconfiguration', description: 'Finds vulnerable packages and insecure settings.' },
-  { id: 'secret-detection', name: 'Secret detection', description: 'Finds keys, passwords and tokens in code.' },
-  { id: 'iac-security', name: 'IaC security', description: 'Checks Terraform, Kubernetes and similar files.' },
-  { id: 'sbom-generation', name: 'SBOM generation', description: 'Lists the packages inside software.' },
-  { id: 'vulnerability-scanning', name: 'Vulnerability scanning', description: 'Matches packages against known vulnerabilities.' },
-  { id: 'network-discovery', name: 'Network discovery', description: 'Finds hosts, open ports and services.' },
-  { id: 'tls-ssl-security', name: 'TLS/SSL security', description: 'Checks certificates and encryption settings.' },
-  { id: 'api-security', name: 'API security', description: 'Tests REST and GraphQL APIs.' },
+  item('dast', 'DAST', 'DAST（動的解析）', 'Tests running web applications from the outside.', '稼働中の Web アプリケーションを外部から検査します。'),
+  item(
+    'vulnerability-misconfiguration',
+    'Vulnerability & misconfiguration',
+    '脆弱性・設定不備',
+    'Finds vulnerable packages and insecure settings.',
+    '脆弱なパッケージや安全でない設定を検出します。',
+  ),
+  item(
+    'secret-detection',
+    'Secret detection',
+    'シークレット検出',
+    'Finds keys, passwords and tokens in code.',
+    'コード内のキー、パスワード、トークンを検出します。',
+  ),
+  item(
+    'iac-security',
+    'IaC security',
+    'IaC セキュリティ',
+    'Checks Terraform, Kubernetes and similar files.',
+    'Terraform や Kubernetes などの定義ファイルを検査します。',
+  ),
+  item('sbom-generation', 'SBOM generation', 'SBOM 生成', 'Lists the packages inside software.', 'ソフトウェアに含まれるパッケージを一覧化します。'),
+  item(
+    'vulnerability-scanning',
+    'Vulnerability scanning',
+    '脆弱性スキャン',
+    'Matches packages against known vulnerabilities.',
+    'パッケージを既知の脆弱性と照合します。',
+  ),
+  item(
+    'network-discovery',
+    'Network discovery',
+    'ネットワーク探索',
+    'Finds hosts, open ports and services.',
+    'ホスト、開いているポート、サービスを検出します。',
+  ),
+  item(
+    'tls-ssl-security',
+    'TLS/SSL security',
+    'TLS/SSL セキュリティ',
+    'Checks certificates and encryption settings.',
+    '証明書と暗号化の設定を検査します。',
+  ),
+  item('api-security', 'API security', 'API セキュリティ', 'Tests REST and GraphQL APIs.', 'REST API や GraphQL API を検査します。'),
 ];
 
-// Master data: what can be scanned. Ids are stored on project targets and plugins.
+// What can be scanned. Ids are stored on project targets and plugins.
 export const targetTypes = [
-  { id: 'web', name: 'Web application', description: 'A running website or web app.', placeholder: 'https://app.example.com', format: 'url' },
-  { id: 'repository', name: 'Source code repository', description: 'A Git repository.', placeholder: 'https://github.com/org/repo', format: 'url' },
-  { id: 'container', name: 'Container image', description: 'A Docker or OCI image.', placeholder: 'registry.example.com/app:1.0.0', format: 'text' },
-  {
-    id: 'iac',
-    name: 'Infrastructure as Code',
-    description: 'Terraform, Kubernetes or CloudFormation files.',
-    placeholder: 'https://github.com/org/terraform',
+  item('web', 'Web application', 'Web アプリケーション', 'A running website or web app.', '稼働中の Web サイトまたは Web アプリ', {
+    placeholder: 'https://app.example.com',
     format: 'url',
-  },
-  { id: 'host', name: 'Network / host', description: 'An IP address or host name.', placeholder: '192.0.2.10 or host.example.com', format: 'text' },
-  {
-    id: 'artifact',
-    name: 'Application artifact',
-    description: 'A built file such as a JAR or APK.',
+  }),
+  item('repository', 'Source code repository', 'ソースコードリポジトリ', 'A Git repository.', 'Git リポジトリ', {
+    placeholder: 'https://github.com/org/repo',
+    format: 'url',
+  }),
+  item('container', 'Container image', 'コンテナイメージ', 'A Docker or OCI image.', 'Docker / OCI イメージ', {
+    placeholder: 'registry.example.com/app:1.0.0',
+    format: 'text',
+  }),
+  item(
+    'iac',
+    'Infrastructure as Code',
+    'Infrastructure as Code',
+    'Terraform, Kubernetes or CloudFormation files.',
+    'Terraform、Kubernetes、CloudFormation のファイル',
+    {
+      placeholder: 'https://github.com/org/terraform',
+      format: 'url',
+    },
+  ),
+  item('host', 'Network / host', 'ネットワーク / ホスト', 'An IP address or host name.', 'IP アドレスまたはホスト名', {
+    placeholder: '192.0.2.10',
+    format: 'text',
+  }),
+  item('artifact', 'Application artifact', 'アプリケーション成果物', 'A built file such as a JAR or APK.', 'JAR や APK などのビルド済みファイル', {
     placeholder: 'service-1.0.0.jar',
     format: 'text',
-  },
+  }),
 ];
 
-// Master data: how Sentinel runs a plugin. `kind` decides what the plugin form asks for.
+// How Sentinel runs a plugin. `kind` decides what the plugin form asks for.
 export const pluginInterfaces = [
-  { id: 'cli', name: 'CLI', description: 'Runs a command inside the container.', kind: 'command' },
-  { id: 'rest-api', name: 'REST API', description: 'Sends the target to an HTTP endpoint.', kind: 'url' },
+  item('cli', 'CLI', 'CLI', 'Runs a command inside the container.', 'コンテナ内でコマンドを実行します。', { kind: 'command' }),
+  item('rest-api', 'REST API', 'REST API', 'Sends the target to an HTTP endpoint.', 'HTTP エンドポイントに対象を送信します。', { kind: 'url' }),
 ];
 
 export const licenses = [
-  { id: 'apache-2-0', name: 'Apache-2.0', description: 'Permissive open-source license.' },
-  { id: 'mit', name: 'MIT', description: 'Permissive open-source license.' },
-  { id: 'gpl-2-0', name: 'GPL-2.0', description: 'Copyleft open-source license.' },
-  { id: 'proprietary', name: 'Proprietary', description: 'Owned by the company. Not open source.' },
+  item('apache-2-0', 'Apache-2.0', 'Apache-2.0', 'Permissive open-source license.', '寛容型のオープンソースライセンス'),
+  item('mit', 'MIT', 'MIT', 'Permissive open-source license.', '寛容型のオープンソースライセンス'),
+  item('gpl-2-0', 'GPL-2.0', 'GPL-2.0', 'Copyleft open-source license.', 'コピーレフト型のオープンソースライセンス'),
+  item('proprietary', 'Proprietary', 'プロプライエタリ', 'Owned by the company. Not open source.', '自社所有。オープンソースではありません。'),
 ];
 
 // Status categories (see STATUS_CATEGORIES). `builtIn` statuses are used by the app's logic.
+const status = (id, name, nameJa, tone, description, descriptionJa, builtIn = true) =>
+  item(id, name, nameJa, description, descriptionJa, { tone, builtIn });
+
 export const organizationStatuses = [
-  { id: 'active', name: 'Active', description: 'Paying customer with full access.', tone: 'success', builtIn: true },
-  { id: 'trial', name: 'Trial', description: 'Evaluating the platform.', tone: 'info', builtIn: true },
-  { id: 'suspended', name: 'Suspended', description: 'Users cannot sign in.', tone: 'danger', builtIn: true },
+  status('active', 'Active', '有効', 'success', 'Paying customer with full access.', '契約中。すべての機能を利用できます。'),
+  status('trial', 'Trial', 'トライアル', 'info', 'Evaluating the platform.', '試用中です。'),
+  status('suspended', 'Suspended', '停止中', 'danger', 'Users cannot sign in.', 'ユーザーはログインできません。'),
 ];
 
 export const userStatuses = [
-  { id: 'active', name: 'Active', description: 'Has signed in at least once.', tone: 'success', builtIn: true },
-  { id: 'invited', name: 'Invited', description: 'Account created, not signed in yet.', tone: 'warning', builtIn: true },
+  status('active', 'Active', '有効', 'success', 'Has signed in at least once.', '一度以上ログインしています。'),
+  status('invited', 'Invited', '招待中', 'warning', 'Account created, not signed in yet.', 'アカウント作成済み。まだログインしていません。'),
 ];
 
 export const integrationStatuses = [
-  { id: 'planned', name: 'Planned', description: 'Not started yet.', tone: 'neutral' },
-  { id: 'in-development', name: 'In development', description: 'Being built and tested.', tone: 'info' },
-  { id: 'available', name: 'Available', description: 'Ready to use in scans.', tone: 'success' },
+  status('planned', 'Planned', '計画中', 'neutral', 'Not started yet.', 'まだ着手していません。', false),
+  status('in-development', 'In development', '開発中', 'info', 'Being built and tested.', '開発・テスト中です。', false),
+  status('available', 'Available', '利用可能', 'success', 'Ready to use in scans.', 'スキャンで利用できます。', false),
 ];
 
 // Statuses of Sentinel's own workflow. The slug of each is the slug of the value the app stores
 // (`slugify('In Progress')` is 'in-progress'), so the Super Admin can rename or recolour them only.
-const systemStatus = (id, name, tone, description) => ({ id, name, description, tone, builtIn: true });
-
 export const projectStatuses = [
-  systemStatus('active', 'Active', 'success', 'In use and can be scanned.'),
-  systemStatus('on-hold', 'On Hold', 'warning', 'Paused for now.'),
-  systemStatus('archived', 'Archived', 'neutral', 'Kept for history. Cannot be scanned or get new targets.'),
+  status('active', 'Active', '有効', 'success', 'In use and can be scanned.', '利用中。スキャンできます。'),
+  status('on-hold', 'On Hold', '保留', 'warning', 'Paused for now.', '一時停止中です。'),
+  status(
+    'archived',
+    'Archived',
+    'アーカイブ済み',
+    'neutral',
+    'Kept for history. Cannot be scanned or get new targets.',
+    '履歴として保管。スキャンや対象の追加はできません。',
+  ),
 ];
 
 export const scanStatuses = [
-  systemStatus('queued', 'Queued', 'neutral', 'Waiting for a free worker.'),
-  systemStatus('running', 'Running', 'info', 'A worker is running the tools.'),
-  systemStatus('completed', 'Completed', 'success', 'Finished; findings are ready.'),
-  systemStatus('failed', 'Failed', 'danger', 'Stopped by an error.'),
-  systemStatus('cancelled', 'Cancelled', 'neutral', 'Stopped by a user.'),
+  status('queued', 'Queued', '待機中', 'neutral', 'Waiting for a free worker.', '空いているワーカーを待っています。'),
+  status('running', 'Running', '実行中', 'info', 'A worker is running the tools.', 'ワーカーがツールを実行しています。'),
+  status('completed', 'Completed', '完了', 'success', 'Finished; findings are ready.', '完了しました。検出結果を確認できます。'),
+  status('failed', 'Failed', '失敗', 'danger', 'Stopped by an error.', 'エラーにより停止しました。'),
+  status('cancelled', 'Cancelled', 'キャンセル', 'neutral', 'Stopped by a user.', 'ユーザーが停止しました。'),
 ];
 
 export const assessmentStatuses = [
-  systemStatus('queued', 'Queued', 'neutral', 'No job has started yet.'),
-  systemStatus('running', 'Running', 'info', 'At least one job is queued or running.'),
-  systemStatus('completed', 'Completed', 'success', 'Every job finished.'),
-  systemStatus('completed-with-errors', 'Completed with errors', 'warning', 'Some jobs failed or were cancelled.'),
-  systemStatus('failed', 'Failed', 'danger', 'Every job failed.'),
-  systemStatus('cancelled', 'Cancelled', 'neutral', 'Stopped by a user.'),
+  status('queued', 'Queued', '待機中', 'neutral', 'No job has started yet.', 'まだどのジョブも開始していません。'),
+  status('running', 'Running', '実行中', 'info', 'At least one job is queued or running.', '待機中または実行中のジョブがあります。'),
+  status('completed', 'Completed', '完了', 'success', 'Every job finished.', 'すべてのジョブが完了しました。'),
+  status(
+    'completed-with-errors',
+    'Completed with errors',
+    '一部エラーで完了',
+    'warning',
+    'Some jobs failed or were cancelled.',
+    '一部のジョブが失敗またはキャンセルされました。',
+  ),
+  status('failed', 'Failed', '失敗', 'danger', 'Every job failed.', 'すべてのジョブが失敗しました。'),
+  status('cancelled', 'Cancelled', 'キャンセル', 'neutral', 'Stopped by a user.', 'ユーザーが停止しました。'),
 ];
 
 export const findingStatuses = [
-  systemStatus('open', 'Open', 'warning', 'Needs to be looked at.'),
-  systemStatus('in-progress', 'In Progress', 'info', 'Someone is fixing it.'),
-  systemStatus('resolved', 'Resolved', 'success', 'Fixed.'),
-  systemStatus('false-positive', 'False Positive', 'neutral', 'Not a real problem.'),
+  status('open', 'Open', '未対応', 'warning', 'Needs to be looked at.', '確認が必要です。'),
+  status('in-progress', 'In Progress', '対応中', 'info', 'Someone is fixing it.', '修正作業中です。'),
+  status('resolved', 'Resolved', '解決済み', 'success', 'Fixed.', '修正済みです。'),
+  status('false-positive', 'False Positive', '誤検知', 'neutral', 'Not a real problem.', '実際の問題ではありません。'),
 ];
 
 // Scanner plugins. `source`, `category`, `targetTypes`, `interface`, `license` and

@@ -205,6 +205,19 @@ The response shapes the UI expects are the objects returned by `src/mocks/mockAp
 - The scan form's authorization checkbox is a UI consent gate. The backend must enforce scan authorization too.
 - Access checks are kept simple: one `user.role` value plus the session's `modules` and `permissions` lists, checked by three small helpers in `src/utils/roles.js`.
 
+## Languages (日本語 / English)
+
+The UI is in **Japanese by default**, with English as the second language. Users switch with the 日本語 | English buttons in the top bar, on the login page or under Settings; the choice is kept in this browser (`localStorage` key `sentinel_language`).
+
+- Texts live in `src/i18n/ja.js` and `src/i18n/en.js`, grouped by screen. Both files must have the same keys.
+- In a component: `const { t } = useTranslation();` then `t('projects.title')`, or `t('scans.queued', { id })` to fill in `{id}`. For English plurals, add a `_one` key and pass `{ count }`.
+- Code without hooks (date formatting, API error messages) uses `translate(getLanguage(), key)`. Dates follow the language: `2026/10/28 14:05` in Japanese.
+- Validation helpers in `src/utils` (`slugError`, `projectCodeError`, `targetAddressError`) return translation keys, not sentences.
+- Data the Super Admin manages (master data, statuses, modules, permissions) has an English `name`/`description` and an optional Japanese `nameJa`/`descriptionJa`, entered side by side in the forms. `localName(item)` and `useMasterList(...).nameOf(id)` show the right one.
+- Not translated: data entered by users (project and target names), scanner output (finding titles and descriptions), activity log messages and error messages from the API. The real API should return error codes the UI can translate.
+
+UI conventions followed for Japanese users: 必須 / 任意 tags on form fields, numbered steps on multi-step forms, polite です・ます messages, a confirmation dialog that names what will happen before every destructive action, and the Noto Sans JP font with slightly wider line height.
+
 ## Folder structure
 
 ```
@@ -233,6 +246,7 @@ src/
 │   └── *.jsx                Shared pages: Login, Settings, Not found
 ├── routes/                  ProtectedRoute (per panel), ModuleRoute (per feature module), PublicOnlyRoute, HomeRedirect
 ├── hooks/usePolling.js      Refreshes data while scans are running
+├── i18n/                    Translations: index.js (useTranslation, translate), ja.js (default), en.js
 ├── services/api.js          Axios instance, error handling, mock/API switch
 ├── mocks/                   Demonstration data and the in-memory mock API
 ├── utils/                   Constants, formatting, session storage, roles, slugs, project codes, target addresses, chart colours

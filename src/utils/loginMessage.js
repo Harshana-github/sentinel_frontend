@@ -1,13 +1,13 @@
-// Ready-to-send message with an organization admin's login details.
-export function buildLoginMessage(organization, admin) {
+// Ready-to-send message with a person's login details, in the UI language (`t` from useTranslation).
+export function buildLoginMessage(organization, account, t) {
   const lines = [
-    `Hi ${admin.name},`,
+    t('loginMessage.greeting', { name: account.name }),
     '',
-    `Your Sentinel account for ${organization.name} is ready.`,
+    t('loginMessage.ready', { organization: organization.name }),
     '',
-    `Sign in: ${window.location.origin}/login`,
-    `Email: ${admin.email}`,
+    t('loginMessage.url', { url: `${window.location.origin}/login` }),
+    t('loginMessage.email', { email: account.email }),
   ];
-  if (admin.password) lines.push(`Password: ${admin.password}`);
+  if (account.password) lines.push(t('loginMessage.password', { password: account.password }));
   return lines.join('\n');
 }

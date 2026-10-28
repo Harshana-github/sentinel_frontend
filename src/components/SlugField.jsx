@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Lock } from 'lucide-react';
 import { slugify, SLUG_MAX_LENGTH } from '../utils/slug';
+import { useTranslation } from '../i18n';
 import FormField, { errorProps } from './FormField';
 
 // Unique slug input. While creating, it follows `source` (usually the name) until the user
 // types in it. When editing (`locked`), it is read-only because other records use it.
 // `prefix` is shown before the input, e.g. "projects." for a permission key.
 export default function SlugField({ id, source, value, onChange, locked = false, prefix, error }) {
+  const { t } = useTranslation();
   const [touched, setTouched] = useState(false);
 
   useEffect(() => {
@@ -25,12 +27,10 @@ export default function SlugField({ id, source, value, onChange, locked = false,
     );
   }
 
-  const hint = locked
-    ? 'The slug cannot be changed, because other records use it.'
-    : 'Unique id used in URLs and the API. Lowercase letters, numbers and hyphens.';
+  const hint = locked ? t('slug.lockedHint') : t('slug.hint');
 
   return (
-    <FormField id={id} label="Slug" hint={hint} error={error}>
+    <FormField id={id} label={t('slug.label')} required={!locked} hint={hint} error={error}>
       <div className="flex items-stretch">
         {prefix && (
           <span className="flex items-center rounded-l-md border border-r-0 border-slate-300 bg-slate-50 px-2.5 font-mono text-[13px] text-slate-500">

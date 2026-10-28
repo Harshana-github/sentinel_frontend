@@ -1,7 +1,8 @@
 import { useMasterList } from '../features/masters/useMasterList';
 import { useStatusList } from '../features/masters/useStatusList';
 
-const STATUS_TONES = {
+// Colours used while the status list is still loading.
+const FALLBACK_TONES = {
   Active: 'success',
   Completed: 'success',
   Resolved: 'success',
@@ -21,7 +22,7 @@ const TONE_CLASSES = {
   neutral: 'bg-slate-100 text-slate-600',
 };
 
-// A badge in one of the STATUS_TONES colours.
+// A badge in one of the STATUS_TONES colours (see utils/constants).
 export function ToneBadge({ label, tone }) {
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap ${TONE_CLASSES[tone]}`}>
@@ -31,17 +32,13 @@ export function ToneBadge({ label, tone }) {
   );
 }
 
-// The status text is always shown, so meaning never depends on colour alone.
-// With `category` (e.g. 'scan-statuses'), the name and colour come from the Statuses page.
+// A workflow status (project, scan, assessment or finding). `category` is its Statuses page
+// category, e.g. 'scan-statuses', which supplies the name and colour. The status text is
+// always shown, so meaning never depends on colour alone.
 export default function StatusBadge({ status, category }) {
-  if (category) return <WorkflowStatusBadge status={status} category={category} />;
-  return <ToneBadge label={status} tone={STATUS_TONES[status] ?? 'neutral'} />;
-}
-
-function WorkflowStatusBadge({ status, category }) {
   const statuses = useStatusList(category);
   const tone = statuses.toneOf(status);
-  return <ToneBadge label={statuses.labelOf(status)} tone={TONE_CLASSES[tone] ? tone : (STATUS_TONES[status] ?? 'neutral')} />;
+  return <ToneBadge label={statuses.labelOf(status)} tone={TONE_CLASSES[tone] ? tone : (FALLBACK_TONES[status] ?? 'neutral')} />;
 }
 
 // For statuses managed on the Statuses page: `category` is a STATUS_CATEGORIES key and
@@ -49,5 +46,5 @@ function WorkflowStatusBadge({ status, category }) {
 export function CategoryStatusBadge({ category, value }) {
   const statuses = useMasterList(category);
   const status = statuses.find(value);
-  return <ToneBadge label={status?.name ?? value} tone={TONE_CLASSES[status?.tone] ? status.tone : 'neutral'} />;
+  return <ToneBadge label={statuses.nameOf(value)} tone={TONE_CLASSES[status?.tone] ? status.tone : 'neutral'} />;
 }

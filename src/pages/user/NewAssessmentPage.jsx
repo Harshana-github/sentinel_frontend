@@ -16,9 +16,9 @@ import Card from '../../components/Card';
 import PageHeader from '../../components/PageHeader';
 import { EmptyState } from '../../components/StateMessage';
 import { ASSESSMENT_PROFILES } from '../../utils/constants';
+import { useTranslation } from '../../i18n';
 import { can } from '../../utils/roles';
 
-const RULE_LABELS = { required: 'Required', included: 'Included', optional: 'Optional' };
 const RULE_CLASSES = {
   required: 'bg-blue-100 text-blue-700',
   included: 'bg-slate-100 text-slate-600',
@@ -57,6 +57,7 @@ function ReviewSection({ title, children }) {
 // what will run and what blocks the start; the API checks the same rules again.
 export default function NewAssessmentPage() {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const user = useSelector(selectCurrentUser);
@@ -82,8 +83,8 @@ export default function NewAssessmentPage() {
   if (!can(user, 'scans.start')) {
     return (
       <>
-        <PageHeader title="New assessment" breadcrumbs={[{ label: 'Assessments', to: '/assessments' }, { label: 'New' }]} />
-        <EmptyState title="You do not have permission to start scans." />
+        <PageHeader title={t('assessments.new')} breadcrumbs={[{ label: t('assessments.title'), to: '/assessments' }, { label: t('common.new') }]} />
+        <EmptyState title={t('scans.noPermission')} />
       </>
     );
   }
@@ -104,31 +105,31 @@ export default function NewAssessmentPage() {
     const available = Boolean(rule) && plugins.length > 0;
     const selected = available && (choices[target.id] ?? rule !== 'optional');
     let reason = '';
-    if (!rule) reason = 'Not part of this profile';
-    else if (!plugins.length) reason = 'No enabled plugin can scan this target type';
-    else if (!selected) reason = 'Not selected';
+    if (!rule) reason = t('assessments.skipReasons.notInProfile');
+    else if (!plugins.length) reason = t('assessments.skipReasons.noPlugin');
+    else if (!selected) reason = t('assessments.skipReasons.notSelected');
     return { target, rule, plugins, available, selected, reason };
   });
   const planned = rows.filter((row) => row.selected);
   const skipped = rows.filter((row) => row.rule && !row.selected);
 
   const blockers = [];
-  if (!project) blockers.push('Choose a project.');
+  if (!project) blockers.push(t('assessments.blockers.project'));
   else {
-    if (project.targets.length === 0) blockers.push('This project has no targets yet. Add targets on the project page first.');
+    if (project.targets.length === 0) blockers.push(t('assessments.blockers.noTargets'));
     Object.entries(profile.types)
       .filter(([type, rule]) => rule === 'required' && !planned.some((row) => row.target.type === type))
       .forEach(([type]) => {
         const hasTarget = project.targets.some((target) => target.type === type);
         blockers.push(
           hasTarget
-            ? `Select a ${targetTypes.nameOf(type)} target. This profile requires one.`
-            : `This profile requires a ${targetTypes.nameOf(type)} target, and the project has none.`,
+            ? t('assessments.blockers.selectRequired', { type: targetTypes.nameOf(type) })
+            : t('assessments.blockers.missingRequired', { type: targetTypes.nameOf(type) }),
         );
       });
-    if (project.targets.length > 0 && planned.length === 0 && blockers.length === 0) blockers.push('Select at least one target.');
+    if (project.targets.length > 0 && planned.length === 0 && blockers.length === 0) blockers.push(t('assessments.blockers.selectTarget'));
   }
-  if (!authorized) blockers.push('Confirm that you are authorized to test these targets.');
+  if (!authorized) blockers.push(t('assessments.blockers.authorize'));
 
   const pluginNames = [...new Set(planned.flatMap((row) => row.plugins.map((plugin) => plugin.name)))];
 
@@ -144,15 +145,24 @@ export default function NewAssessmentPage() {
     setStartError('');
   }
 
+  const profileName = t(`assessmentProfiles.${profile.key}.name`);
+  const defaultName = project ? `${profileName} · ${project.name}` : '';
+
   async function handleStart() {
     if (blockers.length > 0 || isStarting) return;
     setIsStarting(true);
     setStartError('');
     try {
       const assessment = await dispatch(
-        startAssessment({ projectId, profile: profileKey, name, targetIds: planned.map((row) => row.target.id), authorized }),
+        startAssessment({
+          projectId,
+          profile: profileKey,
+          name: name.trim() || defaultName,
+          targetIds: planned.map((row) => row.target.id),
+          authorized,
+        }),
       ).unwrap();
-      dispatch(showToast({ message: `${assessment.id} started with ${assessment.jobCount} scan ${assessment.jobCount === 1 ? 'job' : 'jobs'}.` }));
+      dispatch(showToast({ message: t('assessments.started', { id: assessment.id, count: assessment.jobCount }) }));
       navigate(`/assessments/${assessment.id}`);
     } catch (error) {
       setStartError(error.message);
@@ -163,30 +173,30 @@ export default function NewAssessmentPage() {
   return (
     <>
       <PageHeader
-        title="New assessment"
-        description="Scan several targets of a project at once. Each target becomes its own scan job, and the results are combined."
-        breadcrumbs={[{ label: 'Assessments', to: '/assessments' }, { label: 'New' }]}
+        title={t('assessments.new')}
+        description={t('assessments.newDescription')}
+        breadcrumbs={[{ label: t('assessments.title'), to: '/assessments' }, { label: t('common.new') }]}
       />
 
       <div className="grid gap-5 xl:grid-cols-[1fr_360px]">
         <div className="flex min-w-0 flex-col gap-5">
-          <Card title="1 · Project">
+          <Card title={t('assessments.step1')}>
             <label htmlFor="assessment-project" className="mb-1.5 block font-medium">
-              Project
+              {t('projects.project')}
             </label>
             <select id="assessment-project" className="input max-w-md" value={projectId} onChange={(event) => changeProject(event.target.value)}>
-              <option value="">{projects.status === 'loading' ? 'Loading projects…' : 'Choose a project'}</option>
+              <option value="">{projects.status === 'loading' ? t('common.loading') : t('common.selectPlaceholder')}</option>
               {activeProjects.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item.code} · {item.name} ({item.targets.length} {item.targets.length === 1 ? 'target' : 'targets'})
+                  {item.code} · {item.name} ({t('assessments.targetCount', { count: item.targets.length })})
                 </option>
               ))}
             </select>
-            <p className="mt-1.5 text-xs text-slate-500">Archived projects cannot be scanned.</p>
+            <p className="mt-1.5 text-xs text-slate-500">{t('assessments.archivedHint')}</p>
           </Card>
 
-          <Card title="2 · Profile">
-            <div className="grid gap-3 md:grid-cols-2" role="radiogroup" aria-label="Assessment profile">
+          <Card title={t('assessments.step2')}>
+            <div className="grid gap-3 md:grid-cols-2" role="radiogroup" aria-label={t('assessments.profile')}>
               {ASSESSMENT_PROFILES.map((item) => (
                 <label
                   key={item.key}
@@ -201,20 +211,21 @@ export default function NewAssessmentPage() {
                       onChange={() => changeProfile(item.key)}
                     />
                     <span className="min-w-0">
-                      <strong className="block">{item.name}</strong>
-                      <span className="text-xs text-slate-500">{item.description}</span>
+                      <strong className="block">{t(`assessmentProfiles.${item.key}.name`)}</strong>
+                      <span className="text-xs text-slate-500">{t(`assessmentProfiles.${item.key}.description`)}</span>
                     </span>
                   </span>
                   <span className="flex flex-wrap gap-1 pl-6">
                     {Object.entries(item.types).map(([type, rule]) => (
                       <RuleChip key={type} rule={rule}>
                         {targetTypes.nameOf(type)}
-                        {rule !== 'included' && ` · ${RULE_LABELS[rule].toLowerCase()}`}
+                        {rule !== 'included' && ` · ${t(`assessments.rules.${rule}`)}`}
                       </RuleChip>
                     ))}
                   </span>
                   <span className="pl-6 text-[11px] text-slate-500">
-                    {item.duration} · {item.scanProfile} depth · {item.plugins === 'primary' ? 'one plugin per target' : 'all matching plugins'}
+                    {t(`assessmentProfiles.${item.key}.duration`)} · {t(`scanProfiles.${item.scanProfile}.name`)} ·{' '}
+                    {item.plugins === 'primary' ? t('assessments.onePlugin') : t('assessments.allPlugins')}
                   </span>
                 </label>
               ))}
@@ -222,29 +233,29 @@ export default function NewAssessmentPage() {
           </Card>
 
           <Card
-            title="3 · Targets"
+            title={t('assessments.step3')}
             flush
             actions={
               project &&
               can(user, 'targets.add') && (
                 <button type="button" className="btn btn-secondary btn-sm" onClick={() => setIsAddTargetOpen(true)}>
                   <Plus size={14} aria-hidden="true" />
-                  Add target
+                  {t('targets.add')}
                 </button>
               )
             }
           >
             {!project ? (
-              <p className="px-5 py-8 text-center text-slate-500">Choose a project to see its targets.</p>
+              <p className="px-5 py-8 text-center text-slate-500">{t('assessments.chooseProjectFirst')}</p>
             ) : rows.length === 0 ? (
               <p className="px-5 py-8 text-center text-slate-500">
-                This project has no targets yet.{' '}
+                {t('targets.emptyTitle')}{' '}
                 {can(user, 'targets.add') ? (
                   <button type="button" className="cursor-pointer font-medium text-blue-600 hover:underline" onClick={() => setIsAddTargetOpen(true)}>
-                    Add the first target
+                    {t('targets.addFirst')}
                   </button>
                 ) : (
-                  'Ask someone who can add targets.'
+                  t('assessments.askForTargets')
                 )}
               </p>
             ) : (
@@ -263,7 +274,7 @@ export default function NewAssessmentPage() {
                         <span className="flex flex-wrap items-center gap-2">
                           <strong>{target.name}</strong>
                           <span className="text-xs text-slate-500">{targetTypes.nameOf(target.type)}</span>
-                          {rule && <RuleChip rule={rule}>{RULE_LABELS[rule]}</RuleChip>}
+                          {rule && <RuleChip rule={rule}>{t(`assessments.rules.${rule}`)}</RuleChip>}
                         </span>
                         <code className="mt-0.5 block truncate text-xs text-slate-500">{target.value}</code>
                         <span className="mt-1 block text-xs">
@@ -283,38 +294,42 @@ export default function NewAssessmentPage() {
         </div>
 
         <aside className="xl:sticky xl:top-20 xl:self-start">
-          <Card title="Review">
+          <Card title={t('assessments.review')}>
             <div className="flex flex-col gap-4">
               <div>
                 <label htmlFor="assessment-name" className="mb-1.5 block font-medium">
-                  Name <span className="font-normal text-slate-500">(optional)</span>
+                  {t('common.name')} <span className="field-tag ml-1 bg-slate-100 text-slate-500">{t('common.optional')}</span>
                 </label>
                 <input
                   id="assessment-name"
                   className="input"
                   maxLength={80}
-                  placeholder={project ? `${profile.name} · ${project.name}` : 'e.g. Shop platform Q4'}
+                  placeholder={defaultName || t('assessments.namePlaceholder')}
                   value={name}
                   onChange={(event) => setName(event.target.value)}
                 />
               </div>
 
-              <ReviewSection title="Profile">
-                <ReviewItem tone="ok" title={profile.name} detail={`${profile.duration} · ${profile.scanProfile} depth`} />
+              <ReviewSection title={t('assessments.profile')}>
+                <ReviewItem
+                  tone="ok"
+                  title={profileName}
+                  detail={`${t(`assessmentProfiles.${profile.key}.duration`)} · ${t(`scanProfiles.${profile.scanProfile}.name`)}`}
+                />
               </ReviewSection>
 
-              <ReviewSection title={`Will run (${planned.length})`}>
+              <ReviewSection title={t('assessments.willRun', { count: planned.length })}>
                 {planned.length ? (
                   planned.map((row) => (
                     <ReviewItem key={row.target.id} tone="ok" title={row.target.name} detail={row.plugins.map((plugin) => plugin.name).join(', ')} />
                   ))
                 ) : (
-                  <ReviewItem tone="skip" title="Nothing selected yet" />
+                  <ReviewItem tone="skip" title={t('assessments.nothingSelected')} />
                 )}
               </ReviewSection>
 
               {skipped.length > 0 && (
-                <ReviewSection title={`Will be skipped (${skipped.length})`}>
+                <ReviewSection title={t('assessments.willSkip', { count: skipped.length })}>
                   {skipped.map((row) => (
                     <ReviewItem key={row.target.id} tone="skip" title={row.target.name} detail={row.reason} />
                   ))}
@@ -322,13 +337,13 @@ export default function NewAssessmentPage() {
               )}
 
               {pluginNames.length > 0 && (
-                <ReviewSection title="Plugins">
+                <ReviewSection title={t('scanOptions.tools')}>
                   <ReviewItem tone="ok" title={pluginNames.join(', ')} />
                 </ReviewSection>
               )}
 
               {blockers.length > 0 && (
-                <ReviewSection title="Before you can start">
+                <ReviewSection title={t('assessments.beforeStart')}>
                   {blockers.map((blocker) => (
                     <ReviewItem key={blocker} tone="block" title={blocker} />
                   ))}
@@ -343,8 +358,8 @@ export default function NewAssessmentPage() {
                   onChange={(event) => setAuthorized(event.target.checked)}
                 />
                 <span className="text-[13px]">
-                  <strong className="block">Authorization confirmed</strong>
-                  <span className="text-slate-500">I have written permission from the owner to test every selected target.</span>
+                  <strong className="block">{t('assessments.authorizationTitle')}</strong>
+                  <span className="text-slate-500">{t('assessments.authorizationText')}</span>
                 </span>
               </label>
 
@@ -353,13 +368,11 @@ export default function NewAssessmentPage() {
               <div>
                 <button type="button" className="btn btn-primary w-full" disabled={blockers.length > 0 || isStarting} onClick={handleStart}>
                   <Play size={16} aria-hidden="true" />
-                  {isStarting ? 'Starting…' : 'Start assessment'}
+                  {isStarting ? t('common.starting') : t('assessments.start')}
                 </button>
                 <p className="mt-2 flex items-start gap-1.5 text-xs text-slate-500">
                   <Layers size={13} aria-hidden="true" className="mt-0.5 shrink-0" />
-                  {blockers.length > 0
-                    ? 'Start is available once the items above are resolved.'
-                    : `Creates ${planned.length} scan ${planned.length === 1 ? 'job' : 'jobs'}. They run in parallel up to worker capacity.`}
+                  {blockers.length > 0 ? t('assessments.resolveFirst') : t('assessments.createsJobs', { count: planned.length })}
                 </p>
               </div>
             </div>

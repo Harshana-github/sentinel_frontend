@@ -1,9 +1,10 @@
 import { Search } from 'lucide-react';
+import { useTranslation } from '../i18n';
 
 export function SearchInput({ value, onChange, placeholder, label }) {
   return (
     <div className="relative max-w-sm flex-[1_1_100%] sm:flex-[1_1_260px]">
-      <Search size={16} aria-hidden="true" className="absolute top-1/2 left-2.5 -translate-y-1/2 text-slate-500" />
+      <Search size={16} aria-hidden="true" className="absolute top-1/2 left-2.5 -translate-y-1/2 text-slate-400" />
       <input
         type="search"
         className="input pl-8"
@@ -39,12 +40,13 @@ export function SelectFilter({ label, value, onChange, options, allLabel }) {
 }
 
 export function FilterBar({ children, resultCount }) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-wrap items-center gap-2.5 border-b border-slate-200 px-5 py-3.5">
       {children}
       {resultCount !== undefined && (
         <p className="text-[13px] text-slate-500 sm:ml-auto" aria-live="polite">
-          {resultCount} {resultCount === 1 ? 'result' : 'results'}
+          {t('common.resultCount', { count: resultCount })}
         </p>
       )}
     </div>

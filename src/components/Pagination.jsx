@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslation } from '../i18n';
 
 export const PAGE_SIZES = [10, 25, 50];
 
@@ -47,7 +48,8 @@ function pageNumbers(page, pageCount) {
 
 // The bar under a paged list. Hidden when everything fits on the smallest page size.
 // `sizes` are the page sizes offered; card grids use multiples of 12 so rows stay full.
-export default function Pagination({ pagination, label = 'items', sizes = PAGE_SIZES }) {
+export default function Pagination({ pagination, sizes = PAGE_SIZES }) {
+  const { t } = useTranslation();
   const { page, pageCount, pageSize, total, start, setPage, setPageSize } = pagination;
   if (total <= sizes[0]) return null;
 
@@ -55,17 +57,14 @@ export default function Pagination({ pagination, label = 'items', sizes = PAGE_S
   const pageButton = 'grid h-8 min-w-8 cursor-pointer place-items-center rounded-md px-2 text-[13px] disabled:cursor-not-allowed disabled:opacity-40';
 
   return (
-    <nav aria-label={`${label} pages`} className="flex flex-wrap items-center gap-3 border-t border-slate-200 px-5 py-2.5 text-[13px] text-slate-500">
-      <p aria-live="polite">
-        Showing{' '}
-        <span className="font-semibold text-slate-700">
-          {start + 1}–{end}
-        </span>{' '}
-        of <span className="font-semibold text-slate-700">{total}</span> {label}
-      </p>
+    <nav
+      aria-label={t('pagination.label')}
+      className="flex flex-wrap items-center gap-3 border-t border-slate-200 px-5 py-2.5 text-[13px] text-slate-500"
+    >
+      <p aria-live="polite">{t('pagination.showing', { from: start + 1, to: end, total })}</p>
 
       <label className="flex items-center gap-2">
-        Rows per page
+        {t('pagination.rowsPerPage')}
         <select className="input h-8 w-auto py-0 pr-7" value={pageSize} onChange={(event) => setPageSize(Number(event.target.value))}>
           {sizes.map((size) => (
             <option key={size} value={size}>
@@ -80,7 +79,7 @@ export default function Pagination({ pagination, label = 'items', sizes = PAGE_S
           <button
             type="button"
             className={`${pageButton} hover:bg-slate-100`}
-            aria-label="Previous page"
+            aria-label={t('pagination.previous')}
             disabled={page === 1}
             onClick={() => setPage(page - 1)}
           >
@@ -97,7 +96,7 @@ export default function Pagination({ pagination, label = 'items', sizes = PAGE_S
               <button
                 type="button"
                 className={`${pageButton} ${number === page ? 'bg-blue-600 font-semibold text-white' : 'text-slate-700 hover:bg-slate-100'}`}
-                aria-label={`Page ${number}`}
+                aria-label={t('pagination.page', { number })}
                 aria-current={number === page ? 'page' : undefined}
                 onClick={() => setPage(number)}
               >
@@ -110,7 +109,7 @@ export default function Pagination({ pagination, label = 'items', sizes = PAGE_S
           <button
             type="button"
             className={`${pageButton} hover:bg-slate-100`}
-            aria-label="Next page"
+            aria-label={t('pagination.next')}
             disabled={page === pageCount}
             onClick={() => setPage(page + 1)}
           >

@@ -7,11 +7,12 @@ function isHttpUrl(value) {
   }
 }
 
-// The problem with a target address, or '' when it is fine. `targetType` is the master item.
+// The translation key of the problem with a target address, or '' when it is fine.
+// `targetType` is the master data item.
 export function targetAddressError(value, targetType) {
   const address = value.trim();
-  if (!address) return 'Enter the target address.';
-  if (/\s/.test(address)) return 'The target cannot contain spaces.';
-  if (targetType?.format === 'url' && !isHttpUrl(address)) return 'Enter a full URL starting with https://';
+  if (!address) return 'validation.addressRequired';
+  if (/\s/.test(address)) return 'validation.addressSpaces';
+  if (targetType?.format === 'url' && !isHttpUrl(address)) return 'validation.addressUrl';
   return '';
 }

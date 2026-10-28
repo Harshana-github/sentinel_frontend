@@ -27,8 +27,10 @@ import { SEVERITIES } from '../../utils/constants';
 import { formatDateTime, formatDuration } from '../../utils/format';
 import { can } from '../../utils/roles';
 import Alert from '../../components/Alert';
+import { useTranslation } from '../../i18n';
 
 export default function ScanDetailPage() {
+  const { t } = useTranslation();
   const targetTypes = useMasterList('target-types');
   const { scanId } = useParams();
   const dispatch = useDispatch();
@@ -60,7 +62,7 @@ export default function ScanDetailPage() {
       const newScan = await dispatch(
         startScan({ projectId: scan.projectId, targetId: scan.targetId, profile: scan.profile, tools: scan.tools }),
       ).unwrap();
-      dispatch(showToast({ message: `Scan ${newScan.id} was queued.` }));
+      dispatch(showToast({ message: t('scans.queued', { id: newScan.id }) }));
       navigate(`/scans/${newScan.id}`);
     } catch (error) {
       dispatch(showToast({ type: 'error', message: error.message }));
@@ -69,13 +71,13 @@ export default function ScanDetailPage() {
     }
   }
 
-  const breadcrumbs = [{ label: 'Scans', to: '/scans' }, { label: scanId }];
+  const breadcrumbs = [{ label: t('scans.title'), to: '/scans' }, { label: scanId }];
 
   if (scans.status === 'succeeded' && !scan) {
     return (
       <>
-        <PageHeader title="Scan not found" breadcrumbs={breadcrumbs} />
-        <EmptyState title="This scan does not exist." action={<Link to="/scans">Back to scans</Link>} />
+        <PageHeader title={t('scans.notFound')} breadcrumbs={breadcrumbs} />
+        <EmptyState title={t('scans.notFoundMessage')} action={<Link to="/scans">{t('scans.backToList')}</Link>} />
       </>
     );
   }
@@ -86,7 +88,7 @@ export default function ScanDetailPage() {
   return (
     <>
       <PageHeader
-        title={scan ? `Scan ${scan.id}` : 'Scan'}
+        title={scan ? t('scans.scanTitle', { id: scan.id }) : t('scans.scan')}
         description={scan && `${scan.targetName} · ${scan.projectName}`}
         breadcrumbs={breadcrumbs}
         actions={
@@ -97,7 +99,7 @@ export default function ScanDetailPage() {
             can(user, 'scans.start') && (
               <button type="button" className="btn btn-secondary" onClick={handleRescan} disabled={isRescanning}>
                 <RotateCw size={16} aria-hidden="true" />
-                {isRescanning ? 'Queuing…' : 'Run again'}
+                {isRescanning ? t('scans.queuing') : t('scans.runAgain')}
               </button>
             )
           ))
@@ -107,56 +109,56 @@ export default function ScanDetailPage() {
       <AsyncContent status={scans.status} error={scans.error} hasData={Boolean(scan)} onRetry={() => dispatch(fetchScans())}>
         {scan && (
           <div className="flex flex-col gap-5">
-            <Card title="Progress">
+            <Card title={t('scans.progress')}>
               <div className="flex flex-col gap-2.5">
                 <div className="flex items-center justify-between">
                   <StatusBadge status={scan.status} category="scan-statuses" />
                   <span className="text-xl font-bold">{scan.progress}%</span>
                 </div>
-                <ProgressBar value={scan.progress} label={`Scan ${scan.id} progress`} className="h-2.5" />
-                {scan.status === 'Queued' && <p className="text-slate-500">Waiting for a free scan worker…</p>}
+                <ProgressBar value={scan.progress} label={t('scans.progressOf', { id: scan.id })} className="h-2.5" />
+                {scan.status === 'Queued' && <p className="text-slate-500">{t('scans.waitingForWorker')}</p>}
                 {scan.status === 'Running' && (
                   <p className="text-slate-500">
-                    Running {toolNames}. {USE_MOCK_DATA && 'Progress is simulated in demo mode.'}
+                    {t('scans.runningTools', { tools: toolNames })} {USE_MOCK_DATA && t('scans.simulated')}
                   </p>
                 )}
                 {scan.status === 'Failed' && <Alert tone="error">{scan.errorMessage}</Alert>}
-                {scan.status === 'Cancelled' && <Alert>This scan was cancelled before it finished.</Alert>}
+                {scan.status === 'Cancelled' && <Alert>{t('scans.cancelledNotice')}</Alert>}
               </div>
             </Card>
 
-            <Card title="Details">
+            <Card title={t('common.details')}>
               <DetailList
                 items={[
-                  { label: 'Project', value: <Link to={`/projects/${scan.projectId}`}>{scan.projectName}</Link> },
-                  { label: 'Organization', value: scan.organizationName },
-                  { label: 'Target', value: scan.targetName },
-                  { label: 'Address', value: <span className="font-mono">{scan.targetValue}</span> },
-                  { label: 'Target type', value: targetTypes.nameOf(scan.targetType) },
+                  { label: t('projects.project'), value: <Link to={`/projects/${scan.projectId}`}>{scan.projectName}</Link> },
+                  { label: t('common.organization'), value: scan.organizationName },
+                  { label: t('scans.target'), value: scan.targetName },
+                  { label: t('targets.address'), value: <span className="font-mono">{scan.targetValue}</span> },
+                  { label: t('targets.type'), value: targetTypes.nameOf(scan.targetType) },
                   {
-                    label: 'Started as',
+                    label: t('scans.startedAs'),
                     value: scan.assessmentId ? (
                       <Link to={`/assessments/${scan.assessmentId}`}>
-                        Part of {scan.assessmentId} · {scan.assessmentName}
+                        {t('scans.partOf', { id: scan.assessmentId })} · {scan.assessmentName}
                       </Link>
                     ) : (
-                      'Single scan'
+                      t('scans.singleScan')
                     ),
                   },
-                  { label: 'Profile', value: scan.profile },
-                  { label: 'Scanner modules', value: toolNames },
-                  { label: 'Requested by', value: scan.initiatedBy },
-                  { label: 'Requested', value: formatDateTime(scan.createdAt) },
-                  { label: 'Started', value: formatDateTime(scan.startedAt) },
-                  { label: 'Finished', value: formatDateTime(scan.finishedAt) },
-                  { label: 'Duration', value: formatDuration(scan.startedAt, scan.finishedAt) },
+                  { label: t('scanProfiles.legend'), value: t(`scanProfiles.${scan.profile}.name`) },
+                  { label: t('scanOptions.tools'), value: toolNames },
+                  { label: t('scans.requestedBy'), value: scan.initiatedBy },
+                  { label: t('scans.requested'), value: formatDateTime(scan.createdAt) },
+                  { label: t('scans.started'), value: formatDateTime(scan.startedAt) },
+                  { label: t('scans.finished'), value: formatDateTime(scan.finishedAt) },
+                  { label: t('scans.duration'), value: formatDuration(scan.startedAt, scan.finishedAt) },
                 ]}
               />
             </Card>
 
-            <Card title={`Findings (${scanFindings.length})`} flush>
+            <Card title={t('findings.titleCount', { count: scanFindings.length })} flush>
               {scan.status === 'Completed' && (
-                <ul className="flex flex-wrap gap-3.5 border-b border-slate-200 px-5 py-4" aria-label="Findings by severity">
+                <ul className="flex flex-wrap gap-3.5 border-b border-slate-200 px-5 py-4" aria-label={t('dashboard.openBySeverity')}>
                   {SEVERITIES.map((severity) => (
                     <li key={severity} className="flex items-center gap-1.5">
                       <SeverityBadge severity={severity} /> <strong>{scanFindings.filter((finding) => finding.severity === severity).length}</strong>
@@ -173,7 +175,7 @@ export default function ScanDetailPage() {
                 <FindingsTable
                   findings={scanFindings}
                   showTarget={false}
-                  emptyMessage={scan.status === 'Completed' ? 'This scan found no issues.' : 'Findings appear here when the scan completes.'}
+                  emptyMessage={scan.status === 'Completed' ? t('scans.noIssues') : t('scans.findingsLater')}
                 />
               </AsyncContent>
             </Card>

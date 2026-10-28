@@ -1,11 +1,13 @@
 import { useId, useRef, useState } from 'react';
 import { ImageUp, X } from 'lucide-react';
+import { useTranslation } from '../i18n';
 
 const ACCEPT = 'image/png,image/jpeg,image/svg+xml,image/webp,image/x-icon,image/vnd.microsoft.icon';
 
 // Picks an image and returns it as a data URL through onChange (null when removed).
 // `maxKb` is checked here for quick feedback; the API checks it again.
 export default function ImageUpload({ label, hint, value, onChange, maxKb, previewClassName = 'size-16' }) {
+  const { t } = useTranslation();
   const inputRef = useRef(null);
   const id = useId();
   const [error, setError] = useState('');
@@ -15,11 +17,11 @@ export default function ImageUpload({ label, hint, value, onChange, maxKb, previ
     event.target.value = '';
     if (!file) return;
     if (!ACCEPT.split(',').includes(file.type)) {
-      setError('Use a PNG, JPG, SVG, WebP or ICO file.');
+      setError(t('imageUpload.wrongType'));
       return;
     }
     if (file.size > maxKb * 1024) {
-      setError(`That file is ${Math.ceil(file.size / 1024)} KB. The limit is ${maxKb} KB.`);
+      setError(t('imageUpload.tooLarge', { size: Math.ceil(file.size / 1024), max: maxKb }));
       return;
     }
     const reader = new FileReader();
@@ -27,7 +29,7 @@ export default function ImageUpload({ label, hint, value, onChange, maxKb, previ
       setError('');
       onChange(reader.result);
     };
-    reader.onerror = () => setError('The file could not be read.');
+    reader.onerror = () => setError(t('imageUpload.unreadable'));
     reader.readAsDataURL(file);
   }
 
@@ -49,16 +51,16 @@ export default function ImageUpload({ label, hint, value, onChange, maxKb, previ
         <div className="flex flex-col gap-1.5">
           <div className="flex gap-2">
             <button type="button" className="btn btn-secondary btn-sm" aria-describedby={`${id}-label`} onClick={() => inputRef.current.click()}>
-              {value ? 'Replace' : 'Upload'}
+              {value ? t('imageUpload.replace') : t('imageUpload.upload')}
             </button>
             {value && (
               <button type="button" className="btn btn-secondary btn-sm" onClick={() => onChange(null)}>
                 <X size={14} aria-hidden="true" />
-                Remove
+                {t('common.remove')}
               </button>
             )}
           </div>
-          <p className="text-xs text-slate-500">{hint ?? `PNG, JPG, SVG, WebP or ICO, up to ${maxKb} KB.`}</p>
+          <p className="text-xs text-slate-500">{hint ?? t('imageUpload.hint', { max: maxKb })}</p>
           {error && (
             <p className="text-[13px] text-red-700" role="alert">
               {error}

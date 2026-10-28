@@ -14,11 +14,13 @@ import { CategoryStatusBadge } from '../../components/StatusBadge';
 import { EmptyState } from '../../components/StateMessage';
 import { can } from '../../utils/roles';
 import { formatRelativeTime } from '../../utils/format';
+import { useConfirm } from '../../components/ConfirmDialog';
+import { useTranslation } from '../../i18n';
 
-const BASE_COLUMNS = [
+const baseColumns = (t) => [
   {
     key: 'name',
-    header: 'Name',
+    header: t('common.name'),
     render: (member) => (
       <div className="flex min-w-40 flex-col gap-0.5">
         <span className="font-semibold">{member.name}</span>
@@ -28,17 +30,23 @@ const BASE_COLUMNS = [
   },
   {
     key: 'role',
-    header: 'Role',
+    header: t('team.role'),
     render: (member) => (
       <span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold whitespace-nowrap text-slate-700">{member.roleName}</span>
     ),
   },
-  { key: 'status', header: 'Status', render: (member) => <CategoryStatusBadge category="user-statuses" value={member.status} /> },
-  { key: 'lastActiveAt', header: 'Last active', render: (member) => (member.lastActiveAt ? formatRelativeTime(member.lastActiveAt) : 'Never') },
+  { key: 'status', header: t('common.status'), render: (member) => <CategoryStatusBadge category="user-statuses" value={member.status} /> },
+  {
+    key: 'lastActiveAt',
+    header: t('team.lastActive'),
+    render: (member) => (member.lastActiveAt ? formatRelativeTime(member.lastActiveAt) : t('common.never')),
+  },
 ];
 
 export default function TeamPage() {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
+  const confirm = useConfirm();
   const user = useSelector(selectCurrentUser);
   const members = useSelector((state) => selectMembersOf(state, user.organizationId));
 
@@ -55,11 +63,17 @@ export default function TeamPage() {
   const canDelete = can(user, 'users.delete');
 
   async function handleDelete(member) {
-    if (!window.confirm(`Delete ${member.name}? They will no longer be able to sign in. This cannot be undone.`)) return;
+    const confirmed = await confirm({
+      title: t('team.deleteTitle'),
+      message: t('team.deleteMessage', { name: member.name }),
+      confirmLabel: t('common.delete'),
+      danger: true,
+    });
+    if (!confirmed) return;
     setDeletingId(member.id);
     try {
       await dispatch(deleteMember(member.id)).unwrap();
-      dispatch(showToast({ message: `${member.name} was deleted.` }));
+      dispatch(showToast({ message: t('team.deleted', { name: member.name }) }));
     } catch (deleteError) {
       dispatch(showToast({ type: 'error', message: deleteError.message }));
       setDeletingId(null);
@@ -69,10 +83,10 @@ export default function TeamPage() {
   const columns =
     canEdit || canDelete
       ? [
-          ...BASE_COLUMNS,
+          ...baseColumns(t),
           {
             key: 'actions',
-            header: 'Actions',
+            header: t('common.actions'),
             className: 'w-24 text-right',
             render: (member) => {
               const isSelf = member.id === user.id;
@@ -82,8 +96,8 @@ export default function TeamPage() {
                     <button
                       type="button"
                       className="icon-btn"
-                      aria-label={`Edit ${member.name}`}
-                      title="Edit name and role"
+                      aria-label={t('common.editItem', { name: member.name })}
+                      title={t('common.edit')}
                       onClick={() => setEditing(member)}
                     >
                       <Pencil size={16} aria-hidden="true" />
@@ -93,8 +107,8 @@ export default function TeamPage() {
                     <button
                       type="button"
                       className="icon-btn hover:text-red-700"
-                      aria-label={`Delete ${member.name}`}
-                      title={isSelf ? 'You cannot delete your own account' : 'Delete user'}
+                      aria-label={t('common.deleteItem', { name: member.name })}
+                      title={isSelf ? t('team.cannotDeleteSelf') : t('common.delete')}
                       disabled={isSelf || deletingId === member.id}
                       onClick={() => handleDelete(member)}
                     >
@@ -106,13 +120,13 @@ export default function TeamPage() {
             },
           },
         ]
-      : BASE_COLUMNS;
+      : baseColumns(t);
 
   if (!canView) {
     return (
       <>
-        <PageHeader title="Users" />
-        <EmptyState title="You do not have permission to view users." />
+        <PageHeader title={t('team.title')} />
+        <EmptyState title={t('team.noPermission')} />
       </>
     );
   }
@@ -120,25 +134,25 @@ export default function TeamPage() {
   return (
     <div className="fill-page">
       <PageHeader
-        title="Users"
-        description={`People in ${user.organizationName} and their roles.`}
+        title={t('team.title')}
+        description={t('team.description', { organization: user.organizationName })}
         actions={
           can(user, 'users.create') && (
             <button type="button" className="btn btn-primary" onClick={() => setEditing(null)}>
               <Plus size={16} aria-hidden="true" />
-              Add user
+              {t('team.add')}
             </button>
           )
         }
       />
-      <Card title={`Members (${members.items.length})`} flush fill>
+      <Card title={t('team.membersCount', { count: members.items.length })} flush fill>
         <AsyncContent
           status={members.status}
           error={members.error}
           hasData={members.items.length > 0}
           onRetry={() => dispatch(fetchOrganizationMembers(user.organizationId))}
         >
-          <DataTable columns={columns} rows={members.items} caption="Team members" emptyMessage="No members yet." />
+          <DataTable columns={columns} rows={members.items} caption={t('team.title')} emptyMessage={t('team.empty')} />
         </AsyncContent>
       </Card>
 

@@ -15,30 +15,36 @@ import { CategoryStatusBadge } from '../../components/StatusBadge';
 import { SCAN_STATUSES, SEVERITIES } from '../../utils/constants';
 import { SCAN_STATUS_BAR_CLASSES, SEVERITY_BAR_CLASSES } from '../../utils/colors';
 import { formatRelativeTime } from '../../utils/format';
+import { useTranslation } from '../../i18n';
 
-const ORGANIZATION_COLUMNS = [
+const organizationColumns = (t) => [
   {
     key: 'name',
-    header: 'Organization',
+    header: t('common.organization'),
     render: (organization) => (
       <Link to={`/admin/organizations/${organization.id}`} className="font-semibold">
         {organization.name}
       </Link>
     ),
   },
-  { key: 'userCount', header: 'Users', className: 'text-right' },
-  { key: 'projectCount', header: 'Projects', className: 'text-right' },
-  { key: 'scanCount', header: 'Scans', className: 'text-right' },
-  { key: 'openFindingCount', header: 'Open findings', className: 'text-right' },
+  { key: 'userCount', header: t('nav.users'), className: 'text-right' },
+  { key: 'projectCount', header: t('nav.projects'), className: 'text-right' },
+  { key: 'scanCount', header: t('admin.scans'), className: 'text-right' },
+  { key: 'openFindingCount', header: t('projects.openFindings'), className: 'text-right' },
   {
     key: 'lastScanAt',
-    header: 'Last scan',
-    render: (organization) => (organization.lastScanAt ? formatRelativeTime(organization.lastScanAt) : 'Never'),
+    header: t('projects.lastScan'),
+    render: (organization) => (organization.lastScanAt ? formatRelativeTime(organization.lastScanAt) : t('common.never')),
   },
-  { key: 'status', header: 'Status', render: (organization) => <CategoryStatusBadge category="organization-statuses" value={organization.status} /> },
+  {
+    key: 'status',
+    header: t('common.status'),
+    render: (organization) => <CategoryStatusBadge category="organization-statuses" value={organization.status} />,
+  },
 ];
 
 export default function AdminDashboardPage() {
+  const { t } = useTranslation();
   const scanStatuses = useStatusList('scan-statuses');
   const dispatch = useDispatch();
   const { data: summary, status, error } = useSelector(selectPlatformSummary);
@@ -49,7 +55,7 @@ export default function AdminDashboardPage() {
 
   return (
     <>
-      <PageHeader title="Platform dashboard" description="Usage and security activity across every customer organization." />
+      <PageHeader title={t('admin.dashboardTitle')} description={t('admin.dashboardDescription')} />
 
       <AsyncContent status={status} error={error} hasData={Boolean(summary)} onRetry={() => dispatch(fetchPlatformSummary())}>
         {summary && (
@@ -57,26 +63,31 @@ export default function AdminDashboardPage() {
             <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
               <StatCard
                 icon={Building2}
-                label="Organizations"
+                label={t('nav.organizations')}
                 value={summary.totals.organizations}
-                detail={`${summary.totals.activeOrganizations} active or on trial`}
+                detail={t('admin.activeOrganizations', { count: summary.totals.activeOrganizations })}
                 to="/admin/organizations"
               />
-              <StatCard icon={Users} label="Users" value={summary.totals.users} to="/admin/organizations" />
+              <StatCard icon={Users} label={t('nav.users')} value={summary.totals.users} to="/admin/organizations" />
               <StatCard
                 icon={Radar}
-                label="Scans"
+                label={t('admin.scans')}
                 value={summary.totals.scans}
-                detail={`${summary.scanStatusCounts.Running} running now`}
+                detail={t('admin.runningNow', { count: summary.scanStatusCounts.Running })}
                 to="/admin/organizations"
               />
-              <StatCard icon={ShieldAlert} label="Open vulnerabilities" value={summary.totals.openVulnerabilities} to="/admin/organizations" />
+              <StatCard
+                icon={ShieldAlert}
+                label={t('admin.openVulnerabilities')}
+                value={summary.totals.openVulnerabilities}
+                to="/admin/organizations"
+              />
             </div>
 
             <div className="grid gap-5 xl:grid-cols-2">
-              <Card title="Scan status (all organizations)">
+              <Card title={t('admin.scanStatusAll')}>
                 <BarList
-                  label="Scans by status"
+                  label={t('dashboard.scanStatus')}
                   items={SCAN_STATUSES.map((scanStatus) => ({
                     key: scanStatus,
                     label: scanStatuses.labelOf(scanStatus),
@@ -85,12 +96,12 @@ export default function AdminDashboardPage() {
                   }))}
                 />
               </Card>
-              <Card title="Open vulnerabilities by severity">
+              <Card title={t('dashboard.openBySeverity')}>
                 <BarList
-                  label="Open vulnerabilities by severity"
+                  label={t('dashboard.openBySeverity')}
                   items={SEVERITIES.map((severity) => ({
                     key: severity,
-                    label: severity,
+                    label: t(`severity.${severity}`),
                     count: summary.openSeverityCounts[severity],
                     barClass: SEVERITY_BAR_CLASSES[severity],
                   }))}
@@ -98,12 +109,12 @@ export default function AdminDashboardPage() {
               </Card>
             </div>
 
-            <Card title="Organizations overview" flush actions={<Link to="/admin/organizations">Manage organizations</Link>}>
+            <Card title={t('admin.organizationsOverview')} flush actions={<Link to="/admin/organizations">{t('admin.manageOrganizations')}</Link>}>
               <DataTable
-                columns={ORGANIZATION_COLUMNS}
+                columns={organizationColumns(t)}
                 rows={summary.organizations}
-                caption="Organizations overview"
-                emptyMessage="No organizations yet."
+                caption={t('admin.organizationsOverview')}
+                emptyMessage={t('organizations.empty')}
               />
             </Card>
           </div>

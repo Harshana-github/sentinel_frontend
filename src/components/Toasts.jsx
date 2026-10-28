@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { CircleCheck, CircleX, X } from 'lucide-react';
 import { dismissToast, selectToasts } from '../features/ui/uiSlice';
+import { useTranslation } from '../i18n';
 
 const TOAST_DURATION_MS = 4500;
 
@@ -18,6 +19,7 @@ export default function Toasts() {
 
 function Toast({ toast }) {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const timer = setTimeout(() => dispatch(dismissToast(toast.id)), TOAST_DURATION_MS);
@@ -34,7 +36,7 @@ function Toast({ toast }) {
     >
       <Icon size={18} aria-hidden="true" className={`mt-px shrink-0 ${isError ? 'text-red-600' : 'text-green-600'}`} />
       <p className="flex-1">{toast.message}</p>
-      <button type="button" className="icon-btn size-6.5" aria-label="Dismiss notification" onClick={() => dispatch(dismissToast(toast.id))}>
+      <button type="button" className="icon-btn size-6.5" aria-label={t('common.close')} onClick={() => dispatch(dismissToast(toast.id))}>
         <X size={16} aria-hidden="true" />
       </button>
     </div>

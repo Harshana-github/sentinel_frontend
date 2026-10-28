@@ -28,8 +28,10 @@ import { SEVERITY_BAR_CLASSES } from '../../utils/colors';
 import { formatDate } from '../../utils/format';
 import { can } from '../../utils/roles';
 import Alert from '../../components/Alert';
+import { useTranslation } from '../../i18n';
 
 export default function ProjectDetailPage() {
+  const { t } = useTranslation();
   const targetTypes = useMasterList('target-types');
   const { projectId } = useParams();
   const dispatch = useDispatch();
@@ -61,13 +63,13 @@ export default function ProjectDetailPage() {
   const refreshScans = useCallback(() => dispatch(fetchScans({ silent: true })), [dispatch]);
   usePolling(refreshScans, projectScans.some(isActiveScan));
 
-  const breadcrumbs = [{ label: 'Projects', to: '/projects' }, { label: project?.name ?? projectId }];
+  const breadcrumbs = [{ label: t('projects.title'), to: '/projects' }, { label: project?.name ?? projectId }];
 
   if (projects.status === 'succeeded' && !project) {
     return (
       <>
-        <PageHeader title="Project not found" breadcrumbs={breadcrumbs} />
-        <EmptyState title="This project does not exist." action={<Link to="/projects">Back to projects</Link>} />
+        <PageHeader title={t('projects.notFound')} breadcrumbs={breadcrumbs} />
+        <EmptyState title={t('projects.notFoundMessage')} action={<Link to="/projects">{t('projects.backToList')}</Link>} />
       </>
     );
   }
@@ -77,13 +79,13 @@ export default function ProjectDetailPage() {
   const canStartScans = can(user, 'scans.start');
 
   const targetColumns = [
-    { key: 'name', header: 'Name' },
-    { key: 'type', header: 'Type', render: (target) => targetTypes.nameOf(target.type) },
-    { key: 'value', header: 'Address', render: (target) => <span className="font-mono">{target.value}</span> },
-    { key: 'createdAt', header: 'Added', render: (target) => formatDate(target.createdAt) },
+    { key: 'name', header: t('common.name') },
+    { key: 'type', header: t('targets.type'), render: (target) => targetTypes.nameOf(target.type) },
+    { key: 'value', header: t('targets.address'), render: (target) => <span className="font-mono">{target.value}</span> },
+    { key: 'createdAt', header: t('targets.added'), render: (target) => formatDate(target.createdAt) },
     {
       key: 'actions',
-      header: <span className="sr-only">Actions</span>,
+      header: <span className="sr-only">{t('common.actions')}</span>,
       render: (target) =>
         canStartScans && (
           <button
@@ -91,10 +93,10 @@ export default function ProjectDetailPage() {
             className="btn btn-secondary btn-sm"
             onClick={() => setScanDialog({ targetId: target.id })}
             disabled={isArchived}
-            aria-label={`Scan ${target.name}`}
+            aria-label={t('targets.scanLabel', { name: target.name })}
           >
             <Play size={14} aria-hidden="true" />
-            Scan
+            {t('targets.scan')}
           </button>
         ),
     },
@@ -103,7 +105,7 @@ export default function ProjectDetailPage() {
   return (
     <>
       <PageHeader
-        title={project?.name ?? 'Project'}
+        title={project?.name ?? t('projects.project')}
         description={project?.description}
         breadcrumbs={breadcrumbs}
         actions={
@@ -112,7 +114,7 @@ export default function ProjectDetailPage() {
               {can(user, 'targets.add') && (
                 <button type="button" className="btn btn-secondary" onClick={() => setIsAddTargetOpen(true)} disabled={isArchived}>
                   <Plus size={16} aria-hidden="true" />
-                  Add target
+                  {t('targets.add')}
                 </button>
               )}
               {canStartScans && (
@@ -123,7 +125,7 @@ export default function ProjectDetailPage() {
                   disabled={isArchived || project.targets.length === 0}
                 >
                   <Layers size={16} aria-hidden="true" />
-                  Start assessment
+                  {t('assessments.start')}
                 </button>
               )}
               {canStartScans && (
@@ -134,7 +136,7 @@ export default function ProjectDetailPage() {
                   disabled={isArchived || project.targets.length === 0}
                 >
                   <Play size={16} aria-hidden="true" />
-                  Single scan
+                  {t('scans.singleScan')}
                 </button>
               )}
             </>
@@ -145,28 +147,28 @@ export default function ProjectDetailPage() {
       <AsyncContent status={projects.status} error={projects.error} hasData={Boolean(project)} onRetry={() => dispatch(fetchProjects())}>
         {project && (
           <div className="flex flex-col gap-5">
-            {isArchived && <Alert>This project is archived. You can view its history but cannot add targets or start scans.</Alert>}
+            {isArchived && <Alert>{t('projects.archivedNotice')}</Alert>}
 
             <div className="grid gap-5 xl:grid-cols-2">
-              <Card title="Overview">
+              <Card title={t('common.overview')}>
                 <DetailList
                   items={[
-                    { label: 'Project code', value: <code className="text-[13px] font-semibold">{project.code}</code> },
-                    { label: 'Organization', value: project.organizationName },
-                    { label: 'Status', value: <StatusBadge status={project.status} category="project-statuses" /> },
-                    { label: 'Environment', value: project.environment },
-                    { label: 'Owner', value: project.owner },
-                    { label: 'Created', value: formatDate(project.createdAt) },
-                    { label: 'Scans', value: project.scanCount },
+                    { label: t('projects.code'), value: <code className="text-[13px] font-semibold">{project.code}</code> },
+                    { label: t('common.organization'), value: project.organizationName },
+                    { label: t('common.status'), value: <StatusBadge status={project.status} category="project-statuses" /> },
+                    { label: t('projects.environment'), value: t(`environments.${project.environment}`) },
+                    { label: t('projects.owner'), value: project.owner },
+                    { label: t('common.created'), value: formatDate(project.createdAt) },
+                    { label: t('nav.scans'), value: project.scanCount },
                   ]}
                 />
               </Card>
-              <Card title={`Open findings (${openFindings.length})`}>
+              <Card title={t('projects.openFindingsCount', { count: openFindings.length })}>
                 <BarList
-                  label="Open findings by severity"
+                  label={t('dashboard.openBySeverity')}
                   items={SEVERITIES.map((severity) => ({
                     key: severity,
-                    label: severity,
+                    label: t(`severity.${severity}`),
                     count: openFindings.filter((finding) => finding.severity === severity).length,
                     barClass: SEVERITY_BAR_CLASSES[severity],
                   }))}
@@ -175,40 +177,51 @@ export default function ProjectDetailPage() {
             </div>
 
             <Card
-              title={`Scan targets (${project.targets.length})`}
+              title={t('targets.titleCount', { count: project.targets.length })}
               flush
               actions={
                 can(user, 'targets.add') &&
                 !isArchived && (
                   <button type="button" className="btn btn-secondary btn-sm" onClick={() => setIsAddTargetOpen(true)}>
                     <Plus size={14} aria-hidden="true" />
-                    Add target
+                    {t('targets.add')}
                   </button>
                 )
               }
             >
-              <DataTable
-                columns={targetColumns}
-                rows={project.targets}
-                caption="Scan targets"
-                emptyMessage="No targets yet. Use Add target to set up what this project scans."
-              />
+              {project.targets.length === 0 ? (
+                <EmptyState
+                  title={t('targets.emptyTitle')}
+                  message={t('targets.emptyMessage')}
+                  action={
+                    can(user, 'targets.add') &&
+                    !isArchived && (
+                      <button type="button" className="btn btn-primary" onClick={() => setIsAddTargetOpen(true)}>
+                        <Plus size={16} aria-hidden="true" />
+                        {t('targets.addFirst')}
+                      </button>
+                    )
+                  }
+                />
+              ) : (
+                <DataTable columns={targetColumns} rows={project.targets} caption={t('targets.title')} />
+              )}
             </Card>
 
-            <Card title={`Scans (${projectScans.length})`} flush>
+            <Card title={t('scans.titleCount', { count: projectScans.length })} flush>
               <AsyncContent status={scans.status} error={scans.error} hasData={scans.items.length > 0} onRetry={() => dispatch(fetchScans())}>
-                <ScansTable scans={projectScans} showProject={false} showActions emptyMessage="This project has not been scanned yet." />
+                <ScansTable scans={projectScans} showProject={false} showActions emptyMessage={t('projects.noScans')} />
               </AsyncContent>
             </Card>
 
-            <Card title={`Findings (${projectFindings.length})`} flush>
+            <Card title={t('findings.titleCount', { count: projectFindings.length })} flush>
               <AsyncContent
                 status={findings.status}
                 error={findings.error}
                 hasData={findings.items.length > 0}
                 onRetry={() => dispatch(fetchFindings())}
               >
-                <FindingsTable findings={projectFindings} emptyMessage="No findings for this project." />
+                <FindingsTable findings={projectFindings} emptyMessage={t('projects.noFindings')} />
               </AsyncContent>
             </Card>
           </div>

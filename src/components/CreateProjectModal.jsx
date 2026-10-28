@@ -8,22 +8,24 @@ import { PROJECT_CODE_MAX, projectCodeError, suggestProjectCode } from '../utils
 import FormField, { errorProps } from './FormField';
 import Modal from './Modal';
 import Alert from './Alert';
+import { useTranslation } from '../i18n';
 
 const EMPTY_FORM = { name: '', code: '', environment: 'Production', description: '' };
 
-function validate(form) {
+function validate(form, t) {
   const errors = {};
   const name = form.name.trim();
-  if (!name) errors.name = 'Enter a project name.';
-  else if (name.length < 3 || name.length > 60) errors.name = 'Use between 3 and 60 characters.';
+  if (!name) errors.name = t('projects.nameRequired');
+  else if (name.length < 3 || name.length > 60) errors.name = t('projects.nameLength');
   const codeProblem = projectCodeError(form.code);
-  if (codeProblem) errors.code = codeProblem;
-  if (form.description.length > 300) errors.description = 'Keep the description under 300 characters.';
+  if (codeProblem) errors.code = t(codeProblem);
+  if (form.description.length > 300) errors.description = t('validation.descriptionLength');
   return errors;
 }
 
 export default function CreateProjectModal({ onClose, onCreated }) {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const user = useSelector(selectCurrentUser);
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
@@ -55,7 +57,7 @@ export default function CreateProjectModal({ onClose, onCreated }) {
   async function handleSubmit(event) {
     event.preventDefault();
     if (isSubmitting) return;
-    const validationErrors = validate(form);
+    const validationErrors = validate(form, t);
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) return;
 
@@ -63,7 +65,7 @@ export default function CreateProjectModal({ onClose, onCreated }) {
     setSubmitError('');
     try {
       const project = await dispatch(createProject(form)).unwrap();
-      dispatch(showToast({ message: `Project "${project.name}" was created.` }));
+      dispatch(showToast({ message: t('projects.created', { name: project.name }) }));
       onCreated(project);
     } catch (error) {
       setSubmitError(error.message);
@@ -72,16 +74,16 @@ export default function CreateProjectModal({ onClose, onCreated }) {
   }
 
   return (
-    <Modal title="Create project" onClose={onClose}>
+    <Modal title={t('projects.createTitle')} onClose={onClose}>
       <form onSubmit={handleSubmit} noValidate>
-        <p className="text-slate-500 mb-4">The project is created in {user?.organizationName}.</p>
+        <p className="mb-4 text-slate-500">{t('projects.createHelp', { organization: user?.organizationName })}</p>
         {submitError && (
           <Alert tone="error" className="mb-4">
             {submitError}
           </Alert>
         )}
         <div className="grid gap-x-3 sm:grid-cols-[1fr_170px]">
-          <FormField id="project-name" label="Project name" error={errors.name}>
+          <FormField id="project-name" label={t('projects.name')} required error={errors.name}>
             <input
               id="project-name"
               name="name"
@@ -92,7 +94,7 @@ export default function CreateProjectModal({ onClose, onCreated }) {
               {...errorProps('project-name', errors.name)}
             />
           </FormField>
-          <FormField id="project-code" label="Project code" hint="Unique, e.g. WEB or MOBILE-API." error={errors.code}>
+          <FormField id="project-code" label={t('projects.code')} required hint={t('projects.codeHint')} error={errors.code}>
             <input
               id="project-code"
               name="code"
@@ -104,14 +106,16 @@ export default function CreateProjectModal({ onClose, onCreated }) {
             />
           </FormField>
         </div>
-        <FormField id="project-environment" label="Environment">
+        <FormField id="project-environment" label={t('projects.environment')} required>
           <select id="project-environment" name="environment" className="input" value={form.environment} onChange={updateField}>
             {PROJECT_ENVIRONMENTS.map((environment) => (
-              <option key={environment}>{environment}</option>
+              <option key={environment} value={environment}>
+                {t(`environments.${environment}`)}
+              </option>
             ))}
           </select>
         </FormField>
-        <FormField id="project-description" label="Description (optional)" error={errors.description}>
+        <FormField id="project-description" label={t('common.description')} optional error={errors.description}>
           <textarea
             id="project-description"
             name="description"
@@ -124,10 +128,10 @@ export default function CreateProjectModal({ onClose, onCreated }) {
         </FormField>
         <div className="mt-2 flex justify-end gap-2">
           <button type="button" className="btn btn-secondary" onClick={onClose}>
-            Cancel
+            {t('common.cancel')}
           </button>
           <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
-            {isSubmitting ? 'Creating…' : 'Create project'}
+            {isSubmitting ? t('common.creating') : t('projects.create')}
           </button>
         </div>
       </form>
