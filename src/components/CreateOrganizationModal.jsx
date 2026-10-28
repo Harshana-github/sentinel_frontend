@@ -86,7 +86,15 @@ export default function CreateOrganizationModal({ onClose }) {
         <section className="mb-2">
           <h3 className={`mb-3 ${SECTION_HEADING}`}>Organization</h3>
           <FormField id="organization-name" label="Name" error={errors.name}>
-            <input id="organization-name" name="name" className="input" value={form.name} onChange={updateField} autoFocus {...errorProps('organization-name', errors.name)} />
+            <input
+              id="organization-name"
+              name="name"
+              className="input"
+              value={form.name}
+              onChange={updateField}
+              autoFocus
+              {...errorProps('organization-name', errors.name)}
+            />
           </FormField>
           <SlugField
             id="organization-slug"
@@ -102,9 +110,18 @@ export default function CreateOrganizationModal({ onClose }) {
 
         <section className="border-t border-slate-200 pt-4">
           <h3 className={`mb-1 ${SECTION_HEADING}`}>Organization admin</h3>
-          <p className="mb-3 text-xs text-slate-500">This person signs in first and manages the organization. You send them the login details yourself.</p>
+          <p className="mb-3 text-xs text-slate-500">
+            This person signs in first and manages the organization. You send them the login details yourself.
+          </p>
           <FormField id="admin-name" label="Full name" error={errors.adminName}>
-            <input id="admin-name" name="adminName" className="input" value={form.adminName} onChange={updateField} {...errorProps('admin-name', errors.adminName)} />
+            <input
+              id="admin-name"
+              name="adminName"
+              className="input"
+              value={form.adminName}
+              onChange={updateField}
+              {...errorProps('admin-name', errors.adminName)}
+            />
           </FormField>
           <FormField id="admin-role" label="Role" hint="Full access to all modules and permissions.">
             <select id="admin-role" className="input" value="Admin" disabled>
@@ -112,7 +129,15 @@ export default function CreateOrganizationModal({ onClose }) {
             </select>
           </FormField>
           <FormField id="admin-email" label="Email (used to sign in)" error={errors.adminEmail}>
-            <input id="admin-email" name="adminEmail" type="email" className="input" value={form.adminEmail} onChange={updateField} {...errorProps('admin-email', errors.adminEmail)} />
+            <input
+              id="admin-email"
+              name="adminEmail"
+              type="email"
+              className="input"
+              value={form.adminEmail}
+              onChange={updateField}
+              {...errorProps('admin-email', errors.adminEmail)}
+            />
           </FormField>
           <FormField id="admin-password" label="Password" error={errors.adminPassword} hint={`At least ${MIN_PASSWORD_LENGTH} characters.`}>
             <div className="relative">

@@ -137,7 +137,9 @@ export default function AssessmentDetailPage() {
             </div>
 
             <Card title={`Scan jobs (${jobs.length})`} flush>
-              <p className="border-b border-slate-200 px-5 py-2.5 text-xs text-slate-500">One job per target. Jobs run in parallel up to worker capacity.</p>
+              <p className="border-b border-slate-200 px-5 py-2.5 text-xs text-slate-500">
+                One job per target. Jobs run in parallel up to worker capacity.
+              </p>
               <AsyncContent status={scans.status} error={scans.error} hasData={scans.items.length > 0} onRetry={() => dispatch(fetchScans())}>
                 <ScansTable scans={jobs} showProject={false} showActions emptyMessage="This assessment has no jobs." />
               </AsyncContent>
@@ -157,8 +159,16 @@ export default function AssessmentDetailPage() {
             )}
 
             <Card title="Consolidated findings" flush>
-              <AsyncContent status={findings.status} error={findings.error} hasData={findings.items.length > 0 || findings.status === 'succeeded'} onRetry={() => dispatch(fetchFindings())}>
-                <FindingsTable findings={assessmentFindings} emptyMessage={isActiveAssessment(assessment) ? 'No findings yet. Jobs are still running.' : 'No findings.'} />
+              <AsyncContent
+                status={findings.status}
+                error={findings.error}
+                hasData={findings.items.length > 0 || findings.status === 'succeeded'}
+                onRetry={() => dispatch(fetchFindings())}
+              >
+                <FindingsTable
+                  findings={assessmentFindings}
+                  emptyMessage={isActiveAssessment(assessment) ? 'No findings yet. Jobs are still running.' : 'No findings.'}
+                />
               </AsyncContent>
             </Card>
           </div>

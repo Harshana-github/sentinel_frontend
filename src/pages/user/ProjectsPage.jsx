@@ -5,6 +5,7 @@ import { ChevronRight, Plus } from 'lucide-react';
 import { selectCurrentUser } from '../../features/auth/authSlice';
 import { selectProjectsState } from '../../features/projects/projectsSlice';
 import { fetchProjects } from '../../features/projects/projectsThunks';
+import { useStatusList } from '../../features/masters/useStatusList';
 import AsyncContent from '../../components/AsyncContent';
 import Card from '../../components/Card';
 import CreateProjectModal from '../../components/CreateProjectModal';
@@ -36,12 +37,13 @@ const COLUMNS = [
   { key: 'targets', header: 'Targets', className: 'text-right', render: (project) => project.targets.length },
   { key: 'openFindingCount', header: 'Open findings', className: 'text-right' },
   { key: 'lastScanAt', header: 'Last scan', render: (project) => (project.lastScanAt ? formatRelativeTime(project.lastScanAt) : 'Never') },
-  { key: 'status', header: 'Status', render: (project) => <StatusBadge status={project.status} /> },
+  { key: 'status', header: 'Status', render: (project) => <StatusBadge status={project.status} category="project-statuses" /> },
   // Shows that the whole row opens the project, where its targets are set up.
   { key: 'open', header: '', className: 'w-10 text-right', render: () => <ChevronRight size={16} aria-hidden="true" className="text-slate-400" /> },
 ];
 
 export default function ProjectsPage() {
+  const projectStatuses = useStatusList('project-statuses');
   const dispatch = useDispatch();
   const user = useSelector(selectCurrentUser);
   const navigate = useNavigate();
@@ -77,16 +79,26 @@ export default function ProjectsPage() {
       <Card flush fill>
         <FilterBar resultCount={items.length > 0 || status === 'succeeded' ? visibleProjects.length : undefined}>
           <SearchInput label="Search projects" placeholder="Search by code, name or description" value={search} onChange={setSearch} />
-          <SelectFilter label="Filter by status" allLabel="All statuses" value={statusFilter} onChange={setStatusFilter} options={PROJECT_STATUSES} />
+          <SelectFilter
+            label="Filter by status"
+            allLabel="All statuses"
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={projectStatuses.options(PROJECT_STATUSES)}
+          />
         </FilterBar>
         <AsyncContent status={status} error={error} hasData={items.length > 0} onRetry={() => dispatch(fetchProjects())}>
-          <DataTable columns={COLUMNS} rows={visibleProjects} caption="Projects" onRowClick={(project) => navigate(`/projects/${project.id}`)} emptyMessage="No projects match your filters." />
+          <DataTable
+            columns={COLUMNS}
+            rows={visibleProjects}
+            caption="Projects"
+            onRowClick={(project) => navigate(`/projects/${project.id}`)}
+            emptyMessage="No projects match your filters."
+          />
         </AsyncContent>
       </Card>
 
-      {isCreateOpen && (
-        <CreateProjectModal onClose={() => setIsCreateOpen(false)} onCreated={(project) => navigate(`/projects/${project.id}`)} />
-      )}
+      {isCreateOpen && <CreateProjectModal onClose={() => setIsCreateOpen(false)} onCreated={(project) => navigate(`/projects/${project.id}`)} />}
     </div>
   );
 }

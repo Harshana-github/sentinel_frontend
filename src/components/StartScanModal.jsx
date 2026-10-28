@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Plus } from 'lucide-react';
 import { selectCurrentUser } from '../features/auth/authSlice';
+import { useMasterList } from '../features/masters/useMasterList';
 import { selectProjectsState } from '../features/projects/projectsSlice';
 import { fetchProjects } from '../features/projects/projectsThunks';
 import { selectScannersState } from '../features/scanners/scannersSlice';
@@ -9,29 +10,26 @@ import { fetchScannerModules } from '../features/scanners/scannersThunks';
 import { startScan } from '../features/scans/scansThunks';
 import { showToast } from '../features/ui/uiSlice';
 import { USE_MOCK_DATA } from '../services/api';
-import { useMasterList } from '../features/masters/useMasterList';
-import { SCAN_PROFILES } from '../utils/constants';
 import { can } from '../utils/roles';
 import AddTargetModal from './AddTargetModal';
+import Alert from './Alert';
 import FormField, { errorProps } from './FormField';
 import Modal from './Modal';
-import Alert from './Alert';
+import { AuthorizationCheckbox, ScanProfilePicker, ToolPicker, useToolSelection } from './ScanOptions';
 
+// Starts one scan of one target of a project.
 export default function StartScanModal({ onClose, onStarted, initialProjectId = '', initialTargetId = '' }) {
   const dispatch = useDispatch();
+  const user = useSelector(selectCurrentUser);
   const projects = useSelector(selectProjectsState);
   const scanners = useSelector(selectScannersState);
   const targetTypes = useMasterList('target-types');
-  const user = useSelector(selectCurrentUser);
-  const canAddTarget = can(user, 'targets.add');
-  const [isAddTargetOpen, setIsAddTargetOpen] = useState(false);
 
   const [projectId, setProjectId] = useState(initialProjectId);
   const [targetId, setTargetId] = useState(initialTargetId);
   const [profile, setProfile] = useState('Standard');
-  // null means "use the default tools for the selected target type".
-  const [toolSelection, setToolSelection] = useState(null);
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isAddTargetOpen, setIsAddTargetOpen] = useState(false);
   const [errors, setErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,57 +42,44 @@ export default function StartScanModal({ onClose, onStarted, initialProjectId = 
   const scannableProjects = projects.items.filter((project) => project.status !== 'Archived');
   const project = scannableProjects.find((item) => item.id === projectId);
   const target = project?.targets.find((item) => item.id === targetId);
-  const compatibleModules = target ? scanners.items.filter((module) => module.enabled && module.targetTypes.includes(target.type)) : [];
-  const selectedTools = toolSelection ?? compatibleModules.map((module) => module.id);
+  const tools = target ? scanners.items.filter((tool) => tool.enabled && tool.targetTypes.includes(target.type)) : [];
+  const toolSelection = useToolSelection(tools);
 
-  function clearError(field) {
-    setErrors((current) => ({ ...current, [field]: undefined }));
-  }
+  const clearError = (field) => setErrors((current) => ({ ...current, [field]: undefined }));
 
-  function handleProjectChange(event) {
-    setProjectId(event.target.value);
+  function selectProject(id) {
+    setProjectId(id);
     setTargetId('');
-    setToolSelection(null);
+    toolSelection.reset();
     clearError('projectId');
   }
 
-  function selectNewTarget(target) {
-    setTargetId(target.id);
-    setToolSelection(null);
+  function selectTarget(id) {
+    setTargetId(id);
+    toolSelection.reset();
     clearError('targetId');
-  }
-
-  function handleTargetChange(event) {
-    setTargetId(event.target.value);
-    setToolSelection(null);
-    clearError('targetId');
-  }
-
-  function toggleTool(toolId) {
-    setToolSelection(selectedTools.includes(toolId) ? selectedTools.filter((id) => id !== toolId) : [...selectedTools, toolId]);
-    clearError('tools');
   }
 
   function validate() {
-    const validationErrors = {};
-    if (!project) validationErrors.projectId = 'Select a project.';
-    if (!target) validationErrors.targetId = 'Select a target.';
-    if (target && selectedTools.length === 0) validationErrors.tools = 'Select at least one scanner module.';
-    if (!isAuthorized) validationErrors.authorized = 'Confirm that you are authorized to scan this target.';
-    return validationErrors;
+    const found = {};
+    if (!project) found.projectId = 'Select a project.';
+    if (!target) found.targetId = 'Select a target.';
+    if (target && toolSelection.selected.length === 0) found.tools = 'Select at least one scanner module.';
+    if (!isAuthorized) found.authorized = 'Confirm that you are authorized to scan this target.';
+    return found;
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
     if (isSubmitting) return;
-    const validationErrors = validate();
-    setErrors(validationErrors);
-    if (Object.keys(validationErrors).length > 0) return;
+    const found = validate();
+    setErrors(found);
+    if (Object.keys(found).length > 0) return;
 
     setIsSubmitting(true);
     setSubmitError('');
     try {
-      const scan = await dispatch(startScan({ projectId, targetId, profile, tools: selectedTools })).unwrap();
+      const scan = await dispatch(startScan({ projectId, targetId, profile, tools: toolSelection.selected })).unwrap();
       dispatch(showToast({ message: `Scan ${scan.id} was queued for ${scan.targetName}.` }));
       onStarted(scan);
     } catch (error) {
@@ -119,7 +104,7 @@ export default function StartScanModal({ onClose, onStarted, initialProjectId = 
               id="scan-project"
               className="input"
               value={projectId}
-              onChange={handleProjectChange}
+              onChange={(event) => selectProject(event.target.value)}
               {...errorProps('scan-project', errors.projectId)}
             >
               <option value="">{projects.status === 'loading' ? 'Loading projects…' : 'Select a project'}</option>
@@ -141,7 +126,7 @@ export default function StartScanModal({ onClose, onStarted, initialProjectId = 
               id="scan-target"
               className="input"
               value={targetId}
-              onChange={handleTargetChange}
+              onChange={(event) => selectTarget(event.target.value)}
               disabled={!project}
               {...errorProps('scan-target', errors.targetId)}
             >
@@ -152,7 +137,7 @@ export default function StartScanModal({ onClose, onStarted, initialProjectId = 
                 </option>
               ))}
             </select>
-            {project && canAddTarget && (
+            {project && can(user, 'targets.add') && (
               <button
                 type="button"
                 className="mt-1.5 flex cursor-pointer items-center gap-1 self-start text-[13px] font-medium text-blue-600 hover:underline"
@@ -164,78 +149,29 @@ export default function StartScanModal({ onClose, onStarted, initialProjectId = 
             )}
           </FormField>
 
-          <fieldset className="mb-4">
-            <legend className="mb-2 font-medium">Scan profile</legend>
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-2">
-              {SCAN_PROFILES.map((option) => (
-                <label
-                  key={option.value}
-                  className="flex cursor-pointer items-start gap-2 rounded-md border border-slate-200 p-2.5 has-checked:border-blue-600 has-checked:bg-blue-50"
-                >
-                  <input
-                    className="mt-1"
-                    type="radio"
-                    name="profile"
-                    value={option.value}
-                    checked={profile === option.value}
-                    onChange={() => setProfile(option.value)}
-                  />
-                  <span className="flex flex-col">
-                    <strong>{option.value}</strong>
-                    <span className="text-slate-500 text-xs">{option.description}</span>
-                  </span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
+          <ScanProfilePicker value={profile} onChange={setProfile} />
 
           {target && (
-            <fieldset className="mb-4" aria-describedby={errors.tools ? 'scan-tools-error' : undefined}>
-              <legend className="mb-2 font-medium">Scanner modules for {targetTypes.nameOf(target.type).toLowerCase()}</legend>
-              <div className="grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-2">
-                {compatibleModules.map((module) => (
-                  <label
-                    key={module.id}
-                    className="flex cursor-pointer items-start gap-2 rounded-md border border-slate-200 p-2.5 has-checked:border-blue-600 has-checked:bg-blue-50"
-                  >
-                    <input className="mt-1" type="checkbox" checked={selectedTools.includes(module.id)} onChange={() => toggleTool(module.id)} />
-                    <span className="flex flex-col">
-                      <strong>{module.name}</strong>
-                      <span className="text-slate-500 text-xs">{module.categoryName}</span>
-                    </span>
-                  </label>
-                ))}
-              </div>
-              {errors.tools && (
-                <p className="text-[13px] text-red-700" id="scan-tools-error">
-                  {errors.tools}
-                </p>
-              )}
-            </fieldset>
+            <ToolPicker
+              legend={`Scanner modules for ${targetTypes.nameOf(target.type).toLowerCase()}`}
+              tools={tools}
+              selection={toolSelection}
+              error={errors.tools}
+              onChange={() => clearError('tools')}
+            />
           )}
 
-          <div className="mb-4 flex flex-col gap-1.5">
-            <label className="flex cursor-pointer items-start gap-2 font-medium">
-              <input
-                className="mt-1"
-                type="checkbox"
-                checked={isAuthorized}
-                onChange={(event) => {
-                  setIsAuthorized(event.target.checked);
-                  clearError('authorized');
-                }}
-                {...errorProps('scan-authorized', errors.authorized)}
-              />
-              I confirm that I am authorized to scan this target.
-            </label>
-            {errors.authorized && (
-              <p className="text-[13px] text-red-700" id="scan-authorized-error">
-                {errors.authorized}
-              </p>
-            )}
-          </div>
+          <AuthorizationCheckbox
+            id="scan-authorized"
+            checked={isAuthorized}
+            error={errors.authorized}
+            onChange={(checked) => {
+              setIsAuthorized(checked);
+              clearError('authorized');
+            }}
+          />
 
-          <div className="mt-2 flex justify-end gap-2">
+          <div className="mt-6 flex justify-end gap-2">
             <button type="button" className="btn btn-secondary" onClick={onClose}>
               Cancel
             </button>
@@ -246,7 +182,9 @@ export default function StartScanModal({ onClose, onStarted, initialProjectId = 
         </form>
       </Modal>
       {/* Opens on top of this dialog; the new target is selected straight away. */}
-      {isAddTargetOpen && project && <AddTargetModal project={project} onAdded={selectNewTarget} onClose={() => setIsAddTargetOpen(false)} />}
+      {isAddTargetOpen && project && (
+        <AddTargetModal project={project} onAdded={(added) => selectTarget(added.id)} onClose={() => setIsAddTargetOpen(false)} />
+      )}
     </>
   );
 }

@@ -14,6 +14,7 @@ import {
   ShieldAlert,
   Tags,
   Users,
+  Zap,
 } from 'lucide-react';
 
 // Sidebar links for each panel. `end` makes a link active only on its exact path.
@@ -57,6 +58,7 @@ export const USER_NAV = [
   {
     title: 'Security',
     items: [
+      { to: '/quick-scan', label: 'Quick scan', icon: Zap, module: 'scans', permission: 'scans.start' },
       { to: '/projects', label: 'Projects', icon: FolderKanban, module: 'projects' },
       { to: '/scans', label: 'Scans', icon: Radar, module: 'scans' },
       { to: '/assessments', label: 'Assessments', icon: Layers, module: 'scans' },

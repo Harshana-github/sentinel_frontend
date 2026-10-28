@@ -118,7 +118,14 @@ export default function MemberFormModal({ member, onClose }) {
         )}
 
         <FormField id="member-name" label="Full name" error={errors.name}>
-          <input id="member-name" className="input" value={form.name} autoFocus onChange={(event) => setField('name', event.target.value)} {...errorProps('member-name', errors.name)} />
+          <input
+            id="member-name"
+            className="input"
+            value={form.name}
+            autoFocus
+            onChange={(event) => setField('name', event.target.value)}
+            {...errorProps('member-name', errors.name)}
+          />
         </FormField>
 
         <FormField id="member-email" label="Email (used to sign in)" error={errors.email} hint={isNew ? undefined : 'The email cannot be changed.'}>
@@ -134,7 +141,12 @@ export default function MemberFormModal({ member, onClose }) {
         </FormField>
 
         {isNew && (
-          <FormField id="member-password" label="Password" hint={`At least ${MIN_PASSWORD_LENGTH} characters. You send it to them yourself.`} error={errors.password}>
+          <FormField
+            id="member-password"
+            label="Password"
+            hint={`At least ${MIN_PASSWORD_LENGTH} characters. You send it to them yourself.`}
+            error={errors.password}
+          >
             <div className="relative">
               <input
                 id="member-password"
@@ -162,7 +174,13 @@ export default function MemberFormModal({ member, onClose }) {
           id="member-role"
           label="Role"
           error={errors.role ?? roleOptions.error}
-          hint={isSelf ? 'You cannot change your own role.' : selectedRole ? `${selectedRole.description || selectedRole.name} · ${selectedRole.permissionCount} permissions` : 'Decides what this person can do.'}
+          hint={
+            isSelf
+              ? 'You cannot change your own role.'
+              : selectedRole
+                ? `${selectedRole.description || selectedRole.name} · ${selectedRole.permissionCount} permissions`
+                : 'Decides what this person can do.'
+          }
         >
           <select
             id="member-role"

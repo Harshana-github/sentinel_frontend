@@ -91,7 +91,13 @@ export default function OrganizationsPage() {
       <Card flush fill>
         <FilterBar resultCount={items.length > 0 || status === 'succeeded' ? visibleOrganizations.length : undefined}>
           <SearchInput label="Search organizations" placeholder="Search by name, admin or email" value={search} onChange={setSearch} />
-          <SelectFilter label="Filter by status" allLabel="All statuses" value={statusFilter} onChange={setStatusFilter} options={organizationStatuses.items.map((item) => ({ value: item.id, label: item.name }))} />
+          <SelectFilter
+            label="Filter by status"
+            allLabel="All statuses"
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={organizationStatuses.items.map((item) => ({ value: item.id, label: item.name }))}
+          />
         </FilterBar>
         <AsyncContent status={status} error={error} hasData={items.length > 0} onRetry={() => dispatch(fetchOrganizations())}>
           <DataTable columns={COLUMNS} rows={visibleOrganizations} caption="Organizations" emptyMessage="No organizations match your search." />

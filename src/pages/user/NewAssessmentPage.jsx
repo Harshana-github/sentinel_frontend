@@ -193,7 +193,13 @@ export default function NewAssessmentPage() {
                   className="flex cursor-pointer flex-col gap-2 rounded-lg border border-slate-200 p-3.5 has-checked:border-blue-600 has-checked:bg-blue-50/60 has-checked:ring-1 has-checked:ring-blue-600"
                 >
                   <span className="flex items-start gap-2.5">
-                    <input type="radio" name="assessment-profile" className="mt-1" checked={profileKey === item.key} onChange={() => changeProfile(item.key)} />
+                    <input
+                      type="radio"
+                      name="assessment-profile"
+                      className="mt-1"
+                      checked={profileKey === item.key}
+                      onChange={() => changeProfile(item.key)}
+                    />
                     <span className="min-w-0">
                       <strong className="block">{item.name}</strong>
                       <span className="text-xs text-slate-500">{item.description}</span>
@@ -299,7 +305,9 @@ export default function NewAssessmentPage() {
 
               <ReviewSection title={`Will run (${planned.length})`}>
                 {planned.length ? (
-                  planned.map((row) => <ReviewItem key={row.target.id} tone="ok" title={row.target.name} detail={row.plugins.map((plugin) => plugin.name).join(', ')} />)
+                  planned.map((row) => (
+                    <ReviewItem key={row.target.id} tone="ok" title={row.target.name} detail={row.plugins.map((plugin) => plugin.name).join(', ')} />
+                  ))
                 ) : (
                   <ReviewItem tone="skip" title="Nothing selected yet" />
                 )}
@@ -328,7 +336,12 @@ export default function NewAssessmentPage() {
               )}
 
               <label className="flex cursor-pointer items-start gap-2.5 rounded-md border border-slate-200 bg-slate-50 p-3">
-                <input type="checkbox" className="mt-0.5 size-4 accent-blue-600" checked={authorized} onChange={(event) => setAuthorized(event.target.checked)} />
+                <input
+                  type="checkbox"
+                  className="mt-0.5 size-4 accent-blue-600"
+                  checked={authorized}
+                  onChange={(event) => setAuthorized(event.target.checked)}
+                />
                 <span className="text-[13px]">
                   <strong className="block">Authorization confirmed</strong>
                   <span className="text-slate-500">I have written permission from the owner to test every selected target.</span>

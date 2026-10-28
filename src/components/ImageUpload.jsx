@@ -37,8 +37,14 @@ export default function ImageUpload({ label, hint, value, onChange, maxKb, previ
         {label}
       </p>
       <div className="flex items-center gap-4">
-        <div className={`grid shrink-0 place-items-center overflow-hidden rounded-lg border border-dashed border-slate-300 bg-slate-50 ${previewClassName}`}>
-          {value ? <img src={value} alt="" className="max-h-full max-w-full object-contain" /> : <ImageUp size={20} className="text-slate-400" aria-hidden="true" />}
+        <div
+          className={`grid shrink-0 place-items-center overflow-hidden rounded-lg border border-dashed border-slate-300 bg-slate-50 ${previewClassName}`}
+        >
+          {value ? (
+            <img src={value} alt="" className="max-h-full max-w-full object-contain" />
+          ) : (
+            <ImageUp size={20} className="text-slate-400" aria-hidden="true" />
+          )}
         </div>
         <div className="flex flex-col gap-1.5">
           <div className="flex gap-2">

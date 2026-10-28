@@ -33,7 +33,7 @@ export default function FindingsTable({ findings, showTarget = true, emptyMessag
       ),
     },
     { key: 'scanner', header: 'Scanner', render: (finding) => finding.scannerName },
-    { key: 'status', header: 'Status', render: (finding) => <StatusBadge status={finding.status} /> },
+    { key: 'status', header: 'Status', render: (finding) => <StatusBadge status={finding.status} category="finding-statuses" /> },
     { key: 'discovered', header: 'Discovered', render: (finding) => formatRelativeTime(finding.discoveredAt) },
   ].filter(Boolean);
 

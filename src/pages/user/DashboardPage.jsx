@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
-import { FolderKanban, Play, Radar, ShieldAlert, Users } from 'lucide-react';
+import { FolderKanban, Play, Radar, ShieldAlert, Users, Zap } from 'lucide-react';
 import { selectCurrentUser } from '../../features/auth/authSlice';
+import { useStatusList } from '../../features/masters/useStatusList';
 import { selectDashboardState } from '../../features/dashboard/dashboardSlice';
 import { fetchDashboardSummary } from '../../features/dashboard/dashboardThunks';
 import AsyncContent from '../../components/AsyncContent';
@@ -29,6 +30,7 @@ const ACTIVITY_DOT_CLASSES = {
 export default function DashboardPage() {
   const dispatch = useDispatch();
   const user = useSelector(selectCurrentUser);
+  const scanStatuses = useStatusList('scan-statuses');
   const navigate = useNavigate();
   const { summary, status, error } = useSelector(selectDashboardState);
   const [isStartScanOpen, setIsStartScanOpen] = useState(false);
@@ -50,10 +52,16 @@ export default function DashboardPage() {
         description="Security overview for your organization."
         actions={
           can(user, 'scans.start') && (
-            <button type="button" className="btn btn-primary" onClick={() => setIsStartScanOpen(true)}>
-              <Play size={16} aria-hidden="true" />
-              Start scan
-            </button>
+            <>
+              <button type="button" className="btn btn-secondary" onClick={() => setIsStartScanOpen(true)}>
+                <Play size={16} aria-hidden="true" />
+                Start scan
+              </button>
+              <Link to="/quick-scan" className="btn btn-primary hover:no-underline">
+                <Zap size={16} aria-hidden="true" />
+                Quick scan
+              </Link>
+            </>
           )
         }
       />
@@ -98,7 +106,7 @@ export default function DashboardPage() {
                   label="Scans by status"
                   items={SCAN_STATUSES.map((scanStatus) => ({
                     key: scanStatus,
-                    label: scanStatus,
+                    label: scanStatuses.labelOf(scanStatus),
                     count: summary.scanStatusCounts[scanStatus],
                     barClass: SCAN_STATUS_BAR_CLASSES[scanStatus],
                     to: `/scans?status=${scanStatus}`,
@@ -136,9 +144,7 @@ export default function DashboardPage() {
         )}
       </AsyncContent>
 
-      {isStartScanOpen && (
-        <StartScanModal onClose={() => setIsStartScanOpen(false)} onStarted={(scan) => navigate(`/scans/${scan.id}`)} />
-      )}
+      {isStartScanOpen && <StartScanModal onClose={() => setIsStartScanOpen(false)} onStarted={(scan) => navigate(`/scans/${scan.id}`)} />}
     </>
   );
 }

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Layers, Play } from 'lucide-react';
+import { Layers, Play, Zap } from 'lucide-react';
 import { selectCurrentUser } from '../../features/auth/authSlice';
 import { isActiveScan, selectScansState } from '../../features/scans/scansSlice';
 import { fetchScans } from '../../features/scans/scansThunks';
@@ -13,12 +13,14 @@ import ScansTable from '../../components/ScansTable';
 import StartScanModal from '../../components/StartScanModal';
 import usePolling from '../../hooks/usePolling';
 import { useMasterList } from '../../features/masters/useMasterList';
+import { useStatusList } from '../../features/masters/useStatusList';
 import { SCAN_STATUSES } from '../../utils/constants';
 import { includesText } from '../../utils/format';
 import { can } from '../../utils/roles';
 
 export default function ScansPage() {
   const targetTypes = useMasterList('target-types');
+  const scanStatuses = useStatusList('scan-statuses');
   const dispatch = useDispatch();
   const user = useSelector(selectCurrentUser);
   const navigate = useNavigate();
@@ -61,10 +63,14 @@ export default function ScansPage() {
                 <Layers size={16} aria-hidden="true" />
                 New assessment
               </Link>
-              <button type="button" className="btn btn-primary" onClick={() => setIsStartScanOpen(true)}>
+              <button type="button" className="btn btn-secondary" onClick={() => setIsStartScanOpen(true)}>
                 <Play size={16} aria-hidden="true" />
                 Single scan
               </button>
+              <Link to="/quick-scan" className="btn btn-primary hover:no-underline">
+                <Zap size={16} aria-hidden="true" />
+                Quick scan
+              </Link>
             </>
           )
         }
@@ -72,8 +78,20 @@ export default function ScansPage() {
       <Card flush fill>
         <FilterBar resultCount={items.length > 0 || status === 'succeeded' ? visibleScans.length : undefined}>
           <SearchInput label="Search scans" placeholder="Search by scan ID, target or project" value={search} onChange={setSearch} />
-          <SelectFilter label="Filter by status" allLabel="All statuses" value={statusFilter} onChange={setStatusFilter} options={SCAN_STATUSES} />
-          <SelectFilter label="Filter by target type" allLabel="All target types" value={typeFilter} onChange={setTypeFilter} options={targetTypes.items.map((type) => ({ value: type.id, label: type.name }))} />
+          <SelectFilter
+            label="Filter by status"
+            allLabel="All statuses"
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={scanStatuses.options(SCAN_STATUSES)}
+          />
+          <SelectFilter
+            label="Filter by target type"
+            allLabel="All target types"
+            value={typeFilter}
+            onChange={setTypeFilter}
+            options={targetTypes.items.map((type) => ({ value: type.id, label: type.name }))}
+          />
           <SelectFilter
             label="Filter by kind"
             allLabel="Single scans and assessments"
@@ -90,9 +108,7 @@ export default function ScansPage() {
         </AsyncContent>
       </Card>
 
-      {isStartScanOpen && (
-        <StartScanModal onClose={() => setIsStartScanOpen(false)} onStarted={(scan) => navigate(`/scans/${scan.id}`)} />
-      )}
+      {isStartScanOpen && <StartScanModal onClose={() => setIsStartScanOpen(false)} onStarted={(scan) => navigate(`/scans/${scan.id}`)} />}
     </div>
   );
 }

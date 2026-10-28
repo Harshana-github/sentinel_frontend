@@ -19,7 +19,12 @@ export function SearchInput({ value, onChange, placeholder, label }) {
 // `options` can be strings or { value, label } objects.
 export function SelectFilter({ label, value, onChange, options, allLabel }) {
   return (
-    <select className="input flex-1 sm:w-auto sm:min-w-40 sm:flex-none" aria-label={label} value={value} onChange={(event) => onChange(event.target.value)}>
+    <select
+      className="input flex-1 sm:w-auto sm:min-w-40 sm:flex-none"
+      aria-label={label}
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+    >
       <option value="">{allLabel}</option>
       {options.map((option) => {
         const { value: optionValue, label: optionLabel } = typeof option === 'string' ? { value: option, label: option } : option;

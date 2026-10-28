@@ -1,34 +1,23 @@
 import { createSlice } from '@reduxjs/toolkit';
+import { ACTIVE_SCAN_STATUSES } from '../../utils/constants';
+import { addLoadCases, loadState, replaceItem } from '../sliceHelpers';
 import { cancelAssessment, fetchAssessments, startAssessment } from './assessmentsThunks';
 
-const ACTIVE_STATUSES = ['Queued', 'Running'];
-export const isActiveAssessment = (assessment) => ACTIVE_STATUSES.includes(assessment.status);
+// An assessment is active while any of its jobs is, and its status says so.
+export const isActiveAssessment = (assessment) => ACTIVE_SCAN_STATUSES.includes(assessment.status);
 
 const assessmentsSlice = createSlice({
   name: 'assessments',
-  initialState: { items: [], status: 'idle', error: null },
+  initialState: loadState(),
   reducers: {},
   extraReducers: (builder) => {
+    addLoadCases(builder, fetchAssessments);
     builder
-      .addCase(fetchAssessments.pending, (state, action) => {
-        if (action.meta.arg?.silent) return;
-        state.status = 'loading';
-        state.error = null;
-      })
-      .addCase(fetchAssessments.fulfilled, (state, action) => {
-        state.status = 'succeeded';
-        state.error = null;
-        state.items = action.payload;
-      })
-      .addCase(fetchAssessments.rejected, (state, action) => {
-        state.status = 'failed';
-        state.error = action.error.message;
-      })
       .addCase(startAssessment.fulfilled, (state, action) => {
         state.items.unshift(action.payload);
       })
       .addCase(cancelAssessment.fulfilled, (state, action) => {
-        state.items = state.items.map((item) => (item.id === action.payload.id ? action.payload : item));
+        state.items = replaceItem(state.items, action.payload);
       });
   },
 });

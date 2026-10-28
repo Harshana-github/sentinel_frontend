@@ -13,7 +13,16 @@ import SlugField from './SlugField';
 import { ToneBadge } from './StatusBadge';
 import { slugError } from '../utils/slug';
 
-const USAGE_NOUNS = { plugins: 'plugin', targets: 'target', organizations: 'organization', users: 'user' };
+const USAGE_NOUNS = {
+  plugins: 'plugin',
+  targets: 'target',
+  organizations: 'organization',
+  users: 'user',
+  projects: 'project',
+  scans: 'scan',
+  assessments: 'assessment',
+  findings: 'finding',
+};
 
 // `usage` is { plugins, targets, organizations, users } counts from the API.
 function usageText(usage = {}) {
@@ -91,12 +100,22 @@ function MasterItemFormModal({ list, item, onClose }) {
           }}
         />
         <FormField id="master-description" label="Description (optional)">
-          <input id="master-description" className="input" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
+          <input
+            id="master-description"
+            className="input"
+            value={form.description}
+            onChange={(event) => setForm({ ...form, description: event.target.value })}
+          />
         </FormField>
         {extraFields.map((field) => (
           <FormField key={field.key} id={`master-${field.key}`} label={field.label} hint={field.hint}>
             {field.options ? (
-              <select id={`master-${field.key}`} className="input" value={form[field.key]} onChange={(event) => setForm({ ...form, [field.key]: event.target.value })}>
+              <select
+                id={`master-${field.key}`}
+                className="input"
+                value={form[field.key]}
+                onChange={(event) => setForm({ ...form, [field.key]: event.target.value })}
+              >
                 {field.options.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
@@ -104,7 +123,12 @@ function MasterItemFormModal({ list, item, onClose }) {
                 ))}
               </select>
             ) : (
-              <input id={`master-${field.key}`} className="input" value={form[field.key]} onChange={(event) => setForm({ ...form, [field.key]: event.target.value })} />
+              <input
+                id={`master-${field.key}`}
+                className="input"
+                value={form[field.key]}
+                onChange={(event) => setForm({ ...form, [field.key]: event.target.value })}
+              />
             )}
           </FormField>
         ))}
@@ -205,16 +229,22 @@ export default function ListManager({ list }) {
     <Card
       title={`${list.title} (${items.length})`}
       actions={
-        <button type="button" className="btn btn-primary" onClick={() => setEditing(null)}>
-          <Plus size={16} aria-hidden="true" />
-          Add {list.singular}
-        </button>
+        // Fixed categories hold exactly the statuses Sentinel uses, so nothing can be added.
+        !list.fixed && (
+          <button type="button" className="btn btn-primary" onClick={() => setEditing(null)}>
+            <Plus size={16} aria-hidden="true" />
+            Add {list.singular}
+          </button>
+        )
       }
       flush
       fill
     >
       <p className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-5 py-2.5 text-xs text-slate-500">
-        <span>{list.description}</span>
+        <span>
+          {list.description}
+          {list.fixed && ' Set by Sentinel: you can change the name shown, the description and the badge colour.'}
+        </span>
         <span>
           Slug <code className="rounded bg-slate-100 px-1.5 py-0.5 text-slate-600">{list.key}</code>
         </span>

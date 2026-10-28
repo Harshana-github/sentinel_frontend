@@ -42,7 +42,9 @@ function EnabledSwitch({ plugin, disabled, onToggle }) {
       onClick={onToggle}
       className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors disabled:cursor-wait ${plugin.enabled ? 'bg-blue-600' : 'bg-slate-300'}`}
     >
-      <span className={`inline-block size-4 rounded-full bg-white shadow transition-transform ${plugin.enabled ? 'translate-x-4.5' : 'translate-x-0.5'}`} />
+      <span
+        className={`inline-block size-4 rounded-full bg-white shadow transition-transform ${plugin.enabled ? 'translate-x-4.5' : 'translate-x-0.5'}`}
+      />
     </button>
   );
 }
@@ -58,7 +60,9 @@ function PluginCard({ plugin, names, busy, onToggle, onEdit, onDelete }) {
   const hiddenTargets = targetNames.slice(VISIBLE_TARGETS);
 
   return (
-    <article className={`flex w-full flex-col rounded-lg border bg-white shadow-sm transition-colors ${plugin.enabled ? 'border-slate-200 hover:border-blue-300' : 'border-dashed border-slate-300 bg-slate-50/60'}`}>
+    <article
+      className={`flex w-full flex-col rounded-lg border bg-white shadow-sm transition-colors ${plugin.enabled ? 'border-slate-200 hover:border-blue-300' : 'border-dashed border-slate-300 bg-slate-50/60'}`}
+    >
       <div className="flex items-start gap-3 p-4 pb-3">
         <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-600" aria-hidden="true">
           <Boxes size={20} />
@@ -143,7 +147,14 @@ function PluginCard({ plugin, names, busy, onToggle, onEdit, onDelete }) {
           <button type="button" className="icon-btn size-7.5" aria-label={`Edit ${plugin.name}`} title="Edit" onClick={onEdit}>
             <Pencil size={15} aria-hidden="true" />
           </button>
-          <button type="button" className="icon-btn size-7.5 hover:text-red-700" aria-label={`Remove ${plugin.name}`} title="Remove" disabled={busy} onClick={onDelete}>
+          <button
+            type="button"
+            className="icon-btn size-7.5 hover:text-red-700"
+            aria-label={`Remove ${plugin.name}`}
+            title="Remove"
+            disabled={busy}
+            onClick={onDelete}
+          >
             <Trash2 size={15} aria-hidden="true" />
           </button>
         </div>
@@ -171,7 +182,6 @@ export default function ScannerModulesPage() {
   useEffect(() => {
     dispatch(fetchScannerModules());
   }, [dispatch]);
-
 
   async function toggleEnabled(plugin) {
     setBusyId(plugin.id);
@@ -236,8 +246,20 @@ export default function ScannerModulesPage() {
           <Card flush fill>
             <FilterBar resultCount={visible.length}>
               <SearchInput label="Search plugins" placeholder="Search by name, category or image" value={search} onChange={setSearch} />
-              <SelectFilter label="Filter by source" allLabel="All sources" value={sourceFilter} onChange={setSourceFilter} options={sources.items.map((source) => ({ value: source.id, label: source.name }))} />
-              <SelectFilter label="Filter by category" allLabel="All categories" value={categoryFilter} onChange={setCategoryFilter} options={categories.items.map((category) => ({ value: category.id, label: category.name }))} />
+              <SelectFilter
+                label="Filter by source"
+                allLabel="All sources"
+                value={sourceFilter}
+                onChange={setSourceFilter}
+                options={sources.items.map((source) => ({ value: source.id, label: source.name }))}
+              />
+              <SelectFilter
+                label="Filter by category"
+                allLabel="All categories"
+                value={categoryFilter}
+                onChange={setCategoryFilter}
+                options={categories.items.map((category) => ({ value: category.id, label: category.name }))}
+              />
             </FilterBar>
             {/* fill-scroll makes the grid scroll inside the full-height card. */}
             <div className="fill-scroll bg-slate-50/60 p-4">

@@ -42,9 +42,7 @@ export default function Topbar({ isSidebarOpen, onToggleSidebar }) {
         </span>
         <span className="hidden flex-col leading-tight sm:flex">
           <strong>{user?.name}</strong>
-          <span className="text-xs text-slate-500">
-            {user?.organizationName ? `${user.role} · ${user.organizationName}` : user?.role}
-          </span>
+          <span className="text-xs text-slate-500">{user?.organizationName ? `${user.role} · ${user.organizationName}` : user?.role}</span>
         </span>
         <button type="button" className="btn btn-secondary btn-sm" onClick={handleLogout}>
           <LogOut size={16} aria-hidden="true" />

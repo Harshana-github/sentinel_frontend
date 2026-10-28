@@ -32,5 +32,7 @@ export function formatDuration(startIso, endIso) {
 }
 
 export function includesText(value, search) {
-  return String(value ?? '').toLowerCase().includes(search.trim().toLowerCase());
+  return String(value ?? '')
+    .toLowerCase()
+    .includes(search.trim().toLowerCase());
 }

@@ -22,46 +22,52 @@ Then open the URL that Vite prints (normally http://localhost:5173).
 
 Other scripts:
 
-| Command | What it does |
-| --- | --- |
-| `npm run build` | Production build into `dist/` |
-| `npm run preview` | Serve the production build locally |
+| Command                | What it does                                      |
+| ---------------------- | ------------------------------------------------- |
+| `npm run build`        | Production build into `dist/`                     |
+| `npm run preview`      | Serve the production build locally                |
+| `npm run lint`         | ESLint, including the React Hooks rules           |
+| `npm run format`       | Format every file with Prettier (150 columns)     |
+| `npm run format:check` | Check formatting without changing files (e.g. CI) |
+
+Run `npm run lint` and `npm run format` before committing.
 
 ## Two panels
 
-| Panel | Who uses it | Home route |
-| --- | --- | --- |
-| **Super Admin panel** | The Sentinel company team that runs the platform | `/admin` |
-| **User panel** | Customer organizations (their admins and users) | `/dashboard` |
+| Panel                 | Who uses it                                      | Home route   |
+| --------------------- | ------------------------------------------------ | ------------ |
+| **Super Admin panel** | The Sentinel company team that runs the platform | `/admin`     |
+| **User panel**        | Customer organizations (their admins and users)  | `/dashboard` |
 
 Everyone signs in at `/login` and lands on the right panel for their role. Opening a route of the other panel redirects you to your own home page.
 
 **Super Admin panel (`/admin`)**
 
-| Route | Page |
-| --- | --- |
-| `/admin` | Platform dashboard: totals and an overview of every organization |
-| `/admin/organizations` | All customer organizations, plus **New organization** (creates the organization and its admin) |
-| `/admin/organizations/:id` | Organization details, members and projects. **Suspend** or **Reactivate** the organization |
-| `/admin/modules` | **Modules & permissions**: one page to create, read, update and delete modules and the permissions inside each module |
-| `/admin/scanners` | **Scanner plugins**: register, edit, enable/disable and remove open-source and in-house tools (container image + CLI command with `{target}` or a REST endpoint) |
-| `/admin/masters` | **Master data**: lists of values managed by the Super Admin, one tab each: target types, plugin sources, plugin categories, interfaces and licenses. Items still in use cannot be deleted |
-| `/admin/statuses` | **Statuses**: fixed status categories (organization, user, integration), each with its own statuses. The Super Admin adds, renames, recolours and deletes statuses; system statuses (used by the app's logic) can be edited but not deleted |
-| `/admin/branding` | **Product & company**: favicon, product logo, product name and tagline, and the software development company's logo, name and contact details, with a live preview. Used by the browser tab, the sidebar and the login page |
-| `/admin/settings` | Profile and app configuration |
+| Route                      | Page                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/admin`                   | Platform dashboard: totals and an overview of every organization                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `/admin/organizations`     | All customer organizations, plus **New organization** (creates the organization and its admin)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `/admin/organizations/:id` | Organization details, members and projects. **Suspend** or **Reactivate** the organization                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `/admin/modules`           | **Modules & permissions**: one page to create, read, update and delete modules and the permissions inside each module                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `/admin/scanners`          | **Scanner plugins**: register, edit, enable/disable and remove open-source and in-house tools (container image + CLI command with `{target}` or a REST endpoint)                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `/admin/masters`           | **Master data**: lists of values managed by the Super Admin, one tab each: target types, plugin sources, plugin categories, interfaces and licenses. Items still in use cannot be deleted                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `/admin/statuses`          | **Statuses**: fixed status categories, each with its own statuses. In the organization, user and integration categories the Super Admin adds, renames, recolours and deletes statuses; system statuses (used by the app's logic) can be edited but not deleted. The project, scan, assessment and finding categories hold exactly the statuses Sentinel's workflow uses: they can be renamed and recoloured only, and every badge, filter and chart in the user panel shows those names and colours. Records keep storing the workflow value (e.g. `In Progress`); its status item has the slug of that value (`in-progress`) |
+| `/admin/branding`          | **Product & company**: favicon, product logo, product name and tagline, and the software development company's logo, name and contact details, with a live preview. Used by the browser tab, the sidebar and the login page                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `/admin/settings`          | Profile and app configuration                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 
 **User panel**
 
-| Route | Page |
-| --- | --- |
-| `/dashboard` | The organization's security overview |
-| `/projects`, `/projects/:id` | Projects and their scan targets |
-| `/scans`, `/scans/:id` | Scan history and live progress |
-| `/findings`, `/findings/:id` | Vulnerability findings |
-| `/assessments` | **Assessments**: multi-target scans. *New assessment* picks a project, a profile (Quick, Web Application, Source Code, Full) and the project's targets, shows a review with what will run, what is skipped and what blocks the start, and needs an authorization confirmation. Each target becomes its own scan job; the assessment's status is always worked out from its jobs. The detail page shows the jobs, skipped targets and consolidated findings, and can cancel the remaining jobs |
-| `/team` | **Users**: people of the organization. *Add user* sets their name, email, password and **role** (any of the organization's roles), then shows login details to copy and send. *Edit* changes the name and role. Nobody can change their own role, and there is always at least one Admin |
-| `/roles` | **Roles**: create, rename and delete roles and choose their permissions, grouped by module. Admin is predefined and locked |
-| `/settings` | Profile, organization and app configuration |
+| Route                        | Page                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/dashboard`                 | The organization's security overview                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `/projects`, `/projects/:id` | Projects and their scan targets                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `/scans`, `/scans/:id`       | Scan history and live progress                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `/findings`, `/findings/:id` | Vulnerability findings                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `/quick-scan`                | **Quick scan**: scan without setting up a project or targets. _Single scan_ takes one target type and address, a profile and the tools; _Full scan_ takes an address per target type (empty ones are skipped) and runs every enabled tool with the Deep profile as an assessment. Needs `scans.start` and an authorization confirmation. The targets are kept in the organization's _Quick scans_ project (code `QUICK`), created on first use                                                |
+| `/assessments`               | **Assessments**: multi-target scans. _New assessment_ picks a project, a profile (Quick, Web Application, Source Code, Full) and the project's targets, shows a review with what will run, what is skipped and what blocks the start, and needs an authorization confirmation. Each target becomes its own scan job; the assessment's status is always worked out from its jobs. The detail page shows the jobs, skipped targets and consolidated findings, and can cancel the remaining jobs |
+| `/team`                      | **Users**: people of the organization. _Add user_ sets their name, email, password and **role** (any of the organization's roles), then shows login details to copy and send. _Edit_ changes the name and role. Nobody can change their own role, and there is always at least one Admin                                                                                                                                                                                                      |
+| `/roles`                     | **Roles**: create, rename and delete roles and choose their permissions, grouped by module. Admin is predefined and locked                                                                                                                                                                                                                                                                                                                                                                    |
+| `/settings`                  | Profile, organization and app configuration                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 
 Organization users only see their own organization's data.
 
@@ -90,10 +96,10 @@ How it works:
 
 ## Demo accounts
 
-| Account | Email (or username) | Password | Panel |
-| --- | --- | --- | --- |
-| Super Admin | `superadmin@sentinel.local` (`superadmin`) | `SuperAdmin@123` | `/admin` |
-| Organization Admin (Acme Security) | `alex.morgan@acme.example` (`admin`) | `Admin@123` | `/dashboard` |
+| Account                            | Email (or username)                        | Password         | Panel        |
+| ---------------------------------- | ------------------------------------------ | ---------------- | ------------ |
+| Super Admin                        | `superadmin@sentinel.local` (`superadmin`) | `SuperAdmin@123` | `/admin`     |
+| Organization Admin (Acme Security) | `alex.morgan@acme.example` (`admin`)       | `Admin@123`      | `/dashboard` |
 
 In mock mode the login page lists these accounts, each with a **Use** button that fills in the form. If the Super Admin suspends an organization, its users can no longer sign in.
 
@@ -101,10 +107,10 @@ In mock mode the login page lists these accounts, each with a **Use** button tha
 
 Copy `.env.example` to `.env` (a ready-to-use `.env` is already included) and adjust as needed:
 
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `VITE_API_BASE_URL` | `http://localhost:8000/api/v1` | Base URL of the FastAPI backend |
-| `VITE_USE_MOCK_DATA` | `true` | `true` uses demo data, `false` calls the API |
+| Variable             | Default                        | Purpose                                      |
+| -------------------- | ------------------------------ | -------------------------------------------- |
+| `VITE_API_BASE_URL`  | `http://localhost:8000/api/v1` | Base URL of the FastAPI backend              |
+| `VITE_USE_MOCK_DATA` | `true`                         | `true` uses demo data, `false` calls the API |
 
 Restart `npm run dev` after changing `.env`.
 
@@ -150,36 +156,37 @@ The shared Axios instance (`src/services/api.js`):
 
 The thunks currently expect the endpoints below. They are **placeholders** to agree with the backend team, not a finished contract.
 
-| Thunk | Request |
-| --- | --- |
-| `login` | `POST /auth/login` → `{ accessToken, user }` |
-| `fetchOrganizations` | `GET /organizations` (the Super Admin gets all; users get their own) |
-| `fetchOrganizationMembers` | `GET /organizations/:id/members` |
-| `createOrganization` | `POST /organizations` with `{ name, adminName, adminEmail, adminPassword }` → `{ organization, admin: { name, email } }` (Super Admin; the password is never returned) |
-| `updateOrganization` | `PATCH /organizations/:id` with `{ status }` and/or `{ modules }` (Super Admin) |
-| `fetchPlatformSummary` | `GET /admin/summary` (Super Admin) |
-| `fetchProjects` | `GET /projects` |
-| `createProject` | `POST /projects` |
-| `addScanTarget` | `POST /projects/:id/targets` |
-| `fetchScans` | `GET /scans` |
-| `startScan` | `POST /scans` |
-| `cancelScan` | `POST /scans/:id/cancel` |
-| `fetchFindings` | `GET /findings` |
-| `updateFindingStatus` | `PATCH /findings/:id` |
-| `fetchDashboardSummary` | `GET /dashboard/summary` |
-| `fetchScannerModules` | `GET /scanner-modules` |
-| `registerScannerModule` | `POST /scanner-modules` (Super Admin) |
-| `updateScannerModule` | `PATCH /scanner-modules/:id` (Super Admin) |
-| `deleteScannerModule` | `DELETE /scanner-modules/:id` (Super Admin) |
-| `fetchBranding` | `GET /branding` (public, the login page needs it) |
-| `updateBranding` | `PUT /admin/branding` (Super Admin). Images are sent as data URLs in the mock; a real backend should store them in object storage and return URLs |
-| `fetchRoles` / `createRole` / `updateRole` / `deleteRole` | `GET`, `POST`, `PATCH /:id`, `DELETE /:id` on `/roles` (own organization, needs `roles.*`) |
-| `fetchAssessments` / `startAssessment` / `cancelAssessment` | `GET /assessments`, `POST /assessments` with `{ projectId, profile, name, targetIds, authorized }`, `POST /assessments/:id/cancel` (needs `scans.start` / `scans.cancel`). Scans carry `assessmentId` |
-| `fetchRoleOptions` | `GET /members/role-options` → the organization's roles to choose from (needs `users.create` or `users.update`) |
-| `createMember` / `updateMember` | `POST /members`, `PATCH /members/:id` (needs `users.create` / `users.update`) |
-| `fetchPermissionCatalog` | `GET /permission-catalog` → `{ modules, permissions }` (needs `roles.read`) |
-| `fetchMasterItems` | `GET /masters/:list` (any signed-in user; the Super Admin also gets usage counts) |
-| `createMasterItem` / `updateMasterItem` / `deleteMasterItem` | `POST`, `PUT /:id`, `DELETE /:id` on `/admin/masters/:list` (Super Admin). `:list` is `target-types`, `plugin-sources`, `plugin-categories`, `plugin-interfaces` or `licenses`, or a status category: `organization-statuses`, `user-statuses`, `integration-statuses` |
+| Thunk                                                        | Request                                                                                                                                                                                                                                                                                                                                                                                     |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `login`                                                      | `POST /auth/login` → `{ accessToken, user }`                                                                                                                                                                                                                                                                                                                                                |
+| `fetchOrganizations`                                         | `GET /organizations` (the Super Admin gets all; users get their own)                                                                                                                                                                                                                                                                                                                        |
+| `fetchOrganizationMembers`                                   | `GET /organizations/:id/members`                                                                                                                                                                                                                                                                                                                                                            |
+| `createOrganization`                                         | `POST /organizations` with `{ name, adminName, adminEmail, adminPassword }` → `{ organization, admin: { name, email } }` (Super Admin; the password is never returned)                                                                                                                                                                                                                      |
+| `updateOrganization`                                         | `PATCH /organizations/:id` with `{ status }` and/or `{ modules }` (Super Admin)                                                                                                                                                                                                                                                                                                             |
+| `fetchPlatformSummary`                                       | `GET /admin/summary` (Super Admin)                                                                                                                                                                                                                                                                                                                                                          |
+| `fetchProjects`                                              | `GET /projects`                                                                                                                                                                                                                                                                                                                                                                             |
+| `createProject`                                              | `POST /projects`                                                                                                                                                                                                                                                                                                                                                                            |
+| `addScanTarget`                                              | `POST /projects/:id/targets`                                                                                                                                                                                                                                                                                                                                                                |
+| `fetchScans`                                                 | `GET /scans`                                                                                                                                                                                                                                                                                                                                                                                |
+| `startScan`                                                  | `POST /scans`                                                                                                                                                                                                                                                                                                                                                                               |
+| `cancelScan`                                                 | `POST /scans/:id/cancel`                                                                                                                                                                                                                                                                                                                                                                    |
+| `fetchFindings`                                              | `GET /findings`                                                                                                                                                                                                                                                                                                                                                                             |
+| `updateFindingStatus`                                        | `PATCH /findings/:id`                                                                                                                                                                                                                                                                                                                                                                       |
+| `fetchDashboardSummary`                                      | `GET /dashboard/summary`                                                                                                                                                                                                                                                                                                                                                                    |
+| `fetchScannerModules`                                        | `GET /scanner-modules`                                                                                                                                                                                                                                                                                                                                                                      |
+| `registerScannerModule`                                      | `POST /scanner-modules` (Super Admin)                                                                                                                                                                                                                                                                                                                                                       |
+| `updateScannerModule`                                        | `PATCH /scanner-modules/:id` (Super Admin)                                                                                                                                                                                                                                                                                                                                                  |
+| `deleteScannerModule`                                        | `DELETE /scanner-modules/:id` (Super Admin)                                                                                                                                                                                                                                                                                                                                                 |
+| `fetchBranding`                                              | `GET /branding` (public, the login page needs it)                                                                                                                                                                                                                                                                                                                                           |
+| `updateBranding`                                             | `PUT /admin/branding` (Super Admin). Images are sent as data URLs in the mock; a real backend should store them in object storage and return URLs                                                                                                                                                                                                                                           |
+| `fetchRoles` / `createRole` / `updateRole` / `deleteRole`    | `GET`, `POST`, `PATCH /:id`, `DELETE /:id` on `/roles` (own organization, needs `roles.*`)                                                                                                                                                                                                                                                                                                  |
+| `startQuickScan`                                             | `POST /scans/quick` with `{ mode: 'single' \| 'full', inputs: [{ type, value }], profile, tools, authorized }` (needs `scans.start`). Returns `{ kind: 'scan' \| 'assessment', id }`                                                                                                                                                                                                        |
+| `fetchAssessments` / `startAssessment` / `cancelAssessment`  | `GET /assessments`, `POST /assessments` with `{ projectId, profile, name, targetIds, authorized }`, `POST /assessments/:id/cancel` (needs `scans.start` / `scans.cancel`). Scans carry `assessmentId`                                                                                                                                                                                       |
+| `fetchRoleOptions`                                           | `GET /members/role-options` → the organization's roles to choose from (needs `users.create` or `users.update`)                                                                                                                                                                                                                                                                              |
+| `createMember` / `updateMember`                              | `POST /members`, `PATCH /members/:id` (needs `users.create` / `users.update`)                                                                                                                                                                                                                                                                                                               |
+| `fetchPermissionCatalog`                                     | `GET /permission-catalog` → `{ modules, permissions }` (needs `roles.read`)                                                                                                                                                                                                                                                                                                                 |
+| `fetchMasterItems`                                           | `GET /masters/:list` (any signed-in user; the Super Admin also gets usage counts)                                                                                                                                                                                                                                                                                                           |
+| `createMasterItem` / `updateMasterItem` / `deleteMasterItem` | `POST`, `PUT /:id`, `DELETE /:id` on `/admin/masters/:list` (Super Admin). `:list` is `target-types`, `plugin-sources`, `plugin-categories`, `plugin-interfaces` or `licenses`, or a status category: `organization-statuses`, `user-statuses`, `integration-statuses`, `project-statuses`, `scan-statuses`, `assessment-statuses`, `finding-statuses` (the last four cannot get new items) |
 
 The response shapes the UI expects are the objects returned by `src/mocks/mockApi.js`.
 
@@ -204,17 +211,21 @@ The response shapes the UI expects are the objects returned by `src/mocks/mockAp
 src/
 ├── app/store.js             Redux store
 ├── features/                One folder per feature: <name>Slice.js (state) + <name>Thunks.js (async calls)
-│   ├── admin/               Platform summary and modules (Super Admin only)
+│   ├── sliceHelpers.js      addLoadCases (loading / succeeded / failed, silent refresh), replaceItem, removeItem
+│   ├── admin/               Platform summary, modules and permissions (Super Admin only)
+│   ├── assessments/
 │   ├── auth/
+│   ├── branding/            Product and company details, BrandingEffect (tab title, favicon)
 │   ├── dashboard/
 │   ├── findings/
-│   ├── organizations/
+│   ├── masters/             Master data and statuses, useMasterList and useStatusList hooks
+│   ├── organizations/       Organizations and their users
 │   ├── projects/
+│   ├── roles/
 │   ├── scanners/
 │   ├── scans/
-│   ├── system/
 │   └── ui/                  Toast notifications
-├── components/              Reusable UI (tables, badges, modals, forms)
+├── components/              Reusable UI (tables, badges, modals, forms); ScanOptions.jsx holds the scan form pieces
 ├── layouts/                 App shell shared by both panels, plus navigation.js (each panel's sidebar links)
 ├── pages/
 │   ├── admin/               Super Admin panel pages
@@ -224,7 +235,7 @@ src/
 ├── hooks/usePolling.js      Refreshes data while scans are running
 ├── services/api.js          Axios instance, error handling, mock/API switch
 ├── mocks/                   Demonstration data and the in-memory mock API
-├── utils/                   Constants, formatting, session storage, roles, chart colour classes
+├── utils/                   Constants, formatting, session storage, roles, slugs, project codes, target addresses, chart colours
 ├── App.jsx                  Routes
 ├── main.jsx                 Entry point
 └── index.css                Tailwind import, base styles and shared primitives (buttons, inputs)

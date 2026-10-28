@@ -1,38 +1,22 @@
 import { createSlice } from '@reduxjs/toolkit';
+import { addLoadCases, loadState, removeItem, replaceItem } from '../sliceHelpers';
 import { deleteScannerModule, fetchScannerModules, registerScannerModule, updateScannerModule } from './scannersThunks';
-
-const initialState = {
-  items: [],
-  status: 'idle',
-  error: null,
-};
 
 const scannersSlice = createSlice({
   name: 'scanners',
-  initialState,
+  initialState: loadState(),
   reducers: {},
   extraReducers: (builder) => {
+    addLoadCases(builder, fetchScannerModules);
     builder
-      .addCase(fetchScannerModules.pending, (state) => {
-        state.status = 'loading';
-        state.error = null;
-      })
-      .addCase(fetchScannerModules.fulfilled, (state, action) => {
-        state.status = 'succeeded';
-        state.items = action.payload;
-      })
-      .addCase(fetchScannerModules.rejected, (state, action) => {
-        state.status = 'failed';
-        state.error = action.error.message;
-      })
       .addCase(registerScannerModule.fulfilled, (state, action) => {
         state.items.push(action.payload);
       })
       .addCase(updateScannerModule.fulfilled, (state, action) => {
-        state.items = state.items.map((item) => (item.id === action.payload.id ? action.payload : item));
+        state.items = replaceItem(state.items, action.payload);
       })
       .addCase(deleteScannerModule.fulfilled, (state, action) => {
-        state.items = state.items.filter((item) => item.id !== action.payload.id);
+        state.items = removeItem(state.items, action.payload);
       });
   },
 });

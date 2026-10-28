@@ -138,7 +138,10 @@ export default function BrandingPage() {
 
   return (
     <>
-      <PageHeader title="Product & company" description="The product's name and logos, and the software development company behind it. Shown on the login page, in the sidebar and in the browser tab." />
+      <PageHeader
+        title="Product & company"
+        description="The product's name and logos, and the software development company behind it. Shown on the login page, in the sidebar and in the browser tab."
+      />
 
       <form onSubmit={handleSubmit} noValidate>
         {submitError && (
@@ -150,15 +153,42 @@ export default function BrandingPage() {
           <div className="flex flex-col gap-5">
             <Card title="Product">
               <div className="grid gap-x-6 md:grid-cols-2">
-                <ImageUpload label="Product logo" value={form.productLogo} onChange={(value) => setField('productLogo', value)} maxKb={512} hint="Square works best. PNG, JPG, SVG or WebP, up to 512 KB." />
-                <ImageUpload label="Favicon" value={form.favicon} onChange={(value) => setField('favicon', value)} maxKb={100} previewClassName="size-12" hint="The small icon in the browser tab. 32×32 or 64×64 PNG, SVG or ICO, up to 100 KB." />
+                <ImageUpload
+                  label="Product logo"
+                  value={form.productLogo}
+                  onChange={(value) => setField('productLogo', value)}
+                  maxKb={512}
+                  hint="Square works best. PNG, JPG, SVG or WebP, up to 512 KB."
+                />
+                <ImageUpload
+                  label="Favicon"
+                  value={form.favicon}
+                  onChange={(value) => setField('favicon', value)}
+                  maxKb={100}
+                  previewClassName="size-12"
+                  hint="The small icon in the browser tab. 32×32 or 64×64 PNG, SVG or ICO, up to 100 KB."
+                />
               </div>
               <div className="grid gap-x-4 md:grid-cols-2">
                 <FormField id="product-name" label="Product name" error={errors.productName}>
-                  <input id="product-name" className="input" maxLength={40} value={form.productName} onChange={(event) => setField('productName', event.target.value)} {...errorProps('product-name', errors.productName)} />
+                  <input
+                    id="product-name"
+                    className="input"
+                    maxLength={40}
+                    value={form.productName}
+                    onChange={(event) => setField('productName', event.target.value)}
+                    {...errorProps('product-name', errors.productName)}
+                  />
                 </FormField>
                 <FormField id="product-tagline" label="Tagline" hint={`${form.tagline.length}/80`} error={errors.tagline}>
-                  <input id="product-tagline" className="input" maxLength={80} value={form.tagline} onChange={(event) => setField('tagline', event.target.value)} {...errorProps('product-tagline', errors.tagline)} />
+                  <input
+                    id="product-tagline"
+                    className="input"
+                    maxLength={80}
+                    value={form.tagline}
+                    onChange={(event) => setField('tagline', event.target.value)}
+                    {...errorProps('product-tagline', errors.tagline)}
+                  />
                 </FormField>
               </div>
             </Card>
@@ -172,7 +202,13 @@ export default function BrandingPage() {
               </div>
               {companyInput('website', 'Website', 'companyWebsite', { type: 'url', placeholder: 'https://www.company.com' })}
               <FormField id="company-address" label="Address">
-                <textarea id="company-address" className="input h-auto py-2" rows={2} value={form.company.address} onChange={(event) => setCompanyField('address', event.target.value)} />
+                <textarea
+                  id="company-address"
+                  className="input h-auto py-2"
+                  rows={2}
+                  value={form.company.address}
+                  onChange={(event) => setCompanyField('address', event.target.value)}
+                />
               </FormField>
             </Card>
           </div>

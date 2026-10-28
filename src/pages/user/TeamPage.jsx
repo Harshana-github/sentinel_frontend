@@ -29,7 +29,9 @@ const BASE_COLUMNS = [
   {
     key: 'role',
     header: 'Role',
-    render: (member) => <span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold whitespace-nowrap text-slate-700">{member.roleName}</span>,
+    render: (member) => (
+      <span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold whitespace-nowrap text-slate-700">{member.roleName}</span>
+    ),
   },
   { key: 'status', header: 'Status', render: (member) => <CategoryStatusBadge category="user-statuses" value={member.status} /> },
   { key: 'lastActiveAt', header: 'Last active', render: (member) => (member.lastActiveAt ? formatRelativeTime(member.lastActiveAt) : 'Never') },
@@ -77,7 +79,13 @@ export default function TeamPage() {
               return (
                 <div className="flex justify-end gap-1">
                   {canEdit && (
-                    <button type="button" className="icon-btn" aria-label={`Edit ${member.name}`} title="Edit name and role" onClick={() => setEditing(member)}>
+                    <button
+                      type="button"
+                      className="icon-btn"
+                      aria-label={`Edit ${member.name}`}
+                      title="Edit name and role"
+                      onClick={() => setEditing(member)}
+                    >
                       <Pencil size={16} aria-hidden="true" />
                     </button>
                   )}

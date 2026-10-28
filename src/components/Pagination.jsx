@@ -57,7 +57,11 @@ export default function Pagination({ pagination, label = 'items', sizes = PAGE_S
   return (
     <nav aria-label={`${label} pages`} className="flex flex-wrap items-center gap-3 border-t border-slate-200 px-5 py-2.5 text-[13px] text-slate-500">
       <p aria-live="polite">
-        Showing <span className="font-semibold text-slate-700">{start + 1}–{end}</span> of <span className="font-semibold text-slate-700">{total}</span> {label}
+        Showing{' '}
+        <span className="font-semibold text-slate-700">
+          {start + 1}–{end}
+        </span>{' '}
+        of <span className="font-semibold text-slate-700">{total}</span> {label}
       </p>
 
       <label className="flex items-center gap-2">
@@ -73,7 +77,13 @@ export default function Pagination({ pagination, label = 'items', sizes = PAGE_S
 
       <ul className="flex items-center gap-1 sm:ml-auto">
         <li>
-          <button type="button" className={`${pageButton} hover:bg-slate-100`} aria-label="Previous page" disabled={page === 1} onClick={() => setPage(page - 1)}>
+          <button
+            type="button"
+            className={`${pageButton} hover:bg-slate-100`}
+            aria-label="Previous page"
+            disabled={page === 1}
+            onClick={() => setPage(page - 1)}
+          >
             <ChevronLeft size={16} aria-hidden="true" />
           </button>
         </li>
@@ -97,7 +107,13 @@ export default function Pagination({ pagination, label = 'items', sizes = PAGE_S
           ),
         )}
         <li>
-          <button type="button" className={`${pageButton} hover:bg-slate-100`} aria-label="Next page" disabled={page === pageCount} onClick={() => setPage(page + 1)}>
+          <button
+            type="button"
+            className={`${pageButton} hover:bg-slate-100`}
+            aria-label="Next page"
+            disabled={page === pageCount}
+            onClick={() => setPage(page + 1)}
+          >
             <ChevronRight size={16} aria-hidden="true" />
           </button>
         </li>

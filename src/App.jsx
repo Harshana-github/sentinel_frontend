@@ -21,6 +21,7 @@ import FindingsPage from './pages/user/FindingsPage';
 import NewAssessmentPage from './pages/user/NewAssessmentPage';
 import ProjectDetailPage from './pages/user/ProjectDetailPage';
 import ProjectsPage from './pages/user/ProjectsPage';
+import QuickScanPage from './pages/user/QuickScanPage';
 import RolesPage from './pages/user/RolesPage';
 import ScanDetailPage from './pages/user/ScanDetailPage';
 import ScansPage from './pages/user/ScansPage';
@@ -66,6 +67,7 @@ export default function App() {
               <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
             </Route>
             <Route element={<ModuleRoute module="scans" />}>
+              <Route path="/quick-scan" element={<QuickScanPage />} />
               <Route path="/scans" element={<ScansPage />} />
               <Route path="/scans/:scanId" element={<ScanDetailPage />} />
               <Route path="/assessments" element={<AssessmentsPage />} />

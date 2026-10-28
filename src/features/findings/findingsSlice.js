@@ -1,34 +1,16 @@
 import { createSlice } from '@reduxjs/toolkit';
+import { addLoadCases, loadState, replaceItem } from '../sliceHelpers';
 import { fetchFindings, updateFindingStatus } from './findingsThunks';
-
-const initialState = {
-  items: [],
-  status: 'idle',
-  error: null,
-};
 
 const findingsSlice = createSlice({
   name: 'findings',
-  initialState,
+  initialState: loadState(),
   reducers: {},
   extraReducers: (builder) => {
-    builder
-      .addCase(fetchFindings.pending, (state) => {
-        state.status = 'loading';
-        state.error = null;
-      })
-      .addCase(fetchFindings.fulfilled, (state, action) => {
-        state.status = 'succeeded';
-        state.items = action.payload;
-      })
-      .addCase(fetchFindings.rejected, (state, action) => {
-        state.status = 'failed';
-        state.error = action.error.message;
-      })
-      .addCase(updateFindingStatus.fulfilled, (state, action) => {
-        const index = state.items.findIndex((finding) => finding.id === action.payload.id);
-        if (index !== -1) state.items[index] = action.payload;
-      });
+    addLoadCases(builder, fetchFindings);
+    builder.addCase(updateFindingStatus.fulfilled, (state, action) => {
+      state.items = replaceItem(state.items, action.payload);
+    });
   },
 });
 

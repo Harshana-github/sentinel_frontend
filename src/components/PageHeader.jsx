@@ -8,7 +8,11 @@ export default function PageHeader({ title, description, breadcrumbs, actions })
           <ol className="mb-1.5 flex flex-wrap gap-1.5 text-[13px] text-slate-500">
             {breadcrumbs.map((crumb, index) => (
               <li key={crumb.label} className="flex gap-1.5">
-                {index > 0 && <span aria-hidden="true" className="text-slate-300">/</span>}
+                {index > 0 && (
+                  <span aria-hidden="true" className="text-slate-300">
+                    /
+                  </span>
+                )}
                 {crumb.to ? <Link to={crumb.to}>{crumb.label}</Link> : <span aria-current="page">{crumb.label}</span>}
               </li>
             ))}

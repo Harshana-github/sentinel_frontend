@@ -8,11 +8,10 @@ import {
   updateMember,
   updateOrganization,
 } from './organizationsThunks';
+import { addLoadCases, loadState, removeItem, replaceItem } from '../sliceHelpers';
 
 const initialState = {
-  items: [],
-  status: 'idle',
-  error: null,
+  ...loadState(),
   // Members are loaded per organization: { [organizationId]: { items, status, error } }
   membersByOrganization: {},
 };
@@ -22,25 +21,13 @@ const organizationsSlice = createSlice({
   initialState,
   reducers: {},
   extraReducers: (builder) => {
+    addLoadCases(builder, fetchOrganizations);
     builder
-      .addCase(fetchOrganizations.pending, (state) => {
-        state.status = 'loading';
-        state.error = null;
-      })
-      .addCase(fetchOrganizations.fulfilled, (state, action) => {
-        state.status = 'succeeded';
-        state.items = action.payload;
-      })
-      .addCase(fetchOrganizations.rejected, (state, action) => {
-        state.status = 'failed';
-        state.error = action.error.message;
-      })
       .addCase(createOrganization.fulfilled, (state, action) => {
         state.items.push(action.payload.organization);
       })
       .addCase(updateOrganization.fulfilled, (state, action) => {
-        const index = state.items.findIndex((organization) => organization.id === action.payload.id);
-        if (index !== -1) state.items[index] = action.payload;
+        state.items = replaceItem(state.items, action.payload);
       })
       .addCase(fetchOrganizationMembers.pending, (state, action) => {
         const previous = state.membersByOrganization[action.meta.arg];
@@ -59,20 +46,19 @@ const organizationsSlice = createSlice({
       })
       .addCase(updateMember.fulfilled, (state, action) => {
         const members = state.membersByOrganization[action.payload.organizationId];
-        if (members) members.items = members.items.map((member) => (member.id === action.payload.id ? action.payload : member));
+        if (members) members.items = replaceItem(members.items, action.payload);
       })
       .addCase(deleteMember.fulfilled, (state, action) => {
         const members = state.membersByOrganization[action.payload.organizationId];
-        if (members) members.items = members.items.filter((member) => member.id !== action.payload.id);
+        if (members) members.items = removeItem(members.items, action.payload);
       });
   },
 });
 
-const emptyMembers = { items: [], status: 'idle', error: null };
+const emptyMembers = loadState();
 
 export const selectOrganizationsState = (state) => state.organizations;
 export const selectOrganizationById = (state, id) => state.organizations.items.find((item) => item.id === id);
-export const selectMembersOf = (state, organizationId) =>
-  state.organizations.membersByOrganization[organizationId] ?? emptyMembers;
+export const selectMembersOf = (state, organizationId) => state.organizations.membersByOrganization[organizationId] ?? emptyMembers;
 
 export default organizationsSlice.reducer;

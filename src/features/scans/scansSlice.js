@@ -1,39 +1,20 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { ACTIVE_SCAN_STATUSES } from '../../utils/constants';
+import { addLoadCases, loadState, replaceItem } from '../sliceHelpers';
 import { cancelScan, fetchScans, startScan } from './scansThunks';
-
-const initialState = {
-  items: [],
-  status: 'idle',
-  error: null,
-};
 
 const scansSlice = createSlice({
   name: 'scans',
-  initialState,
+  initialState: loadState(),
   reducers: {},
   extraReducers: (builder) => {
+    addLoadCases(builder, fetchScans);
     builder
-      .addCase(fetchScans.pending, (state, action) => {
-        if (action.meta.arg?.silent) return;
-        state.status = 'loading';
-        state.error = null;
-      })
-      .addCase(fetchScans.fulfilled, (state, action) => {
-        state.status = 'succeeded';
-        state.error = null;
-        state.items = action.payload;
-      })
-      .addCase(fetchScans.rejected, (state, action) => {
-        state.status = 'failed';
-        state.error = action.error.message;
-      })
       .addCase(startScan.fulfilled, (state, action) => {
         state.items.unshift(action.payload);
       })
       .addCase(cancelScan.fulfilled, (state, action) => {
-        const index = state.items.findIndex((scan) => scan.id === action.payload.id);
-        if (index !== -1) state.items[index] = action.payload;
+        state.items = replaceItem(state.items, action.payload);
       });
   },
 });

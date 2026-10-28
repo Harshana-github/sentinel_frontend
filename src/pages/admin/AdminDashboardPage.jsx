@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Building2, Radar, ShieldAlert, Users } from 'lucide-react';
 import { selectPlatformSummary } from '../../features/admin/adminSlice';
 import { fetchPlatformSummary } from '../../features/admin/adminThunks';
+import { useStatusList } from '../../features/masters/useStatusList';
 import AsyncContent from '../../components/AsyncContent';
 import BarList from '../../components/BarList';
 import Card from '../../components/Card';
@@ -29,11 +30,16 @@ const ORGANIZATION_COLUMNS = [
   { key: 'projectCount', header: 'Projects', className: 'text-right' },
   { key: 'scanCount', header: 'Scans', className: 'text-right' },
   { key: 'openFindingCount', header: 'Open findings', className: 'text-right' },
-  { key: 'lastScanAt', header: 'Last scan', render: (organization) => (organization.lastScanAt ? formatRelativeTime(organization.lastScanAt) : 'Never') },
+  {
+    key: 'lastScanAt',
+    header: 'Last scan',
+    render: (organization) => (organization.lastScanAt ? formatRelativeTime(organization.lastScanAt) : 'Never'),
+  },
   { key: 'status', header: 'Status', render: (organization) => <CategoryStatusBadge category="organization-statuses" value={organization.status} /> },
 ];
 
 export default function AdminDashboardPage() {
+  const scanStatuses = useStatusList('scan-statuses');
   const dispatch = useDispatch();
   const { data: summary, status, error } = useSelector(selectPlatformSummary);
 
@@ -57,7 +63,13 @@ export default function AdminDashboardPage() {
                 to="/admin/organizations"
               />
               <StatCard icon={Users} label="Users" value={summary.totals.users} to="/admin/organizations" />
-              <StatCard icon={Radar} label="Scans" value={summary.totals.scans} detail={`${summary.scanStatusCounts.Running} running now`} to="/admin/organizations" />
+              <StatCard
+                icon={Radar}
+                label="Scans"
+                value={summary.totals.scans}
+                detail={`${summary.scanStatusCounts.Running} running now`}
+                to="/admin/organizations"
+              />
               <StatCard icon={ShieldAlert} label="Open vulnerabilities" value={summary.totals.openVulnerabilities} to="/admin/organizations" />
             </div>
 
@@ -67,7 +79,7 @@ export default function AdminDashboardPage() {
                   label="Scans by status"
                   items={SCAN_STATUSES.map((scanStatus) => ({
                     key: scanStatus,
-                    label: scanStatus,
+                    label: scanStatuses.labelOf(scanStatus),
                     count: summary.scanStatusCounts[scanStatus],
                     barClass: SCAN_STATUS_BAR_CLASSES[scanStatus],
                   }))}
@@ -87,7 +99,12 @@ export default function AdminDashboardPage() {
             </div>
 
             <Card title="Organizations overview" flush actions={<Link to="/admin/organizations">Manage organizations</Link>}>
-              <DataTable columns={ORGANIZATION_COLUMNS} rows={summary.organizations} caption="Organizations overview" emptyMessage="No organizations yet." />
+              <DataTable
+                columns={ORGANIZATION_COLUMNS}
+                rows={summary.organizations}
+                caption="Organizations overview"
+                emptyMessage="No organizations yet."
+              />
             </Card>
           </div>
         )}

@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
 import { selectFindingsState } from '../../features/findings/findingsSlice';
 import { fetchFindings } from '../../features/findings/findingsThunks';
+import { useStatusList } from '../../features/masters/useStatusList';
 import AsyncContent from '../../components/AsyncContent';
 import Card from '../../components/Card';
 import { FilterBar, SearchInput, SelectFilter } from '../../components/Filters';
@@ -17,6 +18,7 @@ function bySeverityThenDate(a, b) {
 }
 
 export default function FindingsPage() {
+  const findingStatuses = useStatusList('finding-statuses');
   const dispatch = useDispatch();
   const [searchParams] = useSearchParams();
   const { items, status, error } = useSelector(selectFindingsState);
@@ -52,9 +54,27 @@ export default function FindingsPage() {
       <Card flush fill>
         <FilterBar resultCount={items.length > 0 || status === 'succeeded' ? visibleFindings.length : undefined}>
           <SearchInput label="Search findings" placeholder="Search by title, CVE, ID, target or project" value={search} onChange={setSearch} />
-          <SelectFilter label="Filter by severity" allLabel="All severities" value={severityFilter} onChange={setSeverityFilter} options={SEVERITIES} />
-          <SelectFilter label="Filter by status" allLabel="All statuses" value={statusFilter} onChange={setStatusFilter} options={FINDING_STATUSES} />
-          <SelectFilter label="Filter by scanner" allLabel="All scanners" value={scannerFilter} onChange={setScannerFilter} options={scannerOptions} />
+          <SelectFilter
+            label="Filter by severity"
+            allLabel="All severities"
+            value={severityFilter}
+            onChange={setSeverityFilter}
+            options={SEVERITIES}
+          />
+          <SelectFilter
+            label="Filter by status"
+            allLabel="All statuses"
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={findingStatuses.options(FINDING_STATUSES)}
+          />
+          <SelectFilter
+            label="Filter by scanner"
+            allLabel="All scanners"
+            value={scannerFilter}
+            onChange={setScannerFilter}
+            options={scannerOptions}
+          />
         </FilterBar>
         <AsyncContent status={status} error={error} hasData={items.length > 0} onRetry={() => dispatch(fetchFindings())}>
           <FindingsTable findings={visibleFindings} emptyMessage="No findings match your filters." />

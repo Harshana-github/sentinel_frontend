@@ -110,7 +110,7 @@ export default function ScanDetailPage() {
             <Card title="Progress">
               <div className="flex flex-col gap-2.5">
                 <div className="flex items-center justify-between">
-                  <StatusBadge status={scan.status} />
+                  <StatusBadge status={scan.status} category="scan-statuses" />
                   <span className="text-xl font-bold">{scan.progress}%</span>
                 </div>
                 <ProgressBar value={scan.progress} label={`Scan ${scan.id} progress`} className="h-2.5" />
@@ -120,11 +120,7 @@ export default function ScanDetailPage() {
                     Running {toolNames}. {USE_MOCK_DATA && 'Progress is simulated in demo mode.'}
                   </p>
                 )}
-                {scan.status === 'Failed' && (
-                  <Alert tone="error">
-                    {scan.errorMessage}
-                  </Alert>
-                )}
+                {scan.status === 'Failed' && <Alert tone="error">{scan.errorMessage}</Alert>}
                 {scan.status === 'Cancelled' && <Alert>This scan was cancelled before it finished.</Alert>}
               </div>
             </Card>
@@ -168,7 +164,12 @@ export default function ScanDetailPage() {
                   ))}
                 </ul>
               )}
-              <AsyncContent status={findings.status} error={findings.error} hasData={findings.items.length > 0} onRetry={() => dispatch(fetchFindings())}>
+              <AsyncContent
+                status={findings.status}
+                error={findings.error}
+                hasData={findings.items.length > 0}
+                onRetry={() => dispatch(fetchFindings())}
+              >
                 <FindingsTable
                   findings={scanFindings}
                   showTarget={false}

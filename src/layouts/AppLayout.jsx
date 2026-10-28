@@ -22,10 +22,7 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-screen">
-      <a
-        href="#main-content"
-        className="absolute -top-10 left-2 z-50 rounded-md bg-white px-3 py-2 focus:top-2"
-      >
+      <a href="#main-content" className="absolute -top-10 left-2 z-50 rounded-md bg-white px-3 py-2 focus:top-2">
         Skip to main content
       </a>
       <Sidebar

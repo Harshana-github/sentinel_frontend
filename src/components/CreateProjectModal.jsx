@@ -44,7 +44,10 @@ export default function CreateProjectModal({ onClose, onCreated }) {
 
   function updateCode(event) {
     setCodeTouched(true);
-    const code = event.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, PROJECT_CODE_MAX);
+    const code = event.target.value
+      .toUpperCase()
+      .replace(/[^A-Z0-9-]/g, '')
+      .slice(0, PROJECT_CODE_MAX);
     setForm((current) => ({ ...current, code }));
     setErrors((current) => ({ ...current, code: undefined }));
   }
@@ -79,7 +82,15 @@ export default function CreateProjectModal({ onClose, onCreated }) {
         )}
         <div className="grid gap-x-3 sm:grid-cols-[1fr_170px]">
           <FormField id="project-name" label="Project name" error={errors.name}>
-            <input id="project-name" name="name" className="input" value={form.name} onChange={updateField} autoFocus {...errorProps('project-name', errors.name)} />
+            <input
+              id="project-name"
+              name="name"
+              className="input"
+              value={form.name}
+              onChange={updateField}
+              autoFocus
+              {...errorProps('project-name', errors.name)}
+            />
           </FormField>
           <FormField id="project-code" label="Project code" hint="Unique, e.g. WEB or MOBILE-API." error={errors.code}>
             <input
@@ -101,7 +112,15 @@ export default function CreateProjectModal({ onClose, onCreated }) {
           </select>
         </FormField>
         <FormField id="project-description" label="Description (optional)" error={errors.description}>
-          <textarea id="project-description" name="description" className="input h-auto py-2" rows={3} value={form.description} onChange={updateField} {...errorProps('project-description', errors.description)} />
+          <textarea
+            id="project-description"
+            name="description"
+            className="input h-auto py-2"
+            rows={3}
+            value={form.description}
+            onChange={updateField}
+            {...errorProps('project-description', errors.description)}
+          />
         </FormField>
         <div className="mt-2 flex justify-end gap-2">
           <button type="button" className="btn btn-secondary" onClick={onClose}>

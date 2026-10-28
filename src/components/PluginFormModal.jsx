@@ -130,11 +130,22 @@ export default function PluginFormModal({ plugin, onClose }) {
           <fieldset className="mb-4" aria-describedby={errors.source ? 'plugin-source-error' : undefined}>
             <legend className="mb-1.5 font-medium">Source</legend>
             {sources.status === 'loading' && <p className="text-[13px] text-slate-500">Loading sources…</p>}
-            {sources.status === 'succeeded' && sources.items.length === 0 && <p className="text-[13px] text-slate-500">No sources yet. {MISSING_HINT}</p>}
+            {sources.status === 'succeeded' && sources.items.length === 0 && (
+              <p className="text-[13px] text-slate-500">No sources yet. {MISSING_HINT}</p>
+            )}
             <div className="grid grid-cols-2 gap-2">
               {sources.items.map((source) => (
-                <label key={source.id} className="flex cursor-pointer items-start gap-2 rounded-md border border-slate-200 p-2.5 has-checked:border-blue-600 has-checked:bg-blue-50">
-                  <input className="mt-1" type="radio" name="source" checked={form.source === source.id} onChange={() => setField('source', source.id)} />
+                <label
+                  key={source.id}
+                  className="flex cursor-pointer items-start gap-2 rounded-md border border-slate-200 p-2.5 has-checked:border-blue-600 has-checked:bg-blue-50"
+                >
+                  <input
+                    className="mt-1"
+                    type="radio"
+                    name="source"
+                    checked={form.source === source.id}
+                    onChange={() => setField('source', source.id)}
+                  />
                   <span className="flex flex-col">
                     <strong>{source.name}</strong>
                     {source.description && <span className="text-xs text-slate-500">{source.description}</span>}
@@ -150,18 +161,51 @@ export default function PluginFormModal({ plugin, onClose }) {
           </fieldset>
           <div className="grid gap-x-3 sm:grid-cols-[1fr_140px]">
             <FormField id="plugin-name" label="Name" error={errors.name}>
-              <input id="plugin-name" className="input" value={form.name} autoFocus onChange={(event) => setField('name', event.target.value)} {...errorProps('plugin-name', errors.name)} />
+              <input
+                id="plugin-name"
+                className="input"
+                value={form.name}
+                autoFocus
+                onChange={(event) => setField('name', event.target.value)}
+                {...errorProps('plugin-name', errors.name)}
+              />
             </FormField>
             <FormField id="plugin-version" label="Version" error={errors.version}>
-              <input id="plugin-version" className="input" placeholder="1.0.0" value={form.version} onChange={(event) => setField('version', event.target.value)} {...errorProps('plugin-version', errors.version)} />
+              <input
+                id="plugin-version"
+                className="input"
+                placeholder="1.0.0"
+                value={form.version}
+                onChange={(event) => setField('version', event.target.value)}
+                {...errorProps('plugin-version', errors.version)}
+              />
             </FormField>
           </div>
-          <SlugField id="plugin-slug" source={form.name} value={form.slug} locked={Boolean(plugin)} error={errors.slug} onChange={(slug) => setField('slug', slug)} />
+          <SlugField
+            id="plugin-slug"
+            source={form.name}
+            value={form.slug}
+            locked={Boolean(plugin)}
+            error={errors.slug}
+            onChange={(slug) => setField('slug', slug)}
+          />
           <FormField id="plugin-category" label="Category" hint={MISSING_HINT} error={errors.category}>
-            <MasterSelect id="plugin-category" list={categories} value={form.category} error={errors.category} onChange={(value) => setField('category', value)} />
+            <MasterSelect
+              id="plugin-category"
+              list={categories}
+              value={form.category}
+              error={errors.category}
+              onChange={(value) => setField('category', value)}
+            />
           </FormField>
           <FormField id="plugin-purpose" label="Description (optional)">
-            <textarea id="plugin-purpose" className="input h-auto py-2" rows={2} value={form.purpose} onChange={(event) => setField('purpose', event.target.value)} />
+            <textarea
+              id="plugin-purpose"
+              className="input h-auto py-2"
+              rows={2}
+              value={form.purpose}
+              onChange={(event) => setField('purpose', event.target.value)}
+            />
           </FormField>
         </section>
 
@@ -171,7 +215,10 @@ export default function PluginFormModal({ plugin, onClose }) {
             <legend className="mb-1.5 font-medium">Target types</legend>
             <div className="grid grid-cols-2 gap-2">
               {targetTypes.items.map((type) => (
-                <label key={type.id} className="flex cursor-pointer items-center gap-2 rounded-md border border-slate-200 px-2.5 py-2 has-checked:border-blue-600 has-checked:bg-blue-50">
+                <label
+                  key={type.id}
+                  className="flex cursor-pointer items-center gap-2 rounded-md border border-slate-200 px-2.5 py-2 has-checked:border-blue-600 has-checked:bg-blue-50"
+                >
                   <input type="checkbox" checked={form.targetTypes.includes(type.id)} onChange={() => toggleTargetType(type.id)} />
                   <span className="text-[13px]">{type.name}</span>
                 </label>
@@ -184,7 +231,13 @@ export default function PluginFormModal({ plugin, onClose }) {
             )}
           </fieldset>
           <FormField id="plugin-interface" label="Interface" hint={pluginInterface?.description} error={errors.interface}>
-            <MasterSelect id="plugin-interface" list={interfaces} value={form.interface} error={errors.interface} onChange={(value) => setField('interface', value)} />
+            <MasterSelect
+              id="plugin-interface"
+              list={interfaces}
+              value={form.interface}
+              error={errors.interface}
+              onChange={(value) => setField('interface', value)}
+            />
           </FormField>
           <FormField
             id="plugin-command"
@@ -217,10 +270,22 @@ export default function PluginFormModal({ plugin, onClose }) {
           <h3 className={SECTION_HEADING}>Status</h3>
           <div className="grid gap-x-3 sm:grid-cols-2">
             <FormField id="plugin-license" label="License" error={errors.license}>
-              <MasterSelect id="plugin-license" list={licenses} value={form.license} error={errors.license} onChange={(value) => setField('license', value)} />
+              <MasterSelect
+                id="plugin-license"
+                list={licenses}
+                value={form.license}
+                error={errors.license}
+                onChange={(value) => setField('license', value)}
+              />
             </FormField>
             <FormField id="plugin-status" label="Integration status" error={errors.integrationStatus}>
-              <MasterSelect id="plugin-status" list={statuses} value={form.integrationStatus} error={errors.integrationStatus} onChange={(value) => setField('integrationStatus', value)} />
+              <MasterSelect
+                id="plugin-status"
+                list={statuses}
+                value={form.integrationStatus}
+                error={errors.integrationStatus}
+                onChange={(value) => setField('integrationStatus', value)}
+              />
             </FormField>
           </div>
           <label className="mb-4 flex cursor-pointer items-center gap-2">

@@ -1,10 +1,18 @@
 import { useState } from 'react';
-import { Building2, CircleDot, Plug, Users } from 'lucide-react';
+import { Building2, CircleDot, FolderKanban, Layers, Plug, Radar, ShieldAlert, Users } from 'lucide-react';
 import ListManager from '../../components/ListManager';
 import PageHeader from '../../components/PageHeader';
 import { STATUS_CATEGORIES } from '../../utils/constants';
 
-const CATEGORY_ICONS = { 'organization-statuses': Building2, 'user-statuses': Users, 'integration-statuses': Plug };
+const CATEGORY_ICONS = {
+  'organization-statuses': Building2,
+  'user-statuses': Users,
+  'integration-statuses': Plug,
+  'project-statuses': FolderKanban,
+  'scan-statuses': Radar,
+  'assessment-statuses': Layers,
+  'finding-statuses': ShieldAlert,
+};
 
 export default function StatusesPage() {
   const [activeKey, setActiveKey] = useState(STATUS_CATEGORIES[0].key);
@@ -12,9 +20,15 @@ export default function StatusesPage() {
 
   return (
     <div className="fill-page">
-      <PageHeader title="Statuses" description="Each status category has its own statuses. Names and badge colours apply everywhere the status is shown." />
+      <PageHeader
+        title="Statuses"
+        description="Each status category has its own statuses. Names and badge colours apply everywhere the status is shown."
+      />
       <div className="fill-grow grid gap-5 lg:grid-cols-[240px_1fr] lg:grid-rows-[minmax(0,1fr)]">
-        <nav aria-label="Status categories" className="self-start rounded-lg border border-slate-200 bg-white p-2 shadow-sm lg:max-h-full lg:overflow-y-auto">
+        <nav
+          aria-label="Status categories"
+          className="self-start rounded-lg border border-slate-200 bg-white p-2 shadow-sm lg:max-h-full lg:overflow-y-auto"
+        >
           <p className="px-2.5 pt-1 pb-2 text-xs font-semibold tracking-wide text-slate-500 uppercase">Categories</p>
           <ul className="flex flex-col gap-0.5">
             {STATUS_CATEGORIES.map((category) => {

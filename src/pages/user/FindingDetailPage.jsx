@@ -14,11 +14,13 @@ import { EmptyState } from '../../components/StateMessage';
 import StatusBadge from '../../components/StatusBadge';
 import { USE_MOCK_DATA } from '../../services/api';
 import { useMasterList } from '../../features/masters/useMasterList';
+import { useStatusList } from '../../features/masters/useStatusList';
 import { FINDING_STATUSES } from '../../utils/constants';
 import { formatDateTime } from '../../utils/format';
 import { can } from '../../utils/roles';
 
 function StatusForm({ finding }) {
+  const findingStatuses = useStatusList('finding-statuses');
   const dispatch = useDispatch();
   const [newStatus, setNewStatus] = useState(finding.status);
   const [isSaving, setIsSaving] = useState(false);
@@ -43,8 +45,10 @@ function StatusForm({ finding }) {
         Status
       </label>
       <select id="finding-status" className="input w-auto min-w-42" value={newStatus} onChange={(event) => setNewStatus(event.target.value)}>
-        {FINDING_STATUSES.map((status) => (
-          <option key={status}>{status}</option>
+        {findingStatuses.options(FINDING_STATUSES).map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
         ))}
       </select>
       <button type="submit" className="btn btn-primary" disabled={isSaving || newStatus === finding.status}>
@@ -87,7 +91,7 @@ export default function FindingDetailPage() {
               <Card>
                 <div className="flex gap-2">
                   <SeverityBadge severity={finding.severity} />
-                  <StatusBadge status={finding.status} />
+                  <StatusBadge status={finding.status} category="finding-statuses" />
                 </div>
                 {/* key resets the form when the stored status changes */}
                 {can(user, 'findings.update') && (
@@ -105,7 +109,9 @@ export default function FindingDetailPage() {
                     Demonstration evidence, not real scanner output
                   </p>
                 )}
-                <pre className="rounded-md bg-slate-900 p-3 font-mono text-[13px] break-words whitespace-pre-wrap text-slate-200">{finding.evidence}</pre>
+                <pre className="rounded-md bg-slate-900 p-3 font-mono text-[13px] break-words whitespace-pre-wrap text-slate-200">
+                  {finding.evidence}
+                </pre>
               </Card>
               <Card title="Remediation">
                 <p>{finding.remediation}</p>

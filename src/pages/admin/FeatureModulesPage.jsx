@@ -35,9 +35,7 @@ function ModuleFormModal({ module, onClose, onSaved }) {
     }
     setIsSaving(true);
     try {
-      const saved = module
-        ? await dispatch(updateModule({ key: module.key, changes: form })).unwrap()
-        : await dispatch(createModule(form)).unwrap();
+      const saved = module ? await dispatch(updateModule({ key: module.key, changes: form })).unwrap() : await dispatch(createModule(form)).unwrap();
       dispatch(showToast({ message: `Module "${saved.name}" ${module ? 'updated' : 'created'}.` }));
       onSaved?.(saved);
       onClose();
@@ -217,7 +215,9 @@ export default function FeatureModulesPage() {
                     >
                       <LayoutGrid size={16} aria-hidden="true" />
                       <span className="flex-1 truncate">{module.name}</span>
-                      <span className={`rounded-full px-1.5 text-[11px] font-semibold ${isSelected ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'}`}>
+                      <span
+                        className={`rounded-full px-1.5 text-[11px] font-semibold ${isSelected ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'}`}
+                      >
                         {permissionsOf(module.key).length}
                       </span>
                     </button>
@@ -236,7 +236,13 @@ export default function FeatureModulesPage() {
                     <Plus size={16} aria-hidden="true" />
                     Add permission
                   </button>
-                  <button type="button" className="icon-btn" aria-label={`Edit module ${selected.name}`} title="Edit module" onClick={() => setEditingModule(selected)}>
+                  <button
+                    type="button"
+                    className="icon-btn"
+                    aria-label={`Edit module ${selected.name}`}
+                    title="Edit module"
+                    onClick={() => setEditingModule(selected)}
+                  >
                     <Pencil size={16} aria-hidden="true" />
                   </button>
                   <button
@@ -275,9 +281,15 @@ export default function FeatureModulesPage() {
       </AsyncContent>
 
       {editingModule !== undefined && (
-        <ModuleFormModal module={editingModule ?? undefined} onSaved={(saved) => setSelectedKey(saved.key)} onClose={() => setEditingModule(undefined)} />
+        <ModuleFormModal
+          module={editingModule ?? undefined}
+          onSaved={(saved) => setSelectedKey(saved.key)}
+          onClose={() => setEditingModule(undefined)}
+        />
       )}
-      {permissionForm && <PermissionFormModal permission={permissionForm.permission} module={permissionForm.module} onClose={() => setPermissionForm(null)} />}
+      {permissionForm && (
+        <PermissionFormModal permission={permissionForm.permission} module={permissionForm.module} onClose={() => setPermissionForm(null)} />
+      )}
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { selectCurrentUser } from '../../features/auth/authSlice';
 import { isActiveAssessment, selectAssessmentsState } from '../../features/assessments/assessmentsSlice';
 import { fetchAssessments } from '../../features/assessments/assessmentsThunks';
+import { useStatusList } from '../../features/masters/useStatusList';
 import AsyncContent from '../../components/AsyncContent';
 import Card from '../../components/Card';
 import DataTable from '../../components/DataTable';
@@ -19,10 +20,10 @@ import { formatRelativeTime, includesText } from '../../utils/format';
 import { can } from '../../utils/roles';
 
 export function AssessmentStatus({ assessment }) {
-  if (!isActiveAssessment(assessment)) return <StatusBadge status={assessment.status} />;
+  if (!isActiveAssessment(assessment)) return <StatusBadge status={assessment.status} category="assessment-statuses" />;
   return (
     <div className="flex min-w-44 items-center gap-2">
-      <StatusBadge status={assessment.status} />
+      <StatusBadge status={assessment.status} category="assessment-statuses" />
       <ProgressBar value={assessment.progress} label={`${assessment.id} progress`} className="h-2 w-16" />
       <span className="text-slate-500">{assessment.progress}%</span>
     </div>
@@ -83,10 +84,15 @@ const COLUMNS = [
     ),
   },
   { key: 'findings', header: 'Findings', render: (assessment) => <FindingSummary assessment={assessment} /> },
-  { key: 'createdAt', header: 'Started', render: (assessment) => <span className="whitespace-nowrap">{formatRelativeTime(assessment.createdAt)}</span> },
+  {
+    key: 'createdAt',
+    header: 'Started',
+    render: (assessment) => <span className="whitespace-nowrap">{formatRelativeTime(assessment.createdAt)}</span>,
+  },
 ];
 
 export default function AssessmentsPage() {
+  const assessmentStatuses = useStatusList('assessment-statuses');
   const dispatch = useDispatch();
   const user = useSelector(selectCurrentUser);
   const { items, status, error } = useSelector(selectAssessmentsState);
@@ -128,7 +134,13 @@ export default function AssessmentsPage() {
       <Card flush fill>
         <FilterBar resultCount={items.length > 0 || status === 'succeeded' ? visible.length : undefined}>
           <SearchInput label="Search assessments" placeholder="Search by name, ID or project" value={search} onChange={setSearch} />
-          <SelectFilter label="Filter by status" allLabel="All statuses" value={statusFilter} onChange={setStatusFilter} options={ASSESSMENT_STATUSES} />
+          <SelectFilter
+            label="Filter by status"
+            allLabel="All statuses"
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={assessmentStatuses.options(ASSESSMENT_STATUSES)}
+          />
           <SelectFilter
             label="Filter by profile"
             allLabel="All profiles"
@@ -138,7 +150,12 @@ export default function AssessmentsPage() {
           />
         </FilterBar>
         <AsyncContent status={status} error={error} hasData={items.length > 0 || status === 'succeeded'} onRetry={() => dispatch(fetchAssessments())}>
-          <DataTable columns={COLUMNS} rows={visible} caption="Assessments" emptyMessage={items.length ? 'No assessments match your filters.' : 'No assessments yet.'} />
+          <DataTable
+            columns={COLUMNS}
+            rows={visible}
+            caption="Assessments"
+            emptyMessage={items.length ? 'No assessments match your filters.' : 'No assessments yet.'}
+          />
         </AsyncContent>
       </Card>
     </div>

@@ -3,11 +3,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useParams } from 'react-router-dom';
 import { selectMembersOf, selectOrganizationById, selectOrganizationsState } from '../../features/organizations/organizationsSlice';
-import {
-  fetchOrganizationMembers,
-  fetchOrganizations,
-  updateOrganization,
-} from '../../features/organizations/organizationsThunks';
+import { fetchOrganizationMembers, fetchOrganizations, updateOrganization } from '../../features/organizations/organizationsThunks';
 import { selectProjectsState } from '../../features/projects/projectsSlice';
 import { fetchProjects } from '../../features/projects/projectsThunks';
 import { useMasterList } from '../../features/masters/useMasterList';
@@ -44,7 +40,7 @@ const PROJECT_COLUMNS = [
   { key: 'environment', header: 'Environment' },
   { key: 'targets', header: 'Targets', className: 'text-right', render: (project) => project.targets.length },
   { key: 'openFindingCount', header: 'Open findings', className: 'text-right' },
-  { key: 'status', header: 'Status', render: (project) => <StatusBadge status={project.status} /> },
+  { key: 'status', header: 'Status', render: (project) => <StatusBadge status={project.status} category="project-statuses" /> },
 ];
 
 function StatusAction({ organization }) {
@@ -97,9 +93,27 @@ function AdminCard({ organization, admin }) {
           <div key={row.label}>
             <dt className="mb-0.5 text-xs text-slate-500">{row.label}</dt>
             <dd className="flex items-center gap-1 font-mono text-sm break-all">
-              {row.secret ? (row.value ? (showPassword ? row.value : '••••••••') : <span className="font-sans text-slate-500">Not available</span>) : row.value}
+              {row.secret ? (
+                row.value ? (
+                  showPassword ? (
+                    row.value
+                  ) : (
+                    '••••••••'
+                  )
+                ) : (
+                  <span className="font-sans text-slate-500">Not available</span>
+                )
+              ) : (
+                row.value
+              )}
               {row.secret && row.value && (
-                <button type="button" className="icon-btn" aria-label={showPassword ? 'Hide password' : 'Show password'} aria-pressed={showPassword} onClick={() => setShowPassword((v) => !v)}>
+                <button
+                  type="button"
+                  className="icon-btn"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-pressed={showPassword}
+                  onClick={() => setShowPassword((v) => !v)}
+                >
                   {showPassword ? <EyeOff size={14} aria-hidden="true" /> : <Eye size={14} aria-hidden="true" />}
                 </button>
               )}
@@ -107,7 +121,10 @@ function AdminCard({ organization, admin }) {
           </div>
         ))}
       </dl>
-      <p className="mt-3 text-xs text-slate-500">Demo data only. A real backend stores hashed passwords, so it could not show them; it would need a reset or a one-time temporary password instead.</p>
+      <p className="mt-3 text-xs text-slate-500">
+        Demo data only. A real backend stores hashed passwords, so it could not show them; it would need a reset or a one-time temporary password
+        instead.
+      </p>
     </Card>
   );
 }
@@ -182,8 +199,18 @@ export default function OrganizationDetailPage() {
             </Card>
 
             <Card title={`Projects (${organizationProjects.length})`} flush>
-              <AsyncContent status={projects.status} error={projects.error} hasData={projects.items.length > 0} onRetry={() => dispatch(fetchProjects())}>
-                <DataTable columns={PROJECT_COLUMNS} rows={organizationProjects} caption="Projects" emptyMessage="This organization has no projects yet." />
+              <AsyncContent
+                status={projects.status}
+                error={projects.error}
+                hasData={projects.items.length > 0}
+                onRetry={() => dispatch(fetchProjects())}
+              >
+                <DataTable
+                  columns={PROJECT_COLUMNS}
+                  rows={organizationProjects}
+                  caption="Projects"
+                  emptyMessage="This organization has no projects yet."
+                />
               </AsyncContent>
             </Card>
           </div>

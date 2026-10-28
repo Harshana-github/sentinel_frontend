@@ -9,7 +9,6 @@ export const OPEN_FINDING_STATUSES = ['Open', 'In Progress'];
 export const PROJECT_STATUSES = ['Active', 'On Hold', 'Archived'];
 export const PROJECT_ENVIRONMENTS = ['Production', 'Staging', 'Development'];
 
-
 // Assessment profiles. An assessment scans several targets of one project at once: one scan
 // job per target. `types` maps target types to required (blocks the start when the project has
 // no ready target of that type), included (selected by default) or optional (not selected by
@@ -161,5 +160,36 @@ export const STATUS_CATEGORIES = [
     singular: 'integration status',
     description: 'How far the integration of a scanner plugin has come.',
     nameHint: 'For example: Planned, In development, Available.',
+  },
+  // `fixed` categories hold exactly the statuses Sentinel's workflow uses (PROJECT_STATUSES,
+  // SCAN_STATUSES and so on). Their slug is the slug of that value; the Super Admin can only
+  // change the name shown, the description and the badge colour.
+  {
+    key: 'project-statuses',
+    title: 'Project statuses',
+    singular: 'project status',
+    description: 'The state of a project. Archived projects cannot be scanned.',
+    fixed: true,
+  },
+  {
+    key: 'scan-statuses',
+    title: 'Scan statuses',
+    singular: 'scan status',
+    description: 'Set by the scan engine as a scan job moves through the queue.',
+    fixed: true,
+  },
+  {
+    key: 'assessment-statuses',
+    title: 'Assessment statuses',
+    singular: 'assessment status',
+    description: 'Worked out from the scan jobs of an assessment.',
+    fixed: true,
+  },
+  {
+    key: 'finding-statuses',
+    title: 'Finding statuses',
+    singular: 'finding status',
+    description: 'The triage state of a finding. Open and In progress count as open.',
+    fixed: true,
   },
 ].map((category) => ({ ...category, extraFields: [{ key: 'tone', label: 'Badge colour', options: STATUS_TONES }] }));

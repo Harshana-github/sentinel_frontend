@@ -22,6 +22,7 @@ import { loadStoredAuth } from '../utils/authStorage';
 import { isSuperAdmin } from '../utils/roles';
 import { projectCodeError } from '../utils/projectCode';
 import { slugError, slugify } from '../utils/slug';
+import { targetAddressError } from '../utils/target';
 import {
   activities,
   demoAccounts,
@@ -38,6 +39,10 @@ import {
   adminRole,
   roles,
   integrationStatuses,
+  projectStatuses,
+  scanStatuses,
+  assessmentStatuses,
+  findingStatuses,
   licenses,
   pluginCategories,
   organizationStatuses,
@@ -77,6 +82,10 @@ const db = {
     'organization-statuses': organizationStatuses,
     'user-statuses': userStatuses,
     'integration-statuses': integrationStatuses,
+    'project-statuses': projectStatuses,
+    'scan-statuses': scanStatuses,
+    'assessment-statuses': assessmentStatuses,
+    'finding-statuses': findingStatuses,
   }),
   // Sign-in accounts: { userId, email, username, password }. New organization admins are added here.
   accounts: demoAccounts.map(({ userId, email, username, password }) => ({ userId, email, username, password })),
@@ -110,9 +119,7 @@ const MIN_PASSWORD_LENGTH = 8;
 const newestFirst = (a, b) => b.createdAt.localeCompare(a.createdAt);
 
 function countBySeverity(findings) {
-  return Object.fromEntries(
-    SEVERITIES.map((severity) => [severity, findings.filter((finding) => finding.severity === severity).length]),
-  );
+  return Object.fromEntries(SEVERITIES.map((severity) => [severity, findings.filter((finding) => finding.severity === severity).length]));
 }
 
 function countByStatus(scanList) {
@@ -220,7 +227,12 @@ function withOrganizationCounts(organization) {
     ...organization,
     // Demo only: the mock keeps passwords in plain text so the Super Admin can copy them.
     admin: admin
-      ? { name: admin.name, email: admin.email, status: admin.status, password: db.accounts.find((account) => account.userId === admin.id)?.password ?? null }
+      ? {
+          name: admin.name,
+          email: admin.email,
+          status: admin.status,
+          password: db.accounts.find((account) => account.userId === admin.id)?.password ?? null,
+        }
       : null,
     memberCount: db.members.filter((member) => member.organizationId === organization.id).length,
     projectCount: db.projects.filter((project) => project.organizationId === organization.id).length,
@@ -395,7 +407,7 @@ export async function createOrganization({ name, slug, adminName, adminEmail, ad
   }
   const normalizedAdminEmail = adminEmail.trim().toLowerCase();
   if (!adminName.trim()) throw new Error("Enter the organization admin's name.");
-  if (!EMAIL_PATTERN.test(normalizedAdminEmail)) throw new Error("Enter a valid email for the organization admin.");
+  if (!EMAIL_PATTERN.test(normalizedAdminEmail)) throw new Error('Enter a valid email for the organization admin.');
   if (db.accounts.some((account) => account.email === normalizedAdminEmail)) {
     throw new Error(`A user with the email ${normalizedAdminEmail} already exists.`);
   }
@@ -510,8 +522,9 @@ export async function addScanTarget(projectId, { name, type, value }) {
   if (project.status === 'Archived') throw new Error('Archived projects cannot get new targets.');
   const targetType = db.masters['target-types'].find((item) => item.id === type);
   if (!targetType) throw new Error('Choose a target type.');
+  const addressError = targetAddressError(value, targetType);
+  if (addressError) throw new Error(addressError);
   const trimmedValue = value.trim();
-  if (targetType.format === 'url' && !/^https?:\/\/\S+$/.test(trimmedValue)) throw new Error('Enter a full URL starting with https://');
   if (project.targets.some((target) => target.value.toLowerCase() === trimmedValue.toLowerCase())) {
     throw new Error(`"${trimmedValue}" is already a target of this project.`);
   }
@@ -539,9 +552,7 @@ export async function startScan({ projectId, targetId, profile, tools }) {
   if (project.status === 'Archived') throw new Error('Archived projects cannot be scanned.');
   if (!PROFILE_DURATION_MS[profile]) throw new Error('Select a scan profile.');
   if (!tools?.length) throw new Error('Select at least one scanner module.');
-  const unsupported = tools.filter(
-    (tool) => !db.scanners.find((module) => module.id === tool && module.enabled)?.targetTypes.includes(target.type),
-  );
+  const unsupported = tools.filter((tool) => !db.scanners.find((module) => module.id === tool && module.enabled)?.targetTypes.includes(target.type));
   if (unsupported.length) {
     throw new Error(`${unsupported.map(moduleName).join(', ')} cannot scan this target type.`);
   }
@@ -708,7 +719,9 @@ function withAssessmentDetails(assessment) {
     jobCount: jobs.length,
     finishedJobCount: jobs.filter((job) => TERMINAL_SCAN_STATUSES.includes(job.status)).length,
     // Average of the jobs' progress, for one overall progress bar.
-    progress: jobs.length ? Math.round(jobs.reduce((sum, job) => sum + (TERMINAL_SCAN_STATUSES.includes(job.status) ? 100 : job.progress), 0) / jobs.length) : 0,
+    progress: jobs.length
+      ? Math.round(jobs.reduce((sum, job) => sum + (TERMINAL_SCAN_STATUSES.includes(job.status) ? 100 : job.progress), 0) / jobs.length)
+      : 0,
     findingCount: jobFindings.length,
     severityCounts: countBySeverity(jobFindings),
   });
@@ -771,8 +784,108 @@ export async function startAssessment({ projectId, profile: profileKey, name, ta
   };
   db.assessments.push(assessment);
   planned.forEach((job) => queueScan(user, project, job.target, profile.scanProfile, job.tools, assessment.id));
-  logActivity('scan', `Assessment ${assessment.id} started with ${planned.length} scan ${planned.length === 1 ? 'job' : 'jobs'}`, project.organizationId);
+  logActivity(
+    'scan',
+    `Assessment ${assessment.id} started with ${planned.length} scan ${planned.length === 1 ? 'job' : 'jobs'}`,
+    project.organizationId,
+  );
   return withAssessmentDetails(assessment);
+}
+
+// ---------- quick scans ----------
+
+// Quick scans need no project or target setup. Their targets are kept in one "Quick scans"
+// project per organization, created on first use, so history and findings work as usual.
+function quickScanProject(user) {
+  const existing = db.projects.find((project) => project.organizationId === user.organizationId && project.quick);
+  if (existing) return existing;
+  const usedCodes = db.projects.filter((project) => project.organizationId === user.organizationId).map((project) => project.code);
+  let code = 'QUICK';
+  for (let number = 2; usedCodes.includes(code); number++) code = `QUICK-${number}`;
+  const project = {
+    id: newId('prj'),
+    code,
+    name: 'Quick scans',
+    organizationId: user.organizationId,
+    description: 'Targets scanned with Quick scan, without a project of their own.',
+    environment: 'Production',
+    status: 'Active',
+    owner: user.name,
+    createdAt: nowIso(),
+    targets: [],
+    quick: true,
+  };
+  db.projects.push(project);
+  return project;
+}
+
+// The project's target with this type and address, added if it is new.
+function quickScanTarget(project, { type, value }) {
+  const address = value.trim();
+  const existing = project.targets.find((target) => target.type === type && target.value.toLowerCase() === address.toLowerCase());
+  if (existing) return existing;
+  let name = address;
+  try {
+    const url = new URL(address);
+    name = `${url.host}${url.pathname}`.replace(/\/$/, '') || address;
+  } catch {
+    // Not a URL, e.g. an IP address or an image name: the address is the name.
+  }
+  const target = { id: newId('tgt'), name, type, value: address, createdAt: nowIso() };
+  project.targets.push(target);
+  return target;
+}
+
+// { mode: 'single' | 'full', inputs: [{ type, value }], profile, tools, authorized }
+// Single runs one target with the chosen tools. Full runs every input as an assessment job,
+// with every enabled plugin for its type and the Deep profile.
+export async function startQuickScan({ mode, inputs, profile, tools, authorized }) {
+  await simulateLatency(600);
+  const user = requirePermission('scans.start');
+  if (!authorized) throw new Error('Confirm that you are authorized to test these targets.');
+  const filled = (inputs ?? []).filter((input) => input.value?.trim());
+  if (filled.length === 0) throw new Error('Enter at least one target.');
+  if (mode === 'single' && filled.length !== 1) throw new Error('A single scan has exactly one target.');
+  for (const input of filled) {
+    const targetType = db.masters['target-types'].find((item) => item.id === input.type);
+    if (!targetType) throw new Error('Choose a target type.');
+    const addressError = targetAddressError(input.value, targetType);
+    if (addressError) throw new Error(`${targetType.name}: ${addressError}`);
+  }
+
+  if (mode === 'single') {
+    if (!PROFILE_DURATION_MS[profile]) throw new Error('Select a scan profile.');
+    if (!tools?.length) throw new Error('Select at least one scanner module.');
+    const unsupported = tools.filter(
+      (tool) => !db.scanners.find((module) => module.id === tool && module.enabled)?.targetTypes.includes(filled[0].type),
+    );
+    if (unsupported.length) throw new Error(`${unsupported.map(moduleName).join(', ')} cannot scan this target type.`);
+    const project = quickScanProject(user);
+    const scan = queueScan(user, project, quickScanTarget(project, filled[0]), profile, tools);
+    return { kind: 'scan', id: scan.id };
+  }
+
+  if (mode !== 'full') throw new Error('Choose a single scan or a full scan.');
+  const fullProfile = ASSESSMENT_PROFILES.find((item) => item.key === 'full');
+  const jobs = filled.map((input) => ({ input, tools: assessmentPlugins(fullProfile, input.type).map((plugin) => plugin.id) }));
+  const noPlugin = jobs.find((job) => job.tools.length === 0);
+  if (noPlugin) throw new Error(`No enabled plugin can scan a ${masterName('target-types', noPlugin.input.type).toLowerCase()} yet.`);
+
+  const project = quickScanProject(user);
+  const assessment = {
+    id: `ASM-${nextAssessmentNumber++}`,
+    projectId: project.id,
+    name: `Full scan · ${filled[0].value.trim()}${filled.length > 1 ? ` +${filled.length - 1}` : ''}`,
+    profile: fullProfile.key,
+    createdBy: user.name,
+    createdAt: nowIso(),
+    cancelled: false,
+    skipped: [],
+  };
+  db.assessments.push(assessment);
+  jobs.forEach((job) => queueScan(user, project, quickScanTarget(project, job.input), fullProfile.scanProfile, job.tools, assessment.id));
+  logActivity('scan', `Full scan ${assessment.id} started with ${jobs.length} scan ${jobs.length === 1 ? 'job' : 'jobs'}`, project.organizationId);
+  return { kind: 'assessment', id: assessment.id };
 }
 
 // Cancels the queued and running jobs. Finished jobs and their findings are kept.
@@ -806,7 +919,13 @@ export async function getRoleOptions() {
   }
   return db.roles
     .filter((role) => role.organizationId === user.organizationId)
-    .map(({ slug, name, description, system }) => ({ slug, name, description, system, permissionCount: effectivePermissions(user.organizationId, slug).length }));
+    .map(({ slug, name, description, system }) => ({
+      slug,
+      name,
+      description,
+      system,
+      permissionCount: effectivePermissions(user.organizationId, slug).length,
+    }));
 }
 
 // Adds a person to the signed-in user's organization with the chosen role and password.
@@ -822,7 +941,15 @@ export async function createMember({ name, email, password, role }) {
   if ((password ?? '').length < MIN_PASSWORD_LENGTH) throw new Error(`The password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
   if (!findRole(user.organizationId, role)) throw new Error('Choose a role.');
 
-  const member = { id: newId('usr'), organizationId: user.organizationId, name: trimmedName, email: normalizedEmail, role, status: 'invited', lastActiveAt: null };
+  const member = {
+    id: newId('usr'),
+    organizationId: user.organizationId,
+    name: trimmedName,
+    email: normalizedEmail,
+    role,
+    status: 'invited',
+    lastActiveAt: null,
+  };
   db.members.push(member);
   db.accounts.push({ userId: member.id, email: member.email, username: member.email, password });
   logActivity('user', `${member.name} was added as ${findRole(user.organizationId, role).name}`, user.organizationId);
@@ -887,7 +1014,9 @@ function requireCustomRole(user, roleId) {
 function validateRole(user, { name, description, permissions }, ignoreId) {
   const trimmed = (name ?? '').trim();
   if (trimmed.length < 2 || trimmed.length > 40) throw new Error('The role name must be 2 to 40 characters.');
-  const duplicate = db.roles.some((role) => role.organizationId === user.organizationId && role.id !== ignoreId && role.name.toLowerCase() === trimmed.toLowerCase());
+  const duplicate = db.roles.some(
+    (role) => role.organizationId === user.organizationId && role.id !== ignoreId && role.name.toLowerCase() === trimmed.toLowerCase(),
+  );
   if (duplicate) throw new Error(`A role named "${trimmed}" already exists.`);
   const known = db.permissions.map((permission) => permission.key);
   return {
@@ -1126,6 +1255,15 @@ function validateMasterItem(list, input, ignoreId) {
 function masterUsage(list, id) {
   if (list === 'organization-statuses') return { organizations: db.organizations.filter((item) => item.status === id).length };
   if (list === 'user-statuses') return { users: db.members.filter((item) => item.status === id).length };
+  // Workflow statuses store the value itself, e.g. 'In Progress' for the slug 'in-progress'.
+  const hasStatus = (status) => slugify(status) === id;
+  if (list === 'project-statuses') return { projects: db.projects.filter((item) => hasStatus(item.status)).length };
+  if (list === 'scan-statuses') return { scans: db.scans.filter((item) => hasStatus(item.status)).length };
+  if (list === 'finding-statuses') return { findings: db.findings.filter((item) => hasStatus(item.status)).length };
+  if (list === 'assessment-statuses') {
+    const jobsOf = (assessment) => db.scans.filter((scan) => scan.assessmentId === assessment.id);
+    return { assessments: db.assessments.filter((item) => hasStatus(assessmentStatus(item, jobsOf(item)))).length };
+  }
   const pluginField = list === 'integration-statuses' ? 'integrationStatus' : masterList(list).pluginField;
   const plugins = db.scanners.filter((plugin) => [plugin[pluginField]].flat().includes(id)).length;
   const targets = list === 'target-types' ? db.projects.flatMap((project) => project.targets).filter((target) => target.type === id).length : 0;
@@ -1161,6 +1299,8 @@ export async function getMasterItems(list) {
 export async function createMasterItem(list, input) {
   await simulateLatency();
   requireSuperAdmin();
+  if (masterList(list).fixed)
+    throw new Error(`${masterList(list).title} are set by Sentinel. You can rename or recolour them, but not add new ones.`);
   const fields = validateMasterItem(list, input);
   const id = resolveSlug(input.slug, fields.name);
   if (db.masters[list].some((item) => item.id === id)) throw new Error(`The slug "${id}" is already used in this list.`);

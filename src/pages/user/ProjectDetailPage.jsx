@@ -153,7 +153,7 @@ export default function ProjectDetailPage() {
                   items={[
                     { label: 'Project code', value: <code className="text-[13px] font-semibold">{project.code}</code> },
                     { label: 'Organization', value: project.organizationName },
-                    { label: 'Status', value: <StatusBadge status={project.status} /> },
+                    { label: 'Status', value: <StatusBadge status={project.status} category="project-statuses" /> },
                     { label: 'Environment', value: project.environment },
                     { label: 'Owner', value: project.owner },
                     { label: 'Created', value: formatDate(project.createdAt) },
@@ -187,7 +187,12 @@ export default function ProjectDetailPage() {
                 )
               }
             >
-              <DataTable columns={targetColumns} rows={project.targets} caption="Scan targets" emptyMessage="No targets yet. Use Add target to set up what this project scans." />
+              <DataTable
+                columns={targetColumns}
+                rows={project.targets}
+                caption="Scan targets"
+                emptyMessage="No targets yet. Use Add target to set up what this project scans."
+              />
             </Card>
 
             <Card title={`Scans (${projectScans.length})`} flush>
@@ -197,7 +202,12 @@ export default function ProjectDetailPage() {
             </Card>
 
             <Card title={`Findings (${projectFindings.length})`} flush>
-              <AsyncContent status={findings.status} error={findings.error} hasData={findings.items.length > 0} onRetry={() => dispatch(fetchFindings())}>
+              <AsyncContent
+                status={findings.status}
+                error={findings.error}
+                hasData={findings.items.length > 0}
+                onRetry={() => dispatch(fetchFindings())}
+              >
                 <FindingsTable findings={projectFindings} emptyMessage="No findings for this project." />
               </AsyncContent>
             </Card>

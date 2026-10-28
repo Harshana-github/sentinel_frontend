@@ -6,28 +6,14 @@ import { useMasterList } from '../features/masters/useMasterList';
 import FormField, { errorProps } from './FormField';
 import Modal from './Modal';
 import Alert from './Alert';
-
-function isHttpUrl(value) {
-  try {
-    const url = new URL(value);
-    return url.protocol === 'http:' || url.protocol === 'https:';
-  } catch {
-    return false;
-  }
-}
+import { targetAddressError } from '../utils/target';
 
 function validate(form, targetType) {
   const errors = {};
-  const value = form.value.trim();
   if (!form.type) errors.type = 'Choose a target type.';
   if (!form.name.trim()) errors.name = 'Enter a name for the target.';
-  if (!value) {
-    errors.value = 'Enter the target address.';
-  } else if (/\s/.test(value)) {
-    errors.value = 'The target cannot contain spaces.';
-  } else if (targetType?.format === 'url' && !isHttpUrl(value)) {
-    errors.value = 'Enter a full URL starting with https://';
-  }
+  const addressError = targetAddressError(form.value, targetType);
+  if (addressError) errors.value = addressError;
   return errors;
 }
 
@@ -93,9 +79,22 @@ export default function AddTargetModal({ project, onClose, onAdded }) {
           </select>
         </FormField>
         <FormField id="target-name" label="Name" error={errors.name} hint="A short label, for example “Production website”.">
-          <input id="target-name" name="name" className="input" value={form.name} onChange={updateField} autoFocus {...errorProps('target-name', errors.name)} />
+          <input
+            id="target-name"
+            name="name"
+            className="input"
+            value={form.name}
+            onChange={updateField}
+            autoFocus
+            {...errorProps('target-name', errors.name)}
+          />
         </FormField>
-        <FormField id="target-value" label="Address" error={errors.value} hint={targetType?.placeholder ? `Example: ${targetType.placeholder}` : undefined}>
+        <FormField
+          id="target-value"
+          label="Address"
+          error={errors.value}
+          hint={targetType?.placeholder ? `Example: ${targetType.placeholder}` : undefined}
+        >
           <input
             id="target-value"
             name="value"

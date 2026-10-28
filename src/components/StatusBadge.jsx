@@ -1,4 +1,5 @@
 import { useMasterList } from '../features/masters/useMasterList';
+import { useStatusList } from '../features/masters/useStatusList';
 
 const STATUS_TONES = {
   Active: 'success',
@@ -31,8 +32,16 @@ export function ToneBadge({ label, tone }) {
 }
 
 // The status text is always shown, so meaning never depends on colour alone.
-export default function StatusBadge({ status }) {
+// With `category` (e.g. 'scan-statuses'), the name and colour come from the Statuses page.
+export default function StatusBadge({ status, category }) {
+  if (category) return <WorkflowStatusBadge status={status} category={category} />;
   return <ToneBadge label={status} tone={STATUS_TONES[status] ?? 'neutral'} />;
+}
+
+function WorkflowStatusBadge({ status, category }) {
+  const statuses = useStatusList(category);
+  const tone = statuses.toneOf(status);
+  return <ToneBadge label={statuses.labelOf(status)} tone={TONE_CLASSES[tone] ? tone : (STATUS_TONES[status] ?? 'neutral')} />;
 }
 
 // For statuses managed on the Statuses page: `category` is a STATUS_CATEGORIES key and

@@ -41,7 +41,12 @@ export default function SettingsPage() {
 
         {showOrganization && (
           <Card title="Organization">
-            <AsyncContent status={organizations.status} error={organizations.error} hasData={Boolean(organization)} onRetry={() => dispatch(fetchOrganizations())}>
+            <AsyncContent
+              status={organizations.status}
+              error={organizations.error}
+              hasData={Boolean(organization)}
+              onRetry={() => dispatch(fetchOrganizations())}
+            >
               {organization && (
                 <DetailList
                   items={[

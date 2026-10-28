@@ -75,7 +75,13 @@ function RoleFormModal({ role, onClose, onSaved }) {
           }}
         />
         <FormField id="role-description" label="Description (optional)">
-          <textarea id="role-description" className="input h-auto py-2" rows={2} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
+          <textarea
+            id="role-description"
+            className="input h-auto py-2"
+            rows={2}
+            value={form.description}
+            onChange={(event) => setForm({ ...form, description: event.target.value })}
+          />
         </FormField>
         <div className="flex justify-end gap-2">
           <button type="button" className="btn btn-secondary" onClick={onClose}>
@@ -152,7 +158,9 @@ function RolePermissions({ role, catalog, canEdit }) {
                 <span className="text-xs whitespace-nowrap text-slate-500">
                   {chosen} of {keys.length}
                 </span>
-                <label className={`flex items-center gap-1.5 text-[13px] whitespace-nowrap ${locked ? 'text-slate-400' : 'cursor-pointer text-slate-700'}`}>
+                <label
+                  className={`flex items-center gap-1.5 text-[13px] whitespace-nowrap ${locked ? 'text-slate-400' : 'cursor-pointer text-slate-700'}`}
+                >
                   <input
                     type="checkbox"
                     className="size-4 accent-blue-600"
@@ -284,7 +292,10 @@ export default function RolesPage() {
                       {role.system ? (
                         <Lock size={13} aria-label="System role" className="shrink-0 text-slate-400" />
                       ) : (
-                        <span className={`rounded-full px-1.5 text-[11px] font-semibold ${isSelected ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'}`} title="People with this role">
+                        <span
+                          className={`rounded-full px-1.5 text-[11px] font-semibold ${isSelected ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'}`}
+                          title="People with this role"
+                        >
                           {role.memberCount}
                         </span>
                       )}
@@ -304,7 +315,13 @@ export default function RolesPage() {
                 !selected.system && (
                   <div className="flex items-center gap-1">
                     {can(user, 'roles.update') && (
-                      <button type="button" className="icon-btn" aria-label={`Edit ${selected.name}`} title="Edit name and description" onClick={() => setEditing(selected)}>
+                      <button
+                        type="button"
+                        className="icon-btn"
+                        aria-label={`Edit ${selected.name}`}
+                        title="Edit name and description"
+                        onClick={() => setEditing(selected)}
+                      >
                         <Pencil size={16} aria-hidden="true" />
                       </button>
                     )}
@@ -334,7 +351,12 @@ export default function RolesPage() {
                   Slug <code className="rounded bg-slate-100 px-1.5 py-0.5 text-slate-600">{selected.slug}</code>
                 </span>
               </p>
-              <AsyncContent status={catalog.status} error={catalog.error} hasData={catalog.permissions.length > 0} onRetry={() => dispatch(fetchPermissionCatalog())}>
+              <AsyncContent
+                status={catalog.status}
+                error={catalog.error}
+                hasData={catalog.permissions.length > 0}
+                onRetry={() => dispatch(fetchPermissionCatalog())}
+              >
                 <RolePermissions key={selected.id} role={selected} catalog={catalog} canEdit={can(user, 'roles.update')} />
               </AsyncContent>
             </Card>
@@ -342,7 +364,9 @@ export default function RolesPage() {
         </div>
       </AsyncContent>
 
-      {editing !== undefined && <RoleFormModal role={editing ?? undefined} onSaved={(saved) => setSelectedId(saved.id)} onClose={() => setEditing(undefined)} />}
+      {editing !== undefined && (
+        <RoleFormModal role={editing ?? undefined} onSaved={(saved) => setSelectedId(saved.id)} onClose={() => setEditing(undefined)} />
+      )}
     </div>
   );
 }
