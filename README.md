@@ -58,7 +58,8 @@ Everyone signs in at `/login` and lands on the right panel for their role. Openi
 | `/projects`, `/projects/:id` | Projects and their scan targets |
 | `/scans`, `/scans/:id` | Scan history and live progress |
 | `/findings`, `/findings/:id` | Vulnerability findings |
-| `/team` | Users of the organization |
+| `/team` | **Users**: people of the organization. *Add user* sets their name, email, password and **role** (any of the organization's roles), then shows login details to copy and send. *Edit* changes the name and role. Nobody can change their own role, and there is always at least one Admin |
+| `/roles` | **Roles**: create, rename and delete roles and choose their permissions, grouped by module. Admin is predefined and locked |
 | `/settings` | Profile, organization and app configuration |
 
 Organization users only see their own organization's data.
@@ -67,12 +68,17 @@ Organization users only see their own organization's data.
 
 Organizations, modules, permissions, scanner plugins, master data items and statuses each have a unique **slug** (lowercase letters, numbers and single hyphens, up to 50 characters; rules in `src/utils/slug.js`). Forms fill it in from the name, and it can be changed before saving. It cannot be changed afterwards, because other records refer to it. A permission's key is `<module slug>.<permission slug>`, for example `projects.create`. Status categories and master data lists have fixed slugs such as `organization-statuses`.
 
+### Project codes
+
+Every project has a short **code** such as `WEB` or `MOBILE-API`: uppercase letters, numbers and single hyphens, starting with a letter, 2 to 12 characters (rules in `src/utils/projectCode.js`). It must be unique within the organization. The Create project form suggests one from the name; it can be changed before saving.
+
 ### Feature modules and permissions
 
 The Super Admin controls what each organization user can do:
 
 - **Modules** (`Projects`, `Scans`, `Findings`, `Users`) are managed by the Super Admin and apply to every organization. Built-in modules can be renamed but not deleted. Deleting a custom module removes it from the user panel.
-- **Permissions** belong to a module and are managed by the Super Admin (create, read, update, delete). The default Admin role has every module and permission. Security Analyst, Developer and Viewer have fixed defaults in `src/mocks/mockData.js`. Built-in permissions (the ones the app checks) can be edited but not deleted. Deleting a custom module deletes its permissions.
+- **Permissions** belong to a module and are managed by the Super Admin (create, read, update, delete). Built-in permissions (the ones the app checks) can be edited but not deleted. Deleting a custom module deletes its permissions.
+- **Roles** belong to one organization and are managed on its **Roles** page (`/roles`) by anyone with the `roles.*` permissions. Each role picks permissions from the Super Admin's modules. Every organization has the system role **Admin**: it always has every permission (including ones added later) and cannot be edited or deleted. A role that people still have cannot be deleted. Members store their role's slug.
 
 How it works:
 
@@ -166,6 +172,10 @@ The thunks currently expect the endpoints below. They are **placeholders** to ag
 | `deleteScannerModule` | `DELETE /scanner-modules/:id` (Super Admin) |
 | `fetchBranding` | `GET /branding` (public, the login page needs it) |
 | `updateBranding` | `PUT /admin/branding` (Super Admin). Images are sent as data URLs in the mock; a real backend should store them in object storage and return URLs |
+| `fetchRoles` / `createRole` / `updateRole` / `deleteRole` | `GET`, `POST`, `PATCH /:id`, `DELETE /:id` on `/roles` (own organization, needs `roles.*`) |
+| `fetchRoleOptions` | `GET /members/role-options` → the organization's roles to choose from (needs `users.create` or `users.update`) |
+| `createMember` / `updateMember` | `POST /members`, `PATCH /members/:id` (needs `users.create` / `users.update`) |
+| `fetchPermissionCatalog` | `GET /permission-catalog` → `{ modules, permissions }` (needs `roles.read`) |
 | `fetchMasterItems` | `GET /masters/:list` (any signed-in user; the Super Admin also gets usage counts) |
 | `createMasterItem` / `updateMasterItem` / `deleteMasterItem` | `POST`, `PUT /:id`, `DELETE /:id` on `/admin/masters/:list` (Super Admin). `:list` is `target-types`, `plugin-sources`, `plugin-categories`, `plugin-interfaces` or `licenses`, or a status category: `organization-statuses`, `user-statuses`, `integration-statuses` |
 

@@ -35,7 +35,12 @@ export default function ScansTable({ scans, showProject = true, showActions = fa
     showProject && {
       key: 'project',
       header: 'Project',
-      render: (scan) => <Link to={`/projects/${scan.projectId}`}>{scan.projectName}</Link>,
+      render: (scan) => (
+        <span className="flex items-center gap-1.5 whitespace-nowrap">
+          {scan.projectCode && <code className="text-[11px] text-slate-500">{scan.projectCode}</code>}
+          <Link to={`/projects/${scan.projectId}`}>{scan.projectName}</Link>
+        </span>
+      ),
     },
     { key: 'status', header: 'Status', render: (scan) => <ScanStatus scan={scan} /> },
     {

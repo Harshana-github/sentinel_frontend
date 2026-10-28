@@ -9,7 +9,6 @@ export const OPEN_FINDING_STATUSES = ['Open', 'In Progress'];
 export const PROJECT_STATUSES = ['Active', 'On Hold', 'Archived'];
 export const PROJECT_ENVIRONMENTS = ['Production', 'Staging', 'Development'];
 
-export const ORGANIZATION_ROLES = ['Admin', 'Security Analyst', 'Developer', 'Viewer'];
 
 export const SCAN_PROFILES = [
   { value: 'Quick', description: 'Fast checks with the most important rules.' },

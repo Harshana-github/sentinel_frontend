@@ -26,3 +26,22 @@ export const updateOrganization = createAsyncThunk('organizations/update', ({ or
     () => api.patch(`/organizations/${organizationId}`, changes),
   ),
 );
+
+// Organization panel: the roles a person can be given, and adding or editing people.
+
+export const fetchRoleOptions = createAsyncThunk('organizations/fetchRoleOptions', () =>
+  callApi(() => mockApi.getRoleOptions(), () => api.get('/members/role-options')),
+);
+
+// Returns the new member. The password is only used to sign in; it is never returned.
+export const createMember = createAsyncThunk('organizations/createMember', (member) =>
+  callApi(() => mockApi.createMember(member), () => api.post('/members', member)),
+);
+
+export const updateMember = createAsyncThunk('organizations/updateMember', ({ id, changes }) =>
+  callApi(() => mockApi.updateMember(id, changes), () => api.patch(`/members/${id}`, changes)),
+);
+
+export const deleteMember = createAsyncThunk('organizations/deleteMember', (id) =>
+  callApi(() => mockApi.deleteMember(id), () => api.delete(`/members/${id}`)),
+);

@@ -1,8 +1,11 @@
 import { createSlice } from '@reduxjs/toolkit';
 import {
+  createMember,
   createOrganization,
+  deleteMember,
   fetchOrganizationMembers,
   fetchOrganizations,
+  updateMember,
   updateOrganization,
 } from './organizationsThunks';
 
@@ -50,6 +53,17 @@ const organizationsSlice = createSlice({
         // The entry may be gone if the user signed out while the request was running.
         const previous = state.membersByOrganization[action.meta.arg];
         state.membersByOrganization[action.meta.arg] = { items: previous?.items ?? [], status: 'failed', error: action.error.message };
+      })
+      .addCase(createMember.fulfilled, (state, action) => {
+        state.membersByOrganization[action.payload.organizationId]?.items.push(action.payload);
+      })
+      .addCase(updateMember.fulfilled, (state, action) => {
+        const members = state.membersByOrganization[action.payload.organizationId];
+        if (members) members.items = members.items.map((member) => (member.id === action.payload.id ? action.payload : member));
+      })
+      .addCase(deleteMember.fulfilled, (state, action) => {
+        const members = state.membersByOrganization[action.payload.organizationId];
+        if (members) members.items = members.items.filter((member) => member.id !== action.payload.id);
       });
   },
 });

@@ -77,7 +77,7 @@ export default function OrganizationsPage() {
   );
 
   return (
-    <>
+    <div className="fill-page">
       <PageHeader
         title="Organizations"
         description="Customer organizations using Sentinel."
@@ -88,7 +88,7 @@ export default function OrganizationsPage() {
           </button>
         }
       />
-      <Card flush>
+      <Card flush fill>
         <FilterBar resultCount={items.length > 0 || status === 'succeeded' ? visibleOrganizations.length : undefined}>
           <SearchInput label="Search organizations" placeholder="Search by name, admin or email" value={search} onChange={setSearch} />
           <SelectFilter label="Filter by status" allLabel="All statuses" value={statusFilter} onChange={setStatusFilter} options={organizationStatuses.items.map((item) => ({ value: item.id, label: item.name }))} />
@@ -99,6 +99,6 @@ export default function OrganizationsPage() {
       </Card>
 
       {isCreateOpen && <CreateOrganizationModal onClose={() => setIsCreateOpen(false)} />}
-    </>
+    </div>
   );
 }

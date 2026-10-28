@@ -5,6 +5,7 @@ import { selectCurrentUser } from '../features/auth/authSlice';
 import { isSuperAdmin } from '../utils/roles';
 import { navigationFor } from './navigation';
 import Sidebar from './Sidebar';
+import Footer from './Footer';
 import Topbar from './Topbar';
 
 // Shell shared by both panels. The signed-in user's role decides which navigation is shown.
@@ -36,12 +37,14 @@ export default function AppLayout() {
       />
       {isSidebarOpen && <div className="fixed inset-0 z-35 bg-slate-900/45 lg:hidden" aria-hidden="true" onClick={() => setIsSidebarOpen(false)} />}
 
-      <div className="flex min-h-screen flex-col lg:ml-62">
+      {/* pb-8 keeps the last content clear of the fixed footer. */}
+      <div className="flex min-h-screen flex-col pb-8 lg:ml-62">
         <Topbar isSidebarOpen={isSidebarOpen} onToggleSidebar={() => setIsSidebarOpen((open) => !open)} />
         <main id="main-content" className="w-full max-w-350 flex-1 p-4 focus:outline-none sm:p-6" tabIndex={-1}>
           <Outlet />
         </main>
       </div>
+      <Footer />
     </div>
   );
 }

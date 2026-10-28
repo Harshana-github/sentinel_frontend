@@ -19,6 +19,7 @@ import {
 } from '../utils/constants';
 import { loadStoredAuth } from '../utils/authStorage';
 import { isSuperAdmin } from '../utils/roles';
+import { projectCodeError } from '../utils/projectCode';
 import { slugError, slugify } from '../utils/slug';
 import {
   activities,
@@ -31,8 +32,9 @@ import {
   organizations,
   platformStaff,
   projects,
-  FULL_ACCESS_ROLES,
-  rolePermissions,
+  ADMIN_ROLE_SLUG,
+  adminRole,
+  roles,
   integrationStatuses,
   licenses,
   pluginCategories,
@@ -60,7 +62,7 @@ const db = {
   projects: structuredClone(projects),
   scans: structuredClone(scans),
   activities: structuredClone(activities),
-  rolePermissions: structuredClone(rolePermissions),
+  roles: structuredClone(roles),
   scanners: structuredClone(scannerModules),
   // Master data lists and status categories, keyed like MASTER_LISTS and STATUS_CATEGORIES.
   masters: structuredClone({
@@ -156,16 +158,18 @@ function requireSuperAdmin() {
 function requirePermission(action) {
   const user = requireUser();
   if (isSuperAdmin(user)) throw new Error(NO_PERMISSION);
-  if (!effectivePermissions(user.role).includes(action)) throw new Error(NO_PERMISSION);
+  if (!effectivePermissions(user.organizationId, user.roleSlug).includes(action)) throw new Error(NO_PERMISSION);
   return user;
 }
 
-// Permissions a role has right now. Deleting a module deletes its permissions too.
-// Admin gets every permission.
-function effectivePermissions(role) {
-  return db.permissions
-    .filter((permission) => FULL_ACCESS_ROLES.includes(role) || db.rolePermissions[role]?.includes(permission.key))
-    .map((permission) => permission.key);
+const findRole = (organizationId, slug) => db.roles.find((role) => role.organizationId === organizationId && role.slug === slug);
+
+// Permissions a role has right now. The Admin role always has every permission; other roles
+// only keep permissions that still exist (the Super Admin may have deleted some).
+function effectivePermissions(organizationId, roleSlug) {
+  const role = findRole(organizationId, roleSlug);
+  if (!role) return [];
+  return db.permissions.filter((permission) => role.system || role.permissions.includes(permission.key)).map((permission) => permission.key);
 }
 
 function canAccess(user, organizationId) {
@@ -208,7 +212,7 @@ function createFinding(template, scan, { id, status = 'Open' }) {
 
 function withOrganizationCounts(organization) {
   const people = db.members.filter((member) => member.organizationId === organization.id);
-  const admin = people.find((member) => member.role === 'Admin');
+  const admin = people.find((member) => member.role === ADMIN_ROLE_SLUG);
   return {
     ...organization,
     // Demo only: the mock keeps passwords in plain text so the Super Admin can copy them.
@@ -241,6 +245,7 @@ function withScanDetails(scan) {
   return {
     ...publicFields,
     projectName: project.name,
+    projectCode: project.code,
     organizationId: project.organizationId,
     organizationName: findOrganization(project.organizationId)?.name ?? 'Unknown',
     targetName: target.name,
@@ -258,6 +263,7 @@ function withFindingDetails(finding) {
     ...finding,
     scannerName: moduleName(finding.scanner),
     projectName: project.name,
+    projectCode: project.code,
     organizationId: project.organizationId,
     organizationName: findOrganization(project.organizationId)?.name ?? 'Unknown',
     targetName: target.name,
@@ -344,11 +350,13 @@ export async function login({ identifier, password }) {
     name: person.name,
     email: person.email,
     username: account.username,
-    role: person.role,
+    // Display name of the role; `roleSlug` is what permission checks use.
+    role: findRole(person.organizationId, person.role)?.name ?? person.role,
+    roleSlug: person.role,
     organizationId: organization?.id ?? null,
     organizationName: organization?.name ?? null,
     modules: organization ? db.modules.map((module) => module.key) : [],
-    permissions: organization ? effectivePermissions(person.role) : [],
+    permissions: organization ? effectivePermissions(organization.id, person.role) : [],
   };
   if (organization) {
     // The first sign-in turns an invited member into an active one.
@@ -404,12 +412,13 @@ export async function createOrganization({ name, slug, adminName, adminEmail, ad
     organizationId: organization.id,
     name: adminName.trim(),
     email: normalizedAdminEmail,
-    role: 'Admin',
+    role: ADMIN_ROLE_SLUG,
     status: 'invited',
     lastActiveAt: null,
   };
 
   db.organizations.push(organization);
+  db.roles.push(adminRole(organization.id));
   db.members.push(admin);
   db.accounts.push({ userId: admin.id, email: admin.email, username: admin.email, password: adminPassword });
   logActivity('organization', `Organization ${organization.name} created with admin ${admin.name}`, organization.id);
@@ -439,7 +448,11 @@ export async function getOrganizationMembers(organizationId) {
   await simulateLatency();
   const user = requireUser();
   if (!findOrganization(organizationId) || !canAccess(user, organizationId)) throw new Error('Organization not found.');
-  return copy(db.members.filter((member) => member.organizationId === organizationId));
+  return copy(
+    db.members
+      .filter((member) => member.organizationId === organizationId)
+      .map((member) => ({ ...member, roleName: findRole(organizationId, member.role)?.name ?? member.role })),
+  );
 }
 
 // ---------- projects ----------
@@ -452,7 +465,7 @@ export async function getProjects() {
 }
 
 // New projects always belong to the signed-in user's organization.
-export async function createProject({ name, environment, description }) {
+export async function createProject({ name, code, environment, description }) {
   await simulateLatency(500);
   const user = requirePermission('projects.create');
 
@@ -461,9 +474,16 @@ export async function createProject({ name, environment, description }) {
     (project) => project.organizationId === user.organizationId && project.name.toLowerCase() === trimmedName.toLowerCase(),
   );
   if (duplicate) throw new Error(`Your organization already has a project named "${trimmedName}".`);
+  const projectCode = (code ?? '').trim().toUpperCase();
+  const codeProblem = projectCodeError(projectCode);
+  if (codeProblem) throw new Error(`Project code: ${codeProblem}`);
+  if (db.projects.some((project) => project.organizationId === user.organizationId && project.code === projectCode)) {
+    throw new Error(`The project code ${projectCode} is already used in your organization.`);
+  }
 
   const project = {
     id: newId('prj'),
+    code: projectCode,
     name: trimmedName,
     organizationId: user.organizationId,
     description: description.trim(),
@@ -641,6 +661,155 @@ export async function getPlatformSummary() {
     openSeverityCounts: countBySeverity(openFindings),
     organizations: organizationRows,
   });
+}
+
+// ---------- users of an organization (organization panel) ----------
+
+const withRoleName = (member) => copy({ ...member, roleName: findRole(member.organizationId, member.role)?.name ?? member.role });
+
+// The roles a user can be given: every role of the organization, Admin included.
+export async function getRoleOptions() {
+  await simulateLatency(200);
+  const user = requireUser();
+  if (!['users.create', 'users.update'].some((action) => effectivePermissions(user.organizationId, user.roleSlug).includes(action))) {
+    throw new Error(NO_PERMISSION);
+  }
+  return db.roles
+    .filter((role) => role.organizationId === user.organizationId)
+    .map(({ slug, name, description, system }) => ({ slug, name, description, system, permissionCount: effectivePermissions(user.organizationId, slug).length }));
+}
+
+// Adds a person to the signed-in user's organization with the chosen role and password.
+// Like organization admins, they start as Invited and the details are sent by hand.
+export async function createMember({ name, email, password, role }) {
+  await simulateLatency(400);
+  const user = requirePermission('users.create');
+  const trimmedName = (name ?? '').trim();
+  const normalizedEmail = (email ?? '').trim().toLowerCase();
+  if (trimmedName.length < 2) throw new Error('Enter the full name.');
+  if (!EMAIL_PATTERN.test(normalizedEmail)) throw new Error('Enter a valid email address.');
+  if (db.accounts.some((account) => account.email === normalizedEmail)) throw new Error(`A user with the email ${normalizedEmail} already exists.`);
+  if ((password ?? '').length < MIN_PASSWORD_LENGTH) throw new Error(`The password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
+  if (!findRole(user.organizationId, role)) throw new Error('Choose a role.');
+
+  const member = { id: newId('usr'), organizationId: user.organizationId, name: trimmedName, email: normalizedEmail, role, status: 'invited', lastActiveAt: null };
+  db.members.push(member);
+  db.accounts.push({ userId: member.id, email: member.email, username: member.email, password });
+  logActivity('user', `${member.name} was added as ${findRole(user.organizationId, role).name}`, user.organizationId);
+  return withRoleName(member);
+}
+
+// Changes a person's name and/or role. Nobody can change their own role, and the
+// organization always keeps at least one Admin.
+export async function updateMember(memberId, { name, role }) {
+  await simulateLatency();
+  const user = requirePermission('users.update');
+  const member = db.members.find((item) => item.id === memberId && item.organizationId === user.organizationId);
+  if (!member) throw new Error('User not found.');
+  if (name !== undefined) {
+    if (name.trim().length < 2) throw new Error('Enter the full name.');
+    member.name = name.trim();
+  }
+  if (role !== undefined && role !== member.role) {
+    if (!findRole(user.organizationId, role)) throw new Error('Choose a role.');
+    if (member.id === user.id) throw new Error('You cannot change your own role. Ask another admin.');
+    const admins = db.members.filter((item) => item.organizationId === user.organizationId && item.role === ADMIN_ROLE_SLUG);
+    if (member.role === ADMIN_ROLE_SLUG && admins.length === 1) throw new Error('The organization needs at least one Admin.');
+    member.role = role;
+    logActivity('user', `${member.name} is now ${findRole(user.organizationId, role).name}`, user.organizationId);
+  }
+  return withRoleName(member);
+}
+
+// Removes a person and their sign-in account. Nobody can delete themselves, and the
+// organization always keeps at least one Admin.
+export async function deleteMember(memberId) {
+  await simulateLatency();
+  const user = requirePermission('users.delete');
+  const member = db.members.find((item) => item.id === memberId && item.organizationId === user.organizationId);
+  if (!member) throw new Error('User not found.');
+  if (member.id === user.id) throw new Error('You cannot delete your own account.');
+  const admins = db.members.filter((item) => item.organizationId === user.organizationId && item.role === ADMIN_ROLE_SLUG);
+  if (member.role === ADMIN_ROLE_SLUG && admins.length === 1) throw new Error('The organization needs at least one Admin.');
+  db.members = db.members.filter((item) => item.id !== memberId);
+  db.accounts = db.accounts.filter((account) => account.userId !== memberId);
+  logActivity('user', `${member.name} was removed`, user.organizationId);
+  return { id: memberId, organizationId: member.organizationId };
+}
+
+// ---------- roles (organization panel) ----------
+
+function roleWithDetails(role) {
+  return copy({
+    ...role,
+    permissions: effectivePermissions(role.organizationId, role.slug),
+    memberCount: db.members.filter((member) => member.organizationId === role.organizationId && member.role === role.slug).length,
+  });
+}
+
+function requireCustomRole(user, roleId) {
+  const role = db.roles.find((item) => item.id === roleId && item.organizationId === user.organizationId);
+  if (!role) throw new Error('Role not found.');
+  if (role.system) throw new Error('The Admin role is predefined and cannot be changed.');
+  return role;
+}
+
+function validateRole(user, { name, description, permissions }, ignoreId) {
+  const trimmed = (name ?? '').trim();
+  if (trimmed.length < 2 || trimmed.length > 40) throw new Error('The role name must be 2 to 40 characters.');
+  const duplicate = db.roles.some((role) => role.organizationId === user.organizationId && role.id !== ignoreId && role.name.toLowerCase() === trimmed.toLowerCase());
+  if (duplicate) throw new Error(`A role named "${trimmed}" already exists.`);
+  const known = db.permissions.map((permission) => permission.key);
+  return {
+    name: trimmed,
+    description: (description ?? '').trim(),
+    permissions: known.filter((key) => (permissions ?? []).includes(key)),
+  };
+}
+
+// The modules and permissions the Super Admin defined, for choosing a role's permissions.
+export async function getPermissionCatalog() {
+  await simulateLatency();
+  requirePermission('roles.read');
+  return copy({ modules: db.modules, permissions: db.permissions });
+}
+
+export async function getRoles() {
+  await simulateLatency();
+  const user = requirePermission('roles.read');
+  return db.roles.filter((role) => role.organizationId === user.organizationId).map(roleWithDetails);
+}
+
+export async function createRole(input) {
+  await simulateLatency();
+  const user = requirePermission('roles.create');
+  const fields = validateRole(user, input);
+  const slug = resolveSlug(input.slug, fields.name);
+  if (findRole(user.organizationId, slug)) throw new Error(`The slug "${slug}" is already used by another role.`);
+  const role = { id: `${user.organizationId}:${slug}`, organizationId: user.organizationId, slug, ...fields, system: false };
+  db.roles.push(role);
+  logActivity('role', `Role "${role.name}" created`, user.organizationId);
+  return roleWithDetails(role);
+}
+
+export async function updateRole(roleId, input) {
+  await simulateLatency();
+  const user = requirePermission('roles.update');
+  const role = requireCustomRole(user, roleId);
+  Object.assign(role, validateRole(user, { ...role, ...input }, roleId));
+  logActivity('role', `Role "${role.name}" updated`, user.organizationId);
+  return roleWithDetails(role);
+}
+
+export async function deleteRole(roleId) {
+  await simulateLatency();
+  const user = requirePermission('roles.delete');
+  const role = requireCustomRole(user, roleId);
+  const memberCount = db.members.filter((member) => member.organizationId === user.organizationId && member.role === role.slug).length;
+  if (memberCount > 0) throw new Error(`${memberCount} ${memberCount === 1 ? 'person has' : 'people have'} this role. Give them another role first.`);
+  db.roles = db.roles.filter((item) => item.id !== roleId);
+  logActivity('role', `Role "${role.name}" deleted`, user.organizationId);
+  return { id: roleId };
 }
 
 // ---------- product and company details ----------

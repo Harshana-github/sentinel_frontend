@@ -8,7 +8,7 @@ export default function MasterDataPage() {
   const active = MASTER_LISTS.find((list) => list.key === activeKey);
 
   return (
-    <>
+    <div className="fill-page">
       <PageHeader title="Master data" description="Lists of values used across the platform. Changes apply everywhere the list is shown." />
       <div className="mb-4 flex flex-wrap gap-1 border-b border-slate-200" role="tablist" aria-label="Master data lists">
         {MASTER_LISTS.map((list) => {
@@ -28,6 +28,6 @@ export default function MasterDataPage() {
         })}
       </div>
       <ListManager key={active.key} list={active} />
-    </>
+    </div>
   );
 }

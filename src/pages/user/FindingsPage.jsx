@@ -47,9 +47,9 @@ export default function FindingsPage() {
     .sort(bySeverityThenDate);
 
   return (
-    <>
+    <div className="fill-page">
       <PageHeader title="Vulnerability findings" description="Issues reported by scanner modules across all projects." />
-      <Card flush>
+      <Card flush fill>
         <FilterBar resultCount={items.length > 0 || status === 'succeeded' ? visibleFindings.length : undefined}>
           <SearchInput label="Search findings" placeholder="Search by title, CVE, ID, target or project" value={search} onChange={setSearch} />
           <SelectFilter label="Filter by severity" allLabel="All severities" value={severityFilter} onChange={setSeverityFilter} options={SEVERITIES} />
@@ -60,6 +60,6 @@ export default function FindingsPage() {
           <FindingsTable findings={visibleFindings} emptyMessage="No findings match your filters." />
         </AsyncContent>
       </Card>
-    </>
+    </div>
   );
 }

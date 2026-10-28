@@ -4,7 +4,8 @@ import { Check, Copy } from 'lucide-react';
 import { showToast } from '../features/ui/uiSlice';
 
 // Copies `value` to the clipboard. With `text` it shows a labelled button, otherwise a small icon button.
-export default function CopyButton({ value, label, text, small = false }) {
+// `className` replaces the icon button's classes, e.g. for a dark background.
+export default function CopyButton({ value, label, text, small = false, className }) {
   const dispatch = useDispatch();
   const [copied, setCopied] = useState(false);
 
@@ -21,7 +22,7 @@ export default function CopyButton({ value, label, text, small = false }) {
 
   const Icon = copied ? Check : Copy;
   return (
-    <button type="button" className={text ? `btn btn-secondary${small ? ' mt-1 self-start' : ''}` : 'icon-btn'} aria-label={label} title={label} onClick={handleClick}>
+    <button type="button" className={text ? `btn btn-secondary${small ? ' mt-1 self-start' : ''}` : (className ?? 'icon-btn')} aria-label={label} title={label} onClick={handleClick}>
       <Icon size={text ? 16 : 14} aria-hidden="true" />
       {text}
     </button>

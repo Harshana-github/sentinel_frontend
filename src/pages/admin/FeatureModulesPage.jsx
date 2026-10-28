@@ -189,15 +189,15 @@ export default function FeatureModulesPage() {
   const selectedPermissions = selected ? permissionsOf(selected.key).map((permission) => ({ ...permission, id: permission.key })) : [];
 
   return (
-    <>
+    <div className="fill-page">
       <PageHeader
         title="Modules & permissions"
         description="Each module of the user panel has its own permissions. The Admin role of every organization automatically gets all of them."
       />
 
       <AsyncContent status={status} error={error} hasData={items.length > 0} onRetry={() => dispatch(fetchModules())}>
-        <div className="grid gap-5 lg:grid-cols-[240px_1fr]">
-          <nav aria-label="Modules" className="self-start rounded-lg border border-slate-200 bg-white p-2 shadow-sm">
+        <div className="fill-grow grid gap-5 lg:grid-cols-[240px_1fr] lg:grid-rows-[minmax(0,1fr)]">
+          <nav aria-label="Modules" className="self-start rounded-lg border border-slate-200 bg-white p-2 shadow-sm lg:max-h-full lg:overflow-y-auto">
             <div className="flex items-center justify-between px-2.5 pt-1 pb-2">
               <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">Modules</p>
               <button type="button" className="icon-btn size-7" aria-label="New module" title="New module" onClick={() => setEditingModule(null)}>
@@ -252,6 +252,7 @@ export default function FeatureModulesPage() {
                 </div>
               }
               flush
+              fill
             >
               <p className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-5 py-2.5 text-xs text-slate-500">
                 <span>
@@ -277,6 +278,6 @@ export default function FeatureModulesPage() {
         <ModuleFormModal module={editingModule ?? undefined} onSaved={(saved) => setSelectedKey(saved.key)} onClose={() => setEditingModule(undefined)} />
       )}
       {permissionForm && <PermissionFormModal permission={permissionForm.permission} module={permissionForm.module} onClose={() => setPermissionForm(null)} />}
-    </>
+    </div>
   );
 }

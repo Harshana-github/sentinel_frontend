@@ -8,6 +8,7 @@ import findingsReducer from '../features/findings/findingsSlice';
 import mastersReducer from '../features/masters/mastersSlice';
 import organizationsReducer from '../features/organizations/organizationsSlice';
 import projectsReducer from '../features/projects/projectsSlice';
+import rolesReducer from '../features/roles/rolesSlice';
 import scannersReducer from '../features/scanners/scannersSlice';
 import scansReducer from '../features/scans/scansSlice';
 import uiReducer from '../features/ui/uiSlice';
@@ -21,6 +22,7 @@ const appReducer = combineReducers({
   masters: mastersReducer,
   organizations: organizationsReducer,
   projects: projectsReducer,
+  roles: rolesReducer,
   scanners: scannersReducer,
   scans: scansReducer,
   ui: uiReducer,

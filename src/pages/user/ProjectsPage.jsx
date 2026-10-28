@@ -22,9 +22,12 @@ const COLUMNS = [
     header: 'Project',
     render: (project) => (
       <div className="flex min-w-40 flex-col gap-0.5">
-        <Link to={`/projects/${project.id}`} className="font-semibold">
-          {project.name}
-        </Link>
+        <span className="flex items-center gap-2">
+          <code className="rounded bg-blue-50 px-1.5 py-0.5 text-[11px] font-semibold text-blue-700">{project.code}</code>
+          <Link to={`/projects/${project.id}`} className="font-semibold">
+            {project.name}
+          </Link>
+        </span>
         <span className="text-slate-500 text-xs block max-w-50 truncate sm:max-w-80">{project.description || 'No description'}</span>
       </div>
     ),
@@ -52,11 +55,11 @@ export default function ProjectsPage() {
   const visibleProjects = items.filter(
     (project) =>
       (!statusFilter || project.status === statusFilter) &&
-      (includesText(project.name, search) || includesText(project.description, search)),
+      (includesText(project.name, search) || includesText(project.code, search) || includesText(project.description, search)),
   );
 
   return (
-    <>
+    <div className="fill-page">
       <PageHeader
         title="Projects"
         description="Applications and environments your organization scans."
@@ -69,9 +72,9 @@ export default function ProjectsPage() {
           )
         }
       />
-      <Card flush>
+      <Card flush fill>
         <FilterBar resultCount={items.length > 0 || status === 'succeeded' ? visibleProjects.length : undefined}>
-          <SearchInput label="Search projects" placeholder="Search by name or description" value={search} onChange={setSearch} />
+          <SearchInput label="Search projects" placeholder="Search by code, name or description" value={search} onChange={setSearch} />
           <SelectFilter label="Filter by status" allLabel="All statuses" value={statusFilter} onChange={setStatusFilter} options={PROJECT_STATUSES} />
         </FilterBar>
         <AsyncContent status={status} error={error} hasData={items.length > 0} onRetry={() => dispatch(fetchProjects())}>
@@ -82,6 +85,6 @@ export default function ProjectsPage() {
       {isCreateOpen && (
         <CreateProjectModal onClose={() => setIsCreateOpen(false)} onCreated={(project) => navigate(`/projects/${project.id}`)} />
       )}
-    </>
+    </div>
   );
 }

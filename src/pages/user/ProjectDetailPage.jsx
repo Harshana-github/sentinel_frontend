@@ -140,6 +140,7 @@ export default function ProjectDetailPage() {
               <Card title="Overview">
                 <DetailList
                   items={[
+                    { label: 'Project code', value: <code className="text-[13px] font-semibold">{project.code}</code> },
                     { label: 'Organization', value: project.organizationName },
                     { label: 'Status', value: <StatusBadge status={project.status} /> },
                     { label: 'Environment', value: project.environment },

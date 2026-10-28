@@ -55,6 +55,10 @@ export const featurePermissions = [
   { key: 'users.create', name: 'Create user', description: 'Add or invite a new user.', module: 'team', builtIn: true },
   { key: 'users.update', name: 'Update user', description: "Change a user's name, role or status.", module: 'team', builtIn: true },
   { key: 'users.delete', name: 'Delete user', description: 'Remove a user from the organization.', module: 'team', builtIn: true },
+  { key: 'roles.read', name: 'View roles', description: 'See the roles and what each one can do.', module: 'team', builtIn: true },
+  { key: 'roles.create', name: 'Create role', description: 'Add a new role.', module: 'team', builtIn: true },
+  { key: 'roles.update', name: 'Update role', description: "Rename a role or change its permissions.", module: 'team', builtIn: true },
+  { key: 'roles.delete', name: 'Delete role', description: 'Remove a role that nobody has.', module: 'team', builtIn: true },
 ];
 
 // Product and software development company details, shown on the login page, in the
@@ -123,35 +127,54 @@ export const organizations = [
   },
 ];
 
-// Admin is the default role of every organization and always has every module and permission.
-// The other roles have fixed defaults
-// (permission keys); there is no screen to change them yet.
-export const FULL_ACCESS_ROLES = ['Admin'];
-export const rolePermissions = {
-  'Security Analyst': ['targets.add', 'scans.start', 'scans.cancel', 'findings.update', 'users.read'],
-  Developer: ['scans.start', 'findings.update', 'users.read'],
-  Viewer: ['users.read'],
-};
+// Roles belong to one organization. Every organization has the system role `admin`, which
+// always has every permission and cannot be changed. The other roles are created and edited
+// by the organization itself; these are the ones the demo organizations start with.
+export const ADMIN_ROLE_SLUG = 'admin';
+const starterRoles = [
+  { slug: 'security-analyst', name: 'Security Analyst', description: 'Runs scans and triages findings.', permissions: ['targets.add', 'scans.start', 'scans.cancel', 'findings.update', 'users.read'] },
+  { slug: 'developer', name: 'Developer', description: 'Starts scans and fixes findings.', permissions: ['scans.start', 'findings.update', 'users.read'] },
+  { slug: 'viewer', name: 'Viewer', description: 'Read-only access.', permissions: ['users.read'] },
+];
 
+export function adminRole(organizationId) {
+  return {
+    id: `${organizationId}:${ADMIN_ROLE_SLUG}`,
+    organizationId,
+    slug: ADMIN_ROLE_SLUG,
+    name: 'Admin',
+    description: 'Full access to every module and permission. Predefined by the system.',
+    permissions: [],
+    system: true,
+  };
+}
+
+export const roles = ['org-acme', 'org-technova', 'org-securecloud', 'org-northwind', 'org-bluepeak'].flatMap((organizationId) => [
+  adminRole(organizationId),
+  ...starterRoles.map((role) => ({ ...role, id: `${organizationId}:${role.slug}`, organizationId, system: false })),
+]);
+
+// `role` is the slug of one of the organization's roles.
 export const members = [
-  { id: 'usr-001', organizationId: 'org-acme', name: 'Alex Morgan', email: 'alex.morgan@acme.example', role: 'Admin', status: 'active', lastActiveAt: minutesAgo(5) },
-  { id: 'usr-002', organizationId: 'org-acme', name: 'Priya Raman', email: 'priya.raman@acme.example', role: 'Security Analyst', status: 'active', lastActiveAt: minutesAgo(3 * HOUR) },
-  { id: 'usr-003', organizationId: 'org-acme', name: 'Daniel Okafor', email: 'daniel.okafor@acme.example', role: 'Developer', status: 'active', lastActiveAt: minutesAgo(2 * DAY) },
-  { id: 'usr-004', organizationId: 'org-acme', name: 'Mei Lin', email: 'mei.lin@acme.example', role: 'Viewer', status: 'invited', lastActiveAt: null },
-  { id: 'usr-005', organizationId: 'org-technova', name: 'Sofia Alvarez', email: 'sofia.alvarez@technova.example', role: 'Admin', status: 'active', lastActiveAt: minutesAgo(1 * DAY) },
-  { id: 'usr-006', organizationId: 'org-technova', name: 'Kasun Perera', email: 'kasun.perera@technova.example', role: 'Security Analyst', status: 'active', lastActiveAt: minutesAgo(40) },
-  { id: 'usr-007', organizationId: 'org-technova', name: 'James Whitfield', email: 'james.whitfield@technova.example', role: 'Developer', status: 'active', lastActiveAt: minutesAgo(6 * HOUR) },
-  { id: 'usr-008', organizationId: 'org-technova', name: 'Aisha Bello', email: 'aisha.bello@technova.example', role: 'Developer', status: 'active', lastActiveAt: minutesAgo(4 * DAY) },
-  { id: 'usr-009', organizationId: 'org-securecloud', name: "Liam O'Connor", email: 'liam.oconnor@securecloud.example', role: 'Admin', status: 'active', lastActiveAt: minutesAgo(9 * HOUR) },
-  { id: 'usr-010', organizationId: 'org-securecloud', name: 'Nimali Fernando', email: 'nimali.fernando@securecloud.example', role: 'Security Analyst', status: 'active', lastActiveAt: minutesAgo(25) },
-  { id: 'usr-011', organizationId: 'org-securecloud', name: 'Tom Becker', email: 'tom.becker@securecloud.example', role: 'Admin', status: 'active', lastActiveAt: minutesAgo(3 * DAY) },
-  { id: 'usr-012', organizationId: 'org-northwind', name: 'Grace Kim', email: 'grace.kim@northwind.example', role: 'Admin', status: 'active', lastActiveAt: minutesAgo(2 * HOUR) },
-  { id: 'usr-013', organizationId: 'org-bluepeak', name: 'Omar Haddad', email: 'omar.haddad@bluepeak.example', role: 'Admin', status: 'active', lastActiveAt: minutesAgo(40 * DAY) },
+  { id: 'usr-001', organizationId: 'org-acme', name: 'Alex Morgan', email: 'alex.morgan@acme.example', role: 'admin', status: 'active', lastActiveAt: minutesAgo(5) },
+  { id: 'usr-002', organizationId: 'org-acme', name: 'Priya Raman', email: 'priya.raman@acme.example', role: 'security-analyst', status: 'active', lastActiveAt: minutesAgo(3 * HOUR) },
+  { id: 'usr-003', organizationId: 'org-acme', name: 'Daniel Okafor', email: 'daniel.okafor@acme.example', role: 'developer', status: 'active', lastActiveAt: minutesAgo(2 * DAY) },
+  { id: 'usr-004', organizationId: 'org-acme', name: 'Mei Lin', email: 'mei.lin@acme.example', role: 'viewer', status: 'invited', lastActiveAt: null },
+  { id: 'usr-005', organizationId: 'org-technova', name: 'Sofia Alvarez', email: 'sofia.alvarez@technova.example', role: 'admin', status: 'active', lastActiveAt: minutesAgo(1 * DAY) },
+  { id: 'usr-006', organizationId: 'org-technova', name: 'Kasun Perera', email: 'kasun.perera@technova.example', role: 'security-analyst', status: 'active', lastActiveAt: minutesAgo(40) },
+  { id: 'usr-007', organizationId: 'org-technova', name: 'James Whitfield', email: 'james.whitfield@technova.example', role: 'developer', status: 'active', lastActiveAt: minutesAgo(6 * HOUR) },
+  { id: 'usr-008', organizationId: 'org-technova', name: 'Aisha Bello', email: 'aisha.bello@technova.example', role: 'developer', status: 'active', lastActiveAt: minutesAgo(4 * DAY) },
+  { id: 'usr-009', organizationId: 'org-securecloud', name: "Liam O'Connor", email: 'liam.oconnor@securecloud.example', role: 'admin', status: 'active', lastActiveAt: minutesAgo(9 * HOUR) },
+  { id: 'usr-010', organizationId: 'org-securecloud', name: 'Nimali Fernando', email: 'nimali.fernando@securecloud.example', role: 'security-analyst', status: 'active', lastActiveAt: minutesAgo(25) },
+  { id: 'usr-011', organizationId: 'org-securecloud', name: 'Tom Becker', email: 'tom.becker@securecloud.example', role: 'admin', status: 'active', lastActiveAt: minutesAgo(3 * DAY) },
+  { id: 'usr-012', organizationId: 'org-northwind', name: 'Grace Kim', email: 'grace.kim@northwind.example', role: 'admin', status: 'active', lastActiveAt: minutesAgo(2 * HOUR) },
+  { id: 'usr-013', organizationId: 'org-bluepeak', name: 'Omar Haddad', email: 'omar.haddad@bluepeak.example', role: 'admin', status: 'active', lastActiveAt: minutesAgo(40 * DAY) },
 ];
 
 export const projects = [
   {
     id: 'prj-001',
+    code: 'WEB',
     name: 'Main Website',
     organizationId: 'org-acme',
     description: 'Public marketing website and blog.',
@@ -166,6 +189,7 @@ export const projects = [
   },
   {
     id: 'prj-002',
+    code: 'PORTAL',
     name: 'Customer Portal',
     organizationId: 'org-technova',
     description: 'Self-service portal where customers manage accounts and invoices.',
@@ -181,6 +205,7 @@ export const projects = [
   },
   {
     id: 'prj-003',
+    code: 'API',
     name: 'API Security Assessment',
     organizationId: 'org-securecloud',
     description: 'Quarterly assessment of the public REST API before release.',
@@ -195,6 +220,7 @@ export const projects = [
   },
   {
     id: 'prj-004',
+    code: 'CLOUD-IAC',
     name: 'Cloud Platform IaC',
     organizationId: 'org-securecloud',
     description: 'Terraform modules and network edge for the hosting platform.',
@@ -209,6 +235,7 @@ export const projects = [
   },
   {
     id: 'prj-005',
+    code: 'MOBILE-API',
     name: 'Mobile Banking Backend',
     organizationId: 'org-technova',
     description: 'Payment and gateway services behind the mobile banking app.',
@@ -223,6 +250,7 @@ export const projects = [
   },
   {
     id: 'prj-006',
+    code: 'INTRANET',
     name: 'Legacy Intranet',
     organizationId: 'org-acme',
     description: 'Old intranet server, decommissioned in favour of the new portal.',
@@ -237,6 +265,7 @@ export const projects = [
   },
   {
     id: 'prj-007',
+    code: 'STORE',
     name: 'Online Storefront',
     organizationId: 'org-northwind',
     description: 'Customer-facing shop evaluated during the trial.',

@@ -11,10 +11,10 @@ export default function StatusesPage() {
   const active = STATUS_CATEGORIES.find((category) => category.key === activeKey);
 
   return (
-    <>
+    <div className="fill-page">
       <PageHeader title="Statuses" description="Each status category has its own statuses. Names and badge colours apply everywhere the status is shown." />
-      <div className="grid gap-5 lg:grid-cols-[240px_1fr]">
-        <nav aria-label="Status categories" className="self-start rounded-lg border border-slate-200 bg-white p-2 shadow-sm">
+      <div className="fill-grow grid gap-5 lg:grid-cols-[240px_1fr] lg:grid-rows-[minmax(0,1fr)]">
+        <nav aria-label="Status categories" className="self-start rounded-lg border border-slate-200 bg-white p-2 shadow-sm lg:max-h-full lg:overflow-y-auto">
           <p className="px-2.5 pt-1 pb-2 text-xs font-semibold tracking-wide text-slate-500 uppercase">Categories</p>
           <ul className="flex flex-col gap-0.5">
             {STATUS_CATEGORIES.map((category) => {
@@ -38,6 +38,6 @@ export default function StatusesPage() {
         </nav>
         <ListManager key={active.key} list={active} />
       </div>
-    </>
+    </div>
   );
 }

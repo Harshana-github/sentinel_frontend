@@ -18,6 +18,7 @@ import FindingDetailPage from './pages/user/FindingDetailPage';
 import FindingsPage from './pages/user/FindingsPage';
 import ProjectDetailPage from './pages/user/ProjectDetailPage';
 import ProjectsPage from './pages/user/ProjectsPage';
+import RolesPage from './pages/user/RolesPage';
 import ScanDetailPage from './pages/user/ScanDetailPage';
 import ScansPage from './pages/user/ScansPage';
 import TeamPage from './pages/user/TeamPage';
@@ -71,6 +72,7 @@ export default function App() {
             </Route>
             <Route element={<ModuleRoute module="team" />}>
               <Route path="/team" element={<TeamPage />} />
+              <Route path="/roles" element={<RolesPage />} />
             </Route>
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="*" element={<NotFoundPage />} />

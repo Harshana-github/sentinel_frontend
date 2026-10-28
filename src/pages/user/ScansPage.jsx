@@ -47,7 +47,7 @@ export default function ScansPage() {
   );
 
   return (
-    <>
+    <div className="fill-page">
       <PageHeader
         title="Scans"
         description="Scan history and live progress. Running scans refresh automatically."
@@ -60,7 +60,7 @@ export default function ScansPage() {
           )
         }
       />
-      <Card flush>
+      <Card flush fill>
         <FilterBar resultCount={items.length > 0 || status === 'succeeded' ? visibleScans.length : undefined}>
           <SearchInput label="Search scans" placeholder="Search by scan ID, target or project" value={search} onChange={setSearch} />
           <SelectFilter label="Filter by status" allLabel="All statuses" value={statusFilter} onChange={setStatusFilter} options={SCAN_STATUSES} />
@@ -74,6 +74,6 @@ export default function ScansPage() {
       {isStartScanOpen && (
         <StartScanModal onClose={() => setIsStartScanOpen(false)} onStarted={(scan) => navigate(`/scans/${scan.id}`)} />
       )}
-    </>
+    </div>
   );
 }

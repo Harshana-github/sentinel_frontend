@@ -55,13 +55,6 @@ export default function Sidebar({ navSections, panelLabel, isAdminPanel, isOpen,
           </div>
         ))}
       </nav>
-
-      {branding.company.name && (
-        <p className="mt-2 flex items-center gap-2 border-t border-slate-800 px-2 pt-4 text-[11px] text-slate-500">
-          {branding.company.logo && <img src={branding.company.logo} alt="" className="size-4 object-contain" />}
-          Developed by {branding.company.name}
-        </p>
-      )}
     </aside>
   );
 }

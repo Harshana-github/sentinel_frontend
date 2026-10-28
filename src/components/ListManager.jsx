@@ -211,6 +211,7 @@ export default function ListManager({ list }) {
         </button>
       }
       flush
+      fill
     >
       <p className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-5 py-2.5 text-xs text-slate-500">
         <span>{list.description}</span>

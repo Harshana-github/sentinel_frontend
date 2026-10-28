@@ -1,10 +1,11 @@
-import { hasModule, isSuperAdmin } from '../utils/roles';
+import { can, hasModule, isSuperAdmin } from '../utils/roles';
 import {
   BadgeInfo,
   Boxes,
   Building2,
   Database,
   FolderKanban,
+  KeyRound,
   LayoutDashboard,
   LayoutGrid,
   Radar,
@@ -15,7 +16,8 @@ import {
 } from 'lucide-react';
 
 // Sidebar links for each panel. `end` makes a link active only on its exact path.
-// `module` hides a user panel link when that feature module is disabled.
+// `module` hides a user panel link when that feature module is disabled, and `permission`
+// hides it when the user's role does not have that permission.
 
 // Grouped by what the Super Admin is doing: customers, who can do what, the scanning
 // engine, the lists of values the app uses, and the platform itself.
@@ -63,6 +65,7 @@ export const USER_NAV = [
     title: 'Organization',
     items: [
       { to: '/team', label: 'Users', icon: Users, module: 'team' },
+      { to: '/roles', label: 'Roles', icon: KeyRound, module: 'team', permission: 'roles.read' },
       { to: '/settings', label: 'Settings', icon: Settings },
     ],
   },
@@ -72,6 +75,6 @@ export function navigationFor(user) {
   if (isSuperAdmin(user)) return ADMIN_NAV;
   return USER_NAV.map((section) => ({
     ...section,
-    items: section.items.filter((item) => !item.module || hasModule(user, item.module)),
+    items: section.items.filter((item) => (!item.module || hasModule(user, item.module)) && (!item.permission || can(user, item.permission))),
   })).filter((section) => section.items.length > 0);
 }
