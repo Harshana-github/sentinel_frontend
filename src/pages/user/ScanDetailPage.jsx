@@ -137,6 +137,16 @@ export default function ScanDetailPage() {
                   { label: 'Target', value: scan.targetName },
                   { label: 'Address', value: <span className="font-mono">{scan.targetValue}</span> },
                   { label: 'Target type', value: targetTypes.nameOf(scan.targetType) },
+                  {
+                    label: 'Started as',
+                    value: scan.assessmentId ? (
+                      <Link to={`/assessments/${scan.assessmentId}`}>
+                        Part of {scan.assessmentId} · {scan.assessmentName}
+                      </Link>
+                    ) : (
+                      'Single scan'
+                    ),
+                  },
                   { label: 'Profile', value: scan.profile },
                   { label: 'Scanner modules', value: toolNames },
                   { label: 'Requested by', value: scan.initiatedBy },

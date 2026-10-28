@@ -14,9 +14,18 @@ export default function ScansTable({ scans, showProject = true, showActions = fa
       header: 'Scan',
       className: 'whitespace-nowrap',
       render: (scan) => (
-        <Link to={`/scans/${scan.id}`} className="font-semibold">
-          {scan.id}
-        </Link>
+        <div className="flex flex-col gap-0.5">
+          <Link to={`/scans/${scan.id}`} className="font-semibold">
+            {scan.id}
+          </Link>
+          {scan.assessmentId ? (
+            <Link to={`/assessments/${scan.assessmentId}`} className="text-[11px] font-normal" title={scan.assessmentName}>
+              Part of {scan.assessmentId}
+            </Link>
+          ) : (
+            <span className="text-[11px] text-slate-500">Single scan</span>
+          )}
+        </div>
       ),
     },
     {

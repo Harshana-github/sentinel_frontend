@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Play, Plus } from 'lucide-react';
+import { Layers, Play, Plus } from 'lucide-react';
 import { selectCurrentUser } from '../../features/auth/authSlice';
 import { selectFindingsState } from '../../features/findings/findingsSlice';
 import { fetchFindings } from '../../features/findings/findingsThunks';
@@ -118,12 +118,23 @@ export default function ProjectDetailPage() {
               {canStartScans && (
                 <button
                   type="button"
+                  className="btn btn-secondary"
+                  onClick={() => navigate(`/assessments/new?project=${project.id}`)}
+                  disabled={isArchived || project.targets.length === 0}
+                >
+                  <Layers size={16} aria-hidden="true" />
+                  Start assessment
+                </button>
+              )}
+              {canStartScans && (
+                <button
+                  type="button"
                   className="btn btn-primary"
                   onClick={() => setScanDialog({ targetId: '' })}
                   disabled={isArchived || project.targets.length === 0}
                 >
                   <Play size={16} aria-hidden="true" />
-                  Start scan
+                  Single scan
                 </button>
               )}
             </>
@@ -163,8 +174,20 @@ export default function ProjectDetailPage() {
               </Card>
             </div>
 
-            <Card title={`Scan targets (${project.targets.length})`} flush>
-              <DataTable columns={targetColumns} rows={project.targets} caption="Scan targets" emptyMessage="No targets yet. Add a target to start scanning." />
+            <Card
+              title={`Scan targets (${project.targets.length})`}
+              flush
+              actions={
+                can(user, 'targets.add') &&
+                !isArchived && (
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => setIsAddTargetOpen(true)}>
+                    <Plus size={14} aria-hidden="true" />
+                    Add target
+                  </button>
+                )
+              }
+            >
+              <DataTable columns={targetColumns} rows={project.targets} caption="Scan targets" emptyMessage="No targets yet. Use Add target to set up what this project scans." />
             </Card>
 
             <Card title={`Scans (${projectScans.length})`} flush>
@@ -182,7 +205,7 @@ export default function ProjectDetailPage() {
         )}
       </AsyncContent>
 
-      {isAddTargetOpen && project && <AddTargetModal project={project} onClose={() => setIsAddTargetOpen(false)} />}
+      {isAddTargetOpen && project && !isArchived && <AddTargetModal project={project} onClose={() => setIsAddTargetOpen(false)} />}
       {scanDialog && project && (
         <StartScanModal
           initialProjectId={project.id}

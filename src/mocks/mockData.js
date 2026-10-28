@@ -438,22 +438,32 @@ export const scannerModules = [
   {
     id: 'naabu',
     name: 'Naabu',
+    version: '2.3.2',
+    source: 'open-source',
     category: 'network-discovery',
     purpose: 'Discovers open TCP ports and exposed services on hosts and network ranges.',
     targetTypes: ['web', 'host'],
     image: 'projectdiscovery/naabu',
     license: 'mit',
     integrationStatus: 'planned',
+    interface: 'cli',
+    command: 'naabu -host {target} -json',
+    enabled: true,
   },
   {
     id: 'testssl',
     name: 'testssl.sh',
+    version: '3.2.0',
+    source: 'open-source',
     category: 'tls-ssl-security',
     purpose: 'Checks TLS protocol versions, cipher suites, certificates and related headers.',
     targetTypes: ['web', 'host'],
     image: 'drwetter/testssl.sh',
     license: 'gpl-2-0',
     integrationStatus: 'planned',
+    interface: 'cli',
+    command: 'testssl.sh --jsonfile report.json {target}',
+    enabled: true,
   },
   {
     id: 'internal-api-fuzzer',
@@ -702,14 +712,39 @@ export const findingTemplates = [
 ];
 
 // `durationMs` is how long the mock engine takes to run the scan.
+// Assessments group the scan jobs they created (scans carry `assessmentId`). Their status is
+// always worked out from those jobs, never stored. `skipped` lists targets that were left out.
+export const assessments = [
+  {
+    id: 'ASM-1001',
+    projectId: 'prj-001',
+    name: 'Main Website quick check',
+    profile: 'quick',
+    createdBy: 'Priya Raman',
+    createdAt: minutesAgo(3 * DAY + 3),
+    cancelled: false,
+    skipped: [],
+  },
+  {
+    id: 'ASM-1002',
+    projectId: 'prj-003',
+    name: 'API platform assessment',
+    profile: 'webapp',
+    createdBy: 'Nimali Fernando',
+    createdAt: minutesAgo(9 * HOUR + 2),
+    cancelled: false,
+    skipped: [],
+  },
+];
+
 export const scans = [
   {
-    id: 'SCN-1001', projectId: 'prj-001', targetId: 'tgt-001', profile: 'Standard', tools: ['zap', 'naabu', 'testssl'],
+    id: 'SCN-1001', projectId: 'prj-001', targetId: 'tgt-001', assessmentId: 'ASM-1001', profile: 'Standard', tools: ['zap', 'naabu', 'testssl'],
     status: 'Completed', progress: 100, initiatedBy: 'Priya Raman', errorMessage: null, durationMs: 38 * MINUTE,
     createdAt: minutesAgo(3 * DAY + 2), startedAt: minutesAgo(3 * DAY), finishedAt: minutesAgo(3 * DAY - 38),
   },
   {
-    id: 'SCN-1002', projectId: 'prj-001', targetId: 'tgt-002', profile: 'Quick', tools: ['naabu', 'testssl'],
+    id: 'SCN-1002', projectId: 'prj-001', targetId: 'tgt-002', assessmentId: 'ASM-1001', profile: 'Quick', tools: ['naabu', 'testssl'],
     status: 'Completed', progress: 100, initiatedBy: 'Alex Morgan', errorMessage: null, durationMs: 9 * MINUTE,
     createdAt: minutesAgo(2 * DAY + 1), startedAt: minutesAgo(2 * DAY), finishedAt: minutesAgo(2 * DAY - 9),
   },
@@ -724,12 +759,12 @@ export const scans = [
     createdAt: minutesAgo(20 * HOUR + 1), startedAt: minutesAgo(20 * HOUR), finishedAt: minutesAgo(20 * HOUR - 6),
   },
   {
-    id: 'SCN-1005', projectId: 'prj-003', targetId: 'tgt-006', profile: 'Deep', tools: ['zap', 'naabu', 'testssl'],
+    id: 'SCN-1005', projectId: 'prj-003', targetId: 'tgt-006', assessmentId: 'ASM-1002', profile: 'Deep', tools: ['zap', 'naabu', 'testssl'],
     status: 'Running', progress: 20, initiatedBy: 'Nimali Fernando', errorMessage: null, durationMs: 30 * MINUTE,
     createdAt: minutesAgo(7), startedAt: minutesAgo(6), finishedAt: null,
   },
   {
-    id: 'SCN-1006', projectId: 'prj-003', targetId: 'tgt-007', profile: 'Standard', tools: ['gitleaks', 'trivy', 'grype'],
+    id: 'SCN-1006', projectId: 'prj-003', targetId: 'tgt-007', assessmentId: 'ASM-1002', profile: 'Standard', tools: ['gitleaks', 'trivy', 'grype'],
     status: 'Completed', progress: 100, initiatedBy: 'Nimali Fernando', errorMessage: null, durationMs: 11 * MINUTE,
     createdAt: minutesAgo(9 * HOUR + 1), startedAt: minutesAgo(9 * HOUR), finishedAt: minutesAgo(9 * HOUR - 11),
   },

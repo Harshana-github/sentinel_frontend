@@ -13,9 +13,12 @@ import OrganizationsPage from './pages/admin/OrganizationsPage';
 import MasterDataPage from './pages/admin/MasterDataPage';
 import ScannerModulesPage from './pages/admin/ScannerModulesPage';
 import StatusesPage from './pages/admin/StatusesPage';
+import AssessmentDetailPage from './pages/user/AssessmentDetailPage';
+import AssessmentsPage from './pages/user/AssessmentsPage';
 import DashboardPage from './pages/user/DashboardPage';
 import FindingDetailPage from './pages/user/FindingDetailPage';
 import FindingsPage from './pages/user/FindingsPage';
+import NewAssessmentPage from './pages/user/NewAssessmentPage';
 import ProjectDetailPage from './pages/user/ProjectDetailPage';
 import ProjectsPage from './pages/user/ProjectsPage';
 import RolesPage from './pages/user/RolesPage';
@@ -65,6 +68,9 @@ export default function App() {
             <Route element={<ModuleRoute module="scans" />}>
               <Route path="/scans" element={<ScansPage />} />
               <Route path="/scans/:scanId" element={<ScanDetailPage />} />
+              <Route path="/assessments" element={<AssessmentsPage />} />
+              <Route path="/assessments/new" element={<NewAssessmentPage />} />
+              <Route path="/assessments/:assessmentId" element={<AssessmentDetailPage />} />
             </Route>
             <Route element={<ModuleRoute module="findings" />}>
               <Route path="/findings" element={<FindingsPage />} />

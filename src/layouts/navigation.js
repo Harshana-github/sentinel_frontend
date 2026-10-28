@@ -8,6 +8,7 @@ import {
   KeyRound,
   LayoutDashboard,
   LayoutGrid,
+  Layers,
   Radar,
   Settings,
   ShieldAlert,
@@ -58,6 +59,7 @@ export const USER_NAV = [
     items: [
       { to: '/projects', label: 'Projects', icon: FolderKanban, module: 'projects' },
       { to: '/scans', label: 'Scans', icon: Radar, module: 'scans' },
+      { to: '/assessments', label: 'Assessments', icon: Layers, module: 'scans' },
       { to: '/findings', label: 'Findings', icon: ShieldAlert, module: 'findings' },
     ],
   },

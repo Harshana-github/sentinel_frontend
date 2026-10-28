@@ -31,7 +31,8 @@ function validate(form, targetType) {
   return errors;
 }
 
-export default function AddTargetModal({ project, onClose }) {
+// `onAdded(target)` is called with the new target, e.g. to select it in a scan form.
+export default function AddTargetModal({ project, onClose, onAdded }) {
   const dispatch = useDispatch();
   const targetTypes = useMasterList('target-types');
   const [form, setForm] = useState({ type: '', name: '', value: '' });
@@ -61,8 +62,11 @@ export default function AddTargetModal({ project, onClose }) {
     setIsSubmitting(true);
     setSubmitError('');
     try {
-      await dispatch(addScanTarget({ projectId: project.id, target: form })).unwrap();
+      const updated = await dispatch(addScanTarget({ projectId: project.id, target: form })).unwrap();
       dispatch(showToast({ message: `Target "${form.name.trim()}" was added to ${project.name}.` }));
+      // Addresses are unique within a project, so this finds the target just added.
+      const added = updated.targets.find((target) => target.value.toLowerCase() === form.value.trim().toLowerCase());
+      if (added) onAdded?.(added);
       onClose();
     } catch (error) {
       setSubmitError(error.message);

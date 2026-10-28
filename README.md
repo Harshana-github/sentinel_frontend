@@ -58,6 +58,7 @@ Everyone signs in at `/login` and lands on the right panel for their role. Openi
 | `/projects`, `/projects/:id` | Projects and their scan targets |
 | `/scans`, `/scans/:id` | Scan history and live progress |
 | `/findings`, `/findings/:id` | Vulnerability findings |
+| `/assessments` | **Assessments**: multi-target scans. *New assessment* picks a project, a profile (Quick, Web Application, Source Code, Full) and the project's targets, shows a review with what will run, what is skipped and what blocks the start, and needs an authorization confirmation. Each target becomes its own scan job; the assessment's status is always worked out from its jobs. The detail page shows the jobs, skipped targets and consolidated findings, and can cancel the remaining jobs |
 | `/team` | **Users**: people of the organization. *Add user* sets their name, email, password and **role** (any of the organization's roles), then shows login details to copy and send. *Edit* changes the name and role. Nobody can change their own role, and there is always at least one Admin |
 | `/roles` | **Roles**: create, rename and delete roles and choose their permissions, grouped by module. Admin is predefined and locked |
 | `/settings` | Profile, organization and app configuration |
@@ -173,6 +174,7 @@ The thunks currently expect the endpoints below. They are **placeholders** to ag
 | `fetchBranding` | `GET /branding` (public, the login page needs it) |
 | `updateBranding` | `PUT /admin/branding` (Super Admin). Images are sent as data URLs in the mock; a real backend should store them in object storage and return URLs |
 | `fetchRoles` / `createRole` / `updateRole` / `deleteRole` | `GET`, `POST`, `PATCH /:id`, `DELETE /:id` on `/roles` (own organization, needs `roles.*`) |
+| `fetchAssessments` / `startAssessment` / `cancelAssessment` | `GET /assessments`, `POST /assessments` with `{ projectId, profile, name, targetIds, authorized }`, `POST /assessments/:id/cancel` (needs `scans.start` / `scans.cancel`). Scans carry `assessmentId` |
 | `fetchRoleOptions` | `GET /members/role-options` → the organization's roles to choose from (needs `users.create` or `users.update`) |
 | `createMember` / `updateMember` | `POST /members`, `PATCH /members/:id` (needs `users.create` / `users.update`) |
 | `fetchPermissionCatalog` | `GET /permission-catalog` → `{ modules, permissions }` (needs `roles.read`) |

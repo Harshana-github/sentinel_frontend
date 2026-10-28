@@ -16,6 +16,7 @@ import {
   SEVERITIES,
   MASTER_LISTS,
   STATUS_CATEGORIES,
+  ASSESSMENT_PROFILES,
 } from '../utils/constants';
 import { loadStoredAuth } from '../utils/authStorage';
 import { isSuperAdmin } from '../utils/roles';
@@ -33,6 +34,7 @@ import {
   platformStaff,
   projects,
   ADMIN_ROLE_SLUG,
+  assessments,
   adminRole,
   roles,
   integrationStatuses,
@@ -61,6 +63,7 @@ const db = {
   members: structuredClone(members),
   projects: structuredClone(projects),
   scans: structuredClone(scans),
+  assessments: structuredClone(assessments),
   activities: structuredClone(activities),
   roles: structuredClone(roles),
   scanners: structuredClone(scannerModules),
@@ -253,6 +256,8 @@ function withScanDetails(scan) {
     targetValue: target.value,
     findingCount: scanFindings.length,
     severityCounts: countBySeverity(scanFindings),
+    assessmentId: scan.assessmentId ?? null,
+    assessmentName: db.assessments.find((assessment) => assessment.id === scan.assessmentId)?.name ?? null,
   };
 }
 
@@ -541,10 +546,17 @@ export async function startScan({ projectId, targetId, profile, tools }) {
     throw new Error(`${unsupported.map(moduleName).join(', ')} cannot scan this target type.`);
   }
 
+  const scan = queueScan(user, project, target, profile, tools);
+  return copy(withScanDetails(scan));
+}
+
+// Creates one queued scan job. Assessments call this once per target.
+function queueScan(user, project, target, profile, tools, assessmentId = null) {
   const scan = {
     id: `SCN-${nextScanNumber++}`,
-    projectId,
-    targetId,
+    projectId: project.id,
+    targetId: target.id,
+    assessmentId,
     profile,
     tools,
     status: 'Queued',
@@ -558,7 +570,7 @@ export async function startScan({ projectId, targetId, profile, tools }) {
   };
   db.scans.push(scan);
   logActivity('scan', `Scan ${scan.id} queued for ${target.name}`, project.organizationId);
-  return copy(withScanDetails(scan));
+  return scan;
 }
 
 export async function cancelScan(scanId) {
@@ -661,6 +673,124 @@ export async function getPlatformSummary() {
     openSeverityCounts: countBySeverity(openFindings),
     organizations: organizationRows,
   });
+}
+
+// ---------- assessments ----------
+
+let nextAssessmentNumber = 1003;
+const TERMINAL_SCAN_STATUSES = ['Completed', 'Failed', 'Cancelled'];
+
+// The overall status always comes from the jobs, so it can never disagree with them.
+function assessmentStatus(assessment, jobs) {
+  const count = (status) => jobs.filter((job) => job.status === status).length;
+  if (jobs.length === 0) return assessment.cancelled ? 'Cancelled' : 'Failed';
+  if (count('Running')) return 'Running';
+  if (count('Queued')) return count('Completed') + count('Failed') + count('Cancelled') ? 'Running' : 'Queued';
+  if (assessment.cancelled) return 'Cancelled';
+  if (count('Failed')) return count('Completed') ? 'Completed with errors' : 'Failed';
+  if (count('Cancelled')) return count('Cancelled') === jobs.length ? 'Cancelled' : 'Completed with errors';
+  return 'Completed';
+}
+
+function withAssessmentDetails(assessment) {
+  const project = findProject(assessment.projectId);
+  const jobs = db.scans.filter((scan) => scan.assessmentId === assessment.id);
+  const jobIds = jobs.map((job) => job.id);
+  const jobFindings = db.findings.filter((finding) => jobIds.includes(finding.scanId));
+  return copy({
+    ...assessment,
+    profileName: ASSESSMENT_PROFILES.find((profile) => profile.key === assessment.profile)?.name ?? assessment.profile,
+    projectName: project.name,
+    projectCode: project.code,
+    organizationId: project.organizationId,
+    status: assessmentStatus(assessment, jobs),
+    jobIds,
+    jobCount: jobs.length,
+    finishedJobCount: jobs.filter((job) => TERMINAL_SCAN_STATUSES.includes(job.status)).length,
+    // Average of the jobs' progress, for one overall progress bar.
+    progress: jobs.length ? Math.round(jobs.reduce((sum, job) => sum + (TERMINAL_SCAN_STATUSES.includes(job.status) ? 100 : job.progress), 0) / jobs.length) : 0,
+    findingCount: jobFindings.length,
+    severityCounts: countBySeverity(jobFindings),
+  });
+}
+
+// The enabled plugins that would scan a target in this profile.
+function assessmentPlugins(profile, targetType) {
+  const plugins = db.scanners.filter((plugin) => plugin.enabled && plugin.targetTypes.includes(targetType));
+  return profile.plugins === 'primary' ? plugins.slice(0, 1) : plugins;
+}
+
+export async function getAssessments() {
+  await simulateLatency(250);
+  const user = requireUser();
+  advanceScans();
+  return db.assessments
+    .filter((assessment) => canAccess(user, organizationOfProject(assessment.projectId)))
+    .toSorted(newestFirst)
+    .map(withAssessmentDetails);
+}
+
+// Plans the assessment into one scan job per selected target and queues them.
+// The person must confirm they are authorized to test every selected target.
+export async function startAssessment({ projectId, profile: profileKey, name, targetIds, authorized }) {
+  await simulateLatency(600);
+  const user = requirePermission('scans.start');
+  const project = requireProject(user, projectId);
+  if (project.status === 'Archived') throw new Error('Archived projects cannot be scanned.');
+  if (!authorized) throw new Error('Confirm that you are authorized to test these targets.');
+  const profile = ASSESSMENT_PROFILES.find((item) => item.key === profileKey);
+  if (!profile) throw new Error('Choose an assessment profile.');
+
+  const selected = project.targets.filter((target) => (targetIds ?? []).includes(target.id));
+  const planned = selected
+    .filter((target) => profile.types[target.type])
+    .map((target) => ({ target, tools: assessmentPlugins(profile, target.type).map((plugin) => plugin.id) }))
+    .filter((job) => job.tools.length > 0);
+  if (planned.length === 0) throw new Error('Select at least one target that can be scanned in this profile.');
+  const missingRequired = Object.entries(profile.types)
+    .filter(([type, rule]) => rule === 'required' && !planned.some((job) => job.target.type === type))
+    .map(([type]) => masterName('target-types', type));
+  if (missingRequired.length) throw new Error(`This profile needs a ${missingRequired.join(' and a ')} target.`);
+
+  const plannedIds = planned.map((job) => job.target.id);
+  const assessment = {
+    id: `ASM-${nextAssessmentNumber++}`,
+    projectId: project.id,
+    name: (name ?? '').trim() || `${profile.name} · ${project.name}`,
+    profile: profile.key,
+    createdBy: user.name,
+    createdAt: nowIso(),
+    cancelled: false,
+    skipped: project.targets
+      .filter((target) => !plannedIds.includes(target.id) && profile.types[target.type])
+      .map((target) => ({
+        targetId: target.id,
+        targetName: target.name,
+        reason: assessmentPlugins(profile, target.type).length ? 'Not selected' : 'No enabled plugin can scan this target type',
+      })),
+  };
+  db.assessments.push(assessment);
+  planned.forEach((job) => queueScan(user, project, job.target, profile.scanProfile, job.tools, assessment.id));
+  logActivity('scan', `Assessment ${assessment.id} started with ${planned.length} scan ${planned.length === 1 ? 'job' : 'jobs'}`, project.organizationId);
+  return withAssessmentDetails(assessment);
+}
+
+// Cancels the queued and running jobs. Finished jobs and their findings are kept.
+export async function cancelAssessment(assessmentId) {
+  await simulateLatency();
+  const user = requirePermission('scans.cancel');
+  advanceScans();
+  const assessment = db.assessments.find((item) => item.id === assessmentId && canAccess(user, organizationOfProject(item.projectId)));
+  if (!assessment) throw new Error('Assessment not found.');
+  const active = db.scans.filter((scan) => scan.assessmentId === assessment.id && (scan.status === 'Queued' || scan.status === 'Running'));
+  if (active.length === 0) throw new Error('This assessment has no queued or running jobs.');
+  active.forEach((scan) => {
+    scan.status = 'Cancelled';
+    scan.finishedAt = nowIso();
+  });
+  assessment.cancelled = true;
+  logActivity('scan', `Assessment ${assessment.id} cancelled`, organizationOfProject(assessment.projectId));
+  return withAssessmentDetails(assessment);
 }
 
 // ---------- users of an organization (organization panel) ----------

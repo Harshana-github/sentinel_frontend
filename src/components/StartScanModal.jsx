@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { Plus } from 'lucide-react';
+import { selectCurrentUser } from '../features/auth/authSlice';
 import { selectProjectsState } from '../features/projects/projectsSlice';
 import { fetchProjects } from '../features/projects/projectsThunks';
 import { selectScannersState } from '../features/scanners/scannersSlice';
@@ -9,6 +11,8 @@ import { showToast } from '../features/ui/uiSlice';
 import { USE_MOCK_DATA } from '../services/api';
 import { useMasterList } from '../features/masters/useMasterList';
 import { SCAN_PROFILES } from '../utils/constants';
+import { can } from '../utils/roles';
+import AddTargetModal from './AddTargetModal';
 import FormField, { errorProps } from './FormField';
 import Modal from './Modal';
 import Alert from './Alert';
@@ -18,6 +22,9 @@ export default function StartScanModal({ onClose, onStarted, initialProjectId = 
   const projects = useSelector(selectProjectsState);
   const scanners = useSelector(selectScannersState);
   const targetTypes = useMasterList('target-types');
+  const user = useSelector(selectCurrentUser);
+  const canAddTarget = can(user, 'targets.add');
+  const [isAddTargetOpen, setIsAddTargetOpen] = useState(false);
 
   const [projectId, setProjectId] = useState(initialProjectId);
   const [targetId, setTargetId] = useState(initialTargetId);
@@ -51,6 +58,12 @@ export default function StartScanModal({ onClose, onStarted, initialProjectId = 
     clearError('projectId');
   }
 
+  function selectNewTarget(target) {
+    setTargetId(target.id);
+    setToolSelection(null);
+    clearError('targetId');
+  }
+
   function handleTargetChange(event) {
     setTargetId(event.target.value);
     setToolSelection(null);
@@ -58,9 +71,7 @@ export default function StartScanModal({ onClose, onStarted, initialProjectId = 
   }
 
   function toggleTool(toolId) {
-    setToolSelection(
-      selectedTools.includes(toolId) ? selectedTools.filter((id) => id !== toolId) : [...selectedTools, toolId],
-    );
+    setToolSelection(selectedTools.includes(toolId) ? selectedTools.filter((id) => id !== toolId) : [...selectedTools, toolId]);
     clearError('tools');
   }
 
@@ -93,111 +104,149 @@ export default function StartScanModal({ onClose, onStarted, initialProjectId = 
   }
 
   return (
-    <Modal title="Start a scan" onClose={onClose}>
-      <form onSubmit={handleSubmit} noValidate>
-        {USE_MOCK_DATA && (
-          <Alert className="mb-4">Demo mode: the scan is simulated and no traffic is sent to the target.</Alert>
-        )}
-        {submitError && (
-          <Alert tone="error" className="mb-4">
-            {submitError}
-          </Alert>
-        )}
+    <>
+      <Modal title="Start a scan" onClose={onClose}>
+        <form onSubmit={handleSubmit} noValidate>
+          {USE_MOCK_DATA && <Alert className="mb-4">Demo mode: the scan is simulated and no traffic is sent to the target.</Alert>}
+          {submitError && (
+            <Alert tone="error" className="mb-4">
+              {submitError}
+            </Alert>
+          )}
 
-        <FormField id="scan-project" label="Project" error={errors.projectId}>
-          <select id="scan-project" className="input" value={projectId} onChange={handleProjectChange} {...errorProps('scan-project', errors.projectId)}>
-            <option value="">{projects.status === 'loading' ? 'Loading projects…' : 'Select a project'}</option>
-            {scannableProjects.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name} ({item.organizationName})
-              </option>
-            ))}
-          </select>
-        </FormField>
+          <FormField id="scan-project" label="Project" error={errors.projectId}>
+            <select
+              id="scan-project"
+              className="input"
+              value={projectId}
+              onChange={handleProjectChange}
+              {...errorProps('scan-project', errors.projectId)}
+            >
+              <option value="">{projects.status === 'loading' ? 'Loading projects…' : 'Select a project'}</option>
+              {scannableProjects.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name} ({item.organizationName})
+                </option>
+              ))}
+            </select>
+          </FormField>
 
-        <FormField
-          id="scan-target"
-          label="Target"
-          error={errors.targetId}
-          hint={project && project.targets.length === 0 ? 'This project has no targets yet. Add one from the project page.' : undefined}
-        >
-          <select id="scan-target" className="input" value={targetId} onChange={handleTargetChange} disabled={!project} {...errorProps('scan-target', errors.targetId)}>
-            <option value="">Select a target</option>
-            {project?.targets.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}: {item.value}
-              </option>
-            ))}
-          </select>
-        </FormField>
+          <FormField
+            id="scan-target"
+            label="Target"
+            error={errors.targetId}
+            hint={project && project.targets.length === 0 ? 'This project has no targets yet. Add one below.' : undefined}
+          >
+            <select
+              id="scan-target"
+              className="input"
+              value={targetId}
+              onChange={handleTargetChange}
+              disabled={!project}
+              {...errorProps('scan-target', errors.targetId)}
+            >
+              <option value="">Select a target</option>
+              {project?.targets.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}: {item.value}
+                </option>
+              ))}
+            </select>
+            {project && canAddTarget && (
+              <button
+                type="button"
+                className="mt-1.5 flex cursor-pointer items-center gap-1 self-start text-[13px] font-medium text-blue-600 hover:underline"
+                onClick={() => setIsAddTargetOpen(true)}
+              >
+                <Plus size={14} aria-hidden="true" />
+                New target for {project.name}
+              </button>
+            )}
+          </FormField>
 
-        <fieldset className="mb-4">
-          <legend className="mb-2 font-medium">Scan profile</legend>
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-2">
-            {SCAN_PROFILES.map((option) => (
-              <label key={option.value} className="flex cursor-pointer items-start gap-2 rounded-md border border-slate-200 p-2.5 has-checked:border-blue-600 has-checked:bg-blue-50">
-                <input className="mt-1" type="radio" name="profile" value={option.value} checked={profile === option.value} onChange={() => setProfile(option.value)} />
-                <span className="flex flex-col">
-                  <strong>{option.value}</strong>
-                  <span className="text-slate-500 text-xs">{option.description}</span>
-                </span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
-
-        {target && (
-          <fieldset className="mb-4" aria-describedby={errors.tools ? 'scan-tools-error' : undefined}>
-            <legend className="mb-2 font-medium">Scanner modules for {targetTypes.nameOf(target.type).toLowerCase()}</legend>
+          <fieldset className="mb-4">
+            <legend className="mb-2 font-medium">Scan profile</legend>
             <div className="grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-2">
-              {compatibleModules.map((module) => (
-                <label key={module.id} className="flex cursor-pointer items-start gap-2 rounded-md border border-slate-200 p-2.5 has-checked:border-blue-600 has-checked:bg-blue-50">
-                  <input className="mt-1" type="checkbox" checked={selectedTools.includes(module.id)} onChange={() => toggleTool(module.id)} />
+              {SCAN_PROFILES.map((option) => (
+                <label
+                  key={option.value}
+                  className="flex cursor-pointer items-start gap-2 rounded-md border border-slate-200 p-2.5 has-checked:border-blue-600 has-checked:bg-blue-50"
+                >
+                  <input
+                    className="mt-1"
+                    type="radio"
+                    name="profile"
+                    value={option.value}
+                    checked={profile === option.value}
+                    onChange={() => setProfile(option.value)}
+                  />
                   <span className="flex flex-col">
-                    <strong>{module.name}</strong>
-                    <span className="text-slate-500 text-xs">{module.categoryName}</span>
+                    <strong>{option.value}</strong>
+                    <span className="text-slate-500 text-xs">{option.description}</span>
                   </span>
                 </label>
               ))}
             </div>
-            {errors.tools && (
-              <p className="text-[13px] text-red-700" id="scan-tools-error">
-                {errors.tools}
+          </fieldset>
+
+          {target && (
+            <fieldset className="mb-4" aria-describedby={errors.tools ? 'scan-tools-error' : undefined}>
+              <legend className="mb-2 font-medium">Scanner modules for {targetTypes.nameOf(target.type).toLowerCase()}</legend>
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-2">
+                {compatibleModules.map((module) => (
+                  <label
+                    key={module.id}
+                    className="flex cursor-pointer items-start gap-2 rounded-md border border-slate-200 p-2.5 has-checked:border-blue-600 has-checked:bg-blue-50"
+                  >
+                    <input className="mt-1" type="checkbox" checked={selectedTools.includes(module.id)} onChange={() => toggleTool(module.id)} />
+                    <span className="flex flex-col">
+                      <strong>{module.name}</strong>
+                      <span className="text-slate-500 text-xs">{module.categoryName}</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+              {errors.tools && (
+                <p className="text-[13px] text-red-700" id="scan-tools-error">
+                  {errors.tools}
+                </p>
+              )}
+            </fieldset>
+          )}
+
+          <div className="mb-4 flex flex-col gap-1.5">
+            <label className="flex cursor-pointer items-start gap-2 font-medium">
+              <input
+                className="mt-1"
+                type="checkbox"
+                checked={isAuthorized}
+                onChange={(event) => {
+                  setIsAuthorized(event.target.checked);
+                  clearError('authorized');
+                }}
+                {...errorProps('scan-authorized', errors.authorized)}
+              />
+              I confirm that I am authorized to scan this target.
+            </label>
+            {errors.authorized && (
+              <p className="text-[13px] text-red-700" id="scan-authorized-error">
+                {errors.authorized}
               </p>
             )}
-          </fieldset>
-        )}
+          </div>
 
-        <div className="mb-4 flex flex-col gap-1.5">
-          <label className="flex cursor-pointer items-start gap-2 font-medium">
-            <input
-              className="mt-1"
-              type="checkbox"
-              checked={isAuthorized}
-              onChange={(event) => {
-                setIsAuthorized(event.target.checked);
-                clearError('authorized');
-              }}
-              {...errorProps('scan-authorized', errors.authorized)}
-            />
-            I confirm that I am authorized to scan this target.
-          </label>
-          {errors.authorized && (
-            <p className="text-[13px] text-red-700" id="scan-authorized-error">
-              {errors.authorized}
-            </p>
-          )}
-        </div>
-
-        <div className="mt-2 flex justify-end gap-2">
-          <button type="button" className="btn btn-secondary" onClick={onClose}>
-            Cancel
-          </button>
-          <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
-            {isSubmitting ? 'Starting…' : 'Start scan'}
-          </button>
-        </div>
-      </form>
-    </Modal>
+          <div className="mt-2 flex justify-end gap-2">
+            <button type="button" className="btn btn-secondary" onClick={onClose}>
+              Cancel
+            </button>
+            <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+              {isSubmitting ? 'Starting…' : 'Start scan'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+      {/* Opens on top of this dialog; the new target is selected straight away. */}
+      {isAddTargetOpen && project && <AddTargetModal project={project} onAdded={selectNewTarget} onClose={() => setIsAddTargetOpen(false)} />}
+    </>
   );
 }

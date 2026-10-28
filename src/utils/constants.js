@@ -10,6 +10,51 @@ export const PROJECT_STATUSES = ['Active', 'On Hold', 'Archived'];
 export const PROJECT_ENVIRONMENTS = ['Production', 'Staging', 'Development'];
 
 
+// Assessment profiles. An assessment scans several targets of one project at once: one scan
+// job per target. `types` maps target types to required (blocks the start when the project has
+// no ready target of that type), included (selected by default) or optional (not selected by
+// default). `scanProfile` is the depth of every job; 'primary' plugins runs one plugin per job.
+export const ASSESSMENT_PROFILES = [
+  {
+    key: 'quick',
+    name: 'Quick Scan',
+    description: 'Fast checks of websites and hosts. Good for a first look.',
+    duration: '~10–20 min',
+    scanProfile: 'Quick',
+    plugins: 'primary',
+    types: { web: 'included', host: 'included' },
+  },
+  {
+    key: 'webapp',
+    name: 'Web Application Assessment',
+    description: 'The running web application, plus its source code and container image when the project has them.',
+    duration: '~1–2 h',
+    scanProfile: 'Standard',
+    plugins: 'all',
+    types: { web: 'required', repository: 'included', container: 'optional' },
+  },
+  {
+    key: 'code',
+    name: 'Source Code Assessment',
+    description: 'Source code and infrastructure files. No live system is contacted.',
+    duration: '~20–60 min',
+    scanProfile: 'Standard',
+    plugins: 'all',
+    types: { repository: 'required', iac: 'included', artifact: 'optional' },
+  },
+  {
+    key: 'full',
+    name: 'Full Security Assessment',
+    description: 'Every target of the project that an enabled plugin can scan.',
+    duration: '~2–6 h',
+    scanProfile: 'Deep',
+    plugins: 'all',
+    types: { web: 'included', repository: 'included', container: 'included', iac: 'included', host: 'included', artifact: 'included' },
+  },
+];
+
+export const ASSESSMENT_STATUSES = ['Queued', 'Running', 'Completed', 'Completed with errors', 'Failed', 'Cancelled'];
+
 export const SCAN_PROFILES = [
   { value: 'Quick', description: 'Fast checks with the most important rules.' },
   { value: 'Standard', description: 'Balanced coverage for regular assessments.' },

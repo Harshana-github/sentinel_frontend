@@ -1,5 +1,6 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import adminReducer from '../features/admin/adminSlice';
+import assessmentsReducer from '../features/assessments/assessmentsSlice';
 import authReducer from '../features/auth/authSlice';
 import brandingReducer from '../features/branding/brandingSlice';
 import { logout } from '../features/auth/authThunks';
@@ -15,6 +16,7 @@ import uiReducer from '../features/ui/uiSlice';
 
 const appReducer = combineReducers({
   admin: adminReducer,
+  assessments: assessmentsReducer,
   auth: authReducer,
   branding: brandingReducer,
   dashboard: dashboardReducer,

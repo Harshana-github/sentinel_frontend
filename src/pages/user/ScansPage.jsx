@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Play } from 'lucide-react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Layers, Play } from 'lucide-react';
 import { selectCurrentUser } from '../../features/auth/authSlice';
 import { isActiveScan, selectScansState } from '../../features/scans/scansSlice';
 import { fetchScans } from '../../features/scans/scansThunks';
@@ -27,6 +27,7 @@ export default function ScansPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') ?? '');
   const [typeFilter, setTypeFilter] = useState('');
+  const [kindFilter, setKindFilter] = useState('');
   const [isStartScanOpen, setIsStartScanOpen] = useState(false);
 
   useEffect(() => {
@@ -40,10 +41,12 @@ export default function ScansPage() {
     (scan) =>
       (!statusFilter || scan.status === statusFilter) &&
       (!typeFilter || scan.targetType === typeFilter) &&
+      (!kindFilter || (kindFilter === 'assessment' ? Boolean(scan.assessmentId) : !scan.assessmentId)) &&
       (includesText(scan.id, search) ||
         includesText(scan.targetName, search) ||
         includesText(scan.targetValue, search) ||
-        includesText(scan.projectName, search)),
+        includesText(scan.projectName, search) ||
+        includesText(scan.assessmentId, search)),
   );
 
   return (
@@ -53,10 +56,16 @@ export default function ScansPage() {
         description="Scan history and live progress. Running scans refresh automatically."
         actions={
           can(user, 'scans.start') && (
-            <button type="button" className="btn btn-primary" onClick={() => setIsStartScanOpen(true)}>
-              <Play size={16} aria-hidden="true" />
-              Start scan
-            </button>
+            <>
+              <Link to="/assessments/new" className="btn btn-secondary hover:no-underline">
+                <Layers size={16} aria-hidden="true" />
+                New assessment
+              </Link>
+              <button type="button" className="btn btn-primary" onClick={() => setIsStartScanOpen(true)}>
+                <Play size={16} aria-hidden="true" />
+                Single scan
+              </button>
+            </>
           )
         }
       />
@@ -65,6 +74,16 @@ export default function ScansPage() {
           <SearchInput label="Search scans" placeholder="Search by scan ID, target or project" value={search} onChange={setSearch} />
           <SelectFilter label="Filter by status" allLabel="All statuses" value={statusFilter} onChange={setStatusFilter} options={SCAN_STATUSES} />
           <SelectFilter label="Filter by target type" allLabel="All target types" value={typeFilter} onChange={setTypeFilter} options={targetTypes.items.map((type) => ({ value: type.id, label: type.name }))} />
+          <SelectFilter
+            label="Filter by kind"
+            allLabel="Single scans and assessments"
+            value={kindFilter}
+            onChange={setKindFilter}
+            options={[
+              { value: 'single', label: 'Single scans' },
+              { value: 'assessment', label: 'Assessment jobs' },
+            ]}
+          />
         </FilterBar>
         <AsyncContent status={status} error={error} hasData={items.length > 0} onRetry={() => dispatch(fetchScans())}>
           <ScansTable scans={visibleScans} showActions emptyMessage="No scans match your filters." />

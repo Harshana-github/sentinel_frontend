@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import { ChevronRight, Plus } from 'lucide-react';
 import { selectCurrentUser } from '../../features/auth/authSlice';
 import { selectProjectsState } from '../../features/projects/projectsSlice';
 import { fetchProjects } from '../../features/projects/projectsThunks';
@@ -37,6 +37,8 @@ const COLUMNS = [
   { key: 'openFindingCount', header: 'Open findings', className: 'text-right' },
   { key: 'lastScanAt', header: 'Last scan', render: (project) => (project.lastScanAt ? formatRelativeTime(project.lastScanAt) : 'Never') },
   { key: 'status', header: 'Status', render: (project) => <StatusBadge status={project.status} /> },
+  // Shows that the whole row opens the project, where its targets are set up.
+  { key: 'open', header: '', className: 'w-10 text-right', render: () => <ChevronRight size={16} aria-hidden="true" className="text-slate-400" /> },
 ];
 
 export default function ProjectsPage() {
@@ -78,7 +80,7 @@ export default function ProjectsPage() {
           <SelectFilter label="Filter by status" allLabel="All statuses" value={statusFilter} onChange={setStatusFilter} options={PROJECT_STATUSES} />
         </FilterBar>
         <AsyncContent status={status} error={error} hasData={items.length > 0} onRetry={() => dispatch(fetchProjects())}>
-          <DataTable columns={COLUMNS} rows={visibleProjects} caption="Projects" emptyMessage="No projects match your filters." />
+          <DataTable columns={COLUMNS} rows={visibleProjects} caption="Projects" onRowClick={(project) => navigate(`/projects/${project.id}`)} emptyMessage="No projects match your filters." />
         </AsyncContent>
       </Card>
 

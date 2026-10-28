@@ -4,7 +4,9 @@ import Pagination, { usePagination } from './Pagination';
 // `className` is applied to the header and body cells, e.g. 'text-right' for numbers.
 // The header row stays visible when the table scrolls inside a fill card. Rows are paged
 // (10, 25 or 50 per page); the pager only shows when there is more than one small page.
-export default function DataTable({ columns, rows, caption, emptyMessage = 'No records found.' }) {
+// `onRowClick(row)` makes the whole row clickable. Clicks on links, buttons and form controls
+// inside the row keep their own behaviour. Keyboard users use the link in the row instead.
+export default function DataTable({ columns, rows, caption, emptyMessage = 'No records found.', onRowClick }) {
   const pagination = usePagination(rows);
 
   return (
@@ -34,7 +36,17 @@ export default function DataTable({ columns, rows, caption, emptyMessage = 'No r
               </tr>
             ) : (
               pagination.pageItems.map((row) => (
-                <tr key={row.id} className="hover:bg-slate-50/60">
+                <tr
+                  key={row.id}
+                  className={onRowClick ? 'cursor-pointer hover:bg-blue-50/40' : 'hover:bg-slate-50/60'}
+                  onClick={
+                    onRowClick &&
+                    ((event) => {
+                      if (event.target.closest('a, button, input, select, textarea, label')) return;
+                      onRowClick(row);
+                    })
+                  }
+                >
                   {columns.map((column) => (
                     <td key={column.key} className={`px-5 py-3 align-middle ${column.className ?? ''}`}>
                       {column.render ? column.render(row) : row[column.key]}

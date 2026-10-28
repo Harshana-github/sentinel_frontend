@@ -8,6 +8,7 @@ const STATUS_TONES = {
   'In Progress': 'info',
   Open: 'warning',
   'On Hold': 'warning',
+  'Completed with errors': 'warning',
   Failed: 'danger',
 };
 
