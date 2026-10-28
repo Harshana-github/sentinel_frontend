@@ -1,0 +1,53 @@
+@import 'tailwindcss';
+
+/* Most styling is written as Tailwind utility classes in the components.
+   This file only holds base styles and a few primitives used in many places. */
+
+@layer base {
+  body {
+    @apply bg-slate-100 text-sm text-slate-900 antialiased;
+  }
+
+  a {
+    @apply text-blue-600 hover:underline;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-blue-600;
+  }
+
+  code {
+    @apply rounded bg-slate-100 px-1.5 py-px font-mono text-[0.92em] break-words;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-transparent px-3.5 font-medium whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-55;
+  }
+
+  .btn-primary {
+    @apply bg-blue-600 text-white enabled:hover:bg-blue-700;
+  }
+
+  .btn-secondary {
+    @apply border-slate-300 bg-white text-slate-900 enabled:hover:bg-slate-50;
+  }
+
+  .btn-danger {
+    @apply border-red-300 bg-white text-red-700 enabled:hover:bg-red-50;
+  }
+
+  .btn-sm {
+    @apply h-7.5 px-2.5 text-[13px];
+  }
+
+  .icon-btn {
+    @apply inline-grid size-8.5 cursor-pointer place-items-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-900;
+  }
+
+  /* Shared by <input>, <select> and <textarea>. */
+  .input {
+    @apply h-9.5 w-full rounded-md border border-slate-300 bg-white px-2.5 text-slate-900 aria-invalid:border-red-600 disabled:bg-slate-50 disabled:text-slate-500;
+  }
+}

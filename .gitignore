@@ -1,0 +1,9 @@
+node_modules
+dist
+*.log
+.DS_Store
+# Local environment files hold machine-specific settings and secrets.
+# .env.example is committed as the template.
+.env
+.env.*
+!.env.example
