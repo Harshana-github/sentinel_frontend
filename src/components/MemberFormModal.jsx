@@ -12,7 +12,7 @@ import Modal from './Modal';
 import { useTranslation } from '../i18n';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MIN_PASSWORD_LENGTH = 8;
+const MIN_PASSWORD_LENGTH = 12;
 
 function validate(form, isNew, t) {
   const errors = {};
