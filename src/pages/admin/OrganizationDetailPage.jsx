@@ -166,7 +166,7 @@ export default function OrganizationDetailPage() {
     );
   }
 
-  const organizationProjects = projects.items.filter((project) => project.organizationId === organizationId);
+  const organizationProjects = projects.items.filter((project) => String(project.organizationId) === organizationId);
 
   return (
     <>

@@ -19,6 +19,7 @@ const projectsSlice = createSlice({
 });
 
 export const selectProjectsState = (state) => state.projects;
-export const selectProjectById = (state, id) => state.projects.items.find((project) => project.id === id);
+// `id` may come from the URL, where it is a string.
+export const selectProjectById = (state, id) => state.projects.items.find((project) => String(project.id) === String(id));
 
 export default projectsSlice.reducer;
