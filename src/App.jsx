@@ -63,11 +63,11 @@ export default function App() {
         <Route element={<ProtectedRoute panel="user" />}>
           <Route element={<AppLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
-            <Route element={<ModuleRoute module="projects" />}>
+            <Route element={<ModuleRoute module="projects" permission="projects.read" />}>
               <Route path="/projects" element={<ProjectsPage />} />
               <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
             </Route>
-            <Route element={<ModuleRoute module="scans" />}>
+            <Route element={<ModuleRoute module="scans" permission="scans.read" />}>
               <Route path="/quick-scan" element={<QuickScanPage />} />
               <Route path="/scans" element={<ScansPage />} />
               <Route path="/scans/:scanId" element={<ScanDetailPage />} />
@@ -75,7 +75,7 @@ export default function App() {
               <Route path="/assessments/new" element={<NewAssessmentPage />} />
               <Route path="/assessments/:assessmentId" element={<AssessmentDetailPage />} />
             </Route>
-            <Route element={<ModuleRoute module="findings" />}>
+            <Route element={<ModuleRoute module="findings" permission="findings.read" />}>
               <Route path="/findings" element={<FindingsPage />} />
               <Route path="/findings/:findingId" element={<FindingDetailPage />} />
             </Route>

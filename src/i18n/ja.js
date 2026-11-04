@@ -144,6 +144,9 @@ const ja = {
     moduleTitle: 'この機能は利用できません',
     moduleMessage: 'この機能は現在利用できません。',
     moduleHelp: '機能が削除された可能性があります。利用が必要な場合は Sentinel チームにお問い合わせください。',
+    permissionTitle: 'アクセス権がありません',
+    permissionMessage: 'このページを閲覧する権限がありません。',
+    permissionHelp: 'アクセスが必要な場合は組織の管理者にお問い合わせください。',
     toDashboard: 'ダッシュボードへ戻る',
   },
 

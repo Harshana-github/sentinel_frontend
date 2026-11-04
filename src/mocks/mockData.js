@@ -85,10 +85,27 @@ const permission = (key, module, name, nameJa, description, descriptionJa) => ({
 });
 
 export const featurePermissions = [
+  permission(
+    'projects.read',
+    'projects',
+    'View projects',
+    'プロジェクトの閲覧',
+    'See the projects and their targets.',
+    'プロジェクトとスキャン対象を閲覧できます。',
+  ),
   permission('projects.create', 'projects', 'Create project', 'プロジェクトの作成', 'Add a new project.', '新しいプロジェクトを作成できます。'),
   permission('targets.add', 'projects', 'Add scan target', 'スキャン対象の追加', 'Add a target to a project.', 'プロジェクトに対象を追加できます。'),
+  permission(
+    'scans.read',
+    'scans',
+    'View scans',
+    'スキャンの閲覧',
+    'See scans, assessments and their progress.',
+    'スキャン、アセスメント、進捗を閲覧できます。',
+  ),
   permission('scans.start', 'scans', 'Start scan', 'スキャンの開始', 'Run a new scan on a target.', '対象のスキャンを開始できます。'),
   permission('scans.cancel', 'scans', 'Cancel scan', 'スキャンの停止', 'Stop a queued or running scan.', '待機中・実行中のスキャンを停止できます。'),
+  permission('findings.read', 'findings', 'View findings', '検出結果の閲覧', 'See the vulnerability findings.', '脆弱性の検出結果を閲覧できます。'),
   permission(
     'findings.update',
     'findings',
@@ -203,15 +220,15 @@ const starterRoles = [
     slug: 'security-analyst',
     name: 'Security Analyst',
     description: 'Runs scans and triages findings.',
-    permissions: ['targets.add', 'scans.start', 'scans.cancel', 'findings.update', 'users.read'],
+    permissions: ['projects.read', 'targets.add', 'scans.read', 'scans.start', 'scans.cancel', 'findings.read', 'findings.update', 'users.read'],
   },
   {
     slug: 'developer',
     name: 'Developer',
     description: 'Starts scans and fixes findings.',
-    permissions: ['scans.start', 'findings.update', 'users.read'],
+    permissions: ['projects.read', 'scans.read', 'scans.start', 'findings.read', 'findings.update', 'users.read'],
   },
-  { slug: 'viewer', name: 'Viewer', description: 'Read-only access.', permissions: ['users.read'] },
+  { slug: 'viewer', name: 'Viewer', description: 'Read-only access.', permissions: ['projects.read', 'scans.read', 'findings.read', 'users.read'] },
 ];
 
 export function adminRole(organizationId) {

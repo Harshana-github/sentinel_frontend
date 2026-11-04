@@ -145,6 +145,9 @@ const en = {
     moduleTitle: 'Module not available',
     moduleMessage: 'This module is not available.',
     moduleHelp: 'It may have been removed. Contact the Sentinel team if you need access.',
+    permissionTitle: 'No access',
+    permissionMessage: 'You do not have permission to view this page.',
+    permissionHelp: 'Ask your organization admin if you need access.',
     toDashboard: 'Go to the dashboard',
   },
 

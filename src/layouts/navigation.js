@@ -19,7 +19,7 @@ import {
 
 // Sidebar links for each panel. `title` and `label` are translation keys. `end` makes a link
 // active only on its exact path. `module` hides a user panel link when that feature module is
-// disabled, and `permission` hides it when the user's role does not have that permission.
+// disabled, and `permissions` hides it unless the user's role has all of those permissions.
 
 // Grouped by what the Super Admin is doing: customers, who can do what, the scanning
 // engine, the lists of values the app uses, and the platform itself.
@@ -50,18 +50,24 @@ const USER_NAV = [
   {
     title: 'nav.scanning',
     items: [
-      { to: '/quick-scan', label: 'nav.quickScan', icon: Zap, module: 'scans', permission: 'scans.start' },
-      { to: '/scans', label: 'nav.scans', icon: Radar, module: 'scans' },
-      { to: '/assessments', label: 'nav.assessments', icon: Layers, module: 'scans' },
+      { to: '/quick-scan', label: 'nav.quickScan', icon: Zap, module: 'scans', permissions: ['scans.read', 'scans.start'] },
+      { to: '/scans', label: 'nav.scans', icon: Radar, module: 'scans', permissions: ['scans.read'] },
+      { to: '/assessments', label: 'nav.assessments', icon: Layers, module: 'scans', permissions: ['scans.read'] },
     ],
   },
-  { title: 'nav.results', items: [{ to: '/findings', label: 'nav.findings', icon: ShieldAlert, module: 'findings' }] },
-  { title: 'nav.assets', items: [{ to: '/projects', label: 'nav.projects', icon: FolderKanban, module: 'projects' }] },
+  {
+    title: 'nav.results',
+    items: [{ to: '/findings', label: 'nav.findings', icon: ShieldAlert, module: 'findings', permissions: ['findings.read'] }],
+  },
+  {
+    title: 'nav.assets',
+    items: [{ to: '/projects', label: 'nav.projects', icon: FolderKanban, module: 'projects', permissions: ['projects.read'] }],
+  },
   {
     title: 'nav.organization',
     items: [
-      { to: '/team', label: 'nav.users', icon: Users, module: 'team' },
-      { to: '/roles', label: 'nav.roles', icon: KeyRound, module: 'team', permission: 'roles.read' },
+      { to: '/team', label: 'nav.users', icon: Users, module: 'team', permissions: ['users.read'] },
+      { to: '/roles', label: 'nav.roles', icon: KeyRound, module: 'team', permissions: ['roles.read'] },
       { to: '/settings', label: 'nav.settings', icon: Settings },
     ],
   },
@@ -71,6 +77,8 @@ export function navigationFor(user) {
   if (isSuperAdmin(user)) return ADMIN_NAV;
   return USER_NAV.map((section) => ({
     ...section,
-    items: section.items.filter((item) => (!item.module || hasModule(user, item.module)) && (!item.permission || can(user, item.permission))),
+    items: section.items.filter(
+      (item) => (!item.module || hasModule(user, item.module)) && (item.permissions ?? []).every((permission) => can(user, permission)),
+    ),
   })).filter((section) => section.items.length > 0);
 }
