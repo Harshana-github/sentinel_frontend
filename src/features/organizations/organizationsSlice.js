@@ -58,7 +58,8 @@ const organizationsSlice = createSlice({
 const emptyMembers = loadState();
 
 export const selectOrganizationsState = (state) => state.organizations;
-export const selectOrganizationById = (state, id) => state.organizations.items.find((item) => item.id === id);
+// `id` may come from the URL, where it is a string.
+export const selectOrganizationById = (state, id) => state.organizations.items.find((item) => String(item.id) === String(id));
 export const selectMembersOf = (state, organizationId) => state.organizations.membersByOrganization[organizationId] ?? emptyMembers;
 
 export default organizationsSlice.reducer;

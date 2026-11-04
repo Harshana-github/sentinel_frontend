@@ -1,16 +1,16 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import api, { callApi } from '../../services/api';
+import api, { callMockOnly } from '../../services/api';
 import * as mockApi from '../../mocks/mockApi';
 
 export const fetchFindings = createAsyncThunk('findings/fetchAll', () =>
-  callApi(
+  callMockOnly(
     () => mockApi.getFindings(),
     () => api.get('/findings'),
   ),
 );
 
 export const updateFindingStatus = createAsyncThunk('findings/updateStatus', ({ findingId, status }) =>
-  callApi(
+  callMockOnly(
     () => mockApi.updateFindingStatus(findingId, status),
     () => api.patch(`/findings/${findingId}`, { status }),
   ),

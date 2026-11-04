@@ -7,10 +7,8 @@
 // organization) and `permissions` (actions their role may perform), set at sign-in.
 // These checks only shape the UI. The backend must enforce the same rules.
 
-export const SUPER_ADMIN = 'Super Admin';
-
 export function isSuperAdmin(user) {
-  return user?.role === SUPER_ADMIN;
+  return Boolean(user?.isSuperAdmin);
 }
 
 export function homePathFor(user) {

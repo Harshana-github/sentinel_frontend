@@ -60,4 +60,10 @@ export async function callApi(mockHandler, apiRequest) {
   return response.data;
 }
 
+// For features the backend does not have yet: they use the mock data in both modes.
+// Change a thunk back to callApi when its endpoint exists.
+export async function callMockOnly(mockHandler) {
+  return mockHandler();
+}
+
 export default api;

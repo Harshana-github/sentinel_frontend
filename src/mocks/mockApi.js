@@ -371,6 +371,7 @@ export async function login({ identifier, password }) {
     name: person.name,
     email: person.email,
     username: account.username,
+    isSuperAdmin: person.role === 'Super Admin',
     // Display name of the role; `roleSlug` is what permission checks use.
     role: findRole(person.organizationId, person.role)?.name ?? person.role,
     roleSlug: person.role,

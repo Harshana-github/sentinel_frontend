@@ -13,7 +13,7 @@ import { useTranslation } from '../i18n';
 import CopyButton from './CopyButton';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MIN_PASSWORD_LENGTH = 8;
+const MIN_PASSWORD_LENGTH = 12;
 const SECTION_HEADING = 'text-[13px] font-semibold tracking-wide text-slate-500 uppercase';
 const EMPTY_FORM = { name: '', slug: '', adminName: '', adminEmail: '', adminPassword: '', confirmPassword: '' };
 

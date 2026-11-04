@@ -1,23 +1,23 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import api, { callApi } from '../../services/api';
+import api, { callMockOnly } from '../../services/api';
 import * as mockApi from '../../mocks/mockApi';
 
 export const fetchProjects = createAsyncThunk('projects/fetchAll', () =>
-  callApi(
+  callMockOnly(
     () => mockApi.getProjects(),
     () => api.get('/projects'),
   ),
 );
 
 export const createProject = createAsyncThunk('projects/create', (project) =>
-  callApi(
+  callMockOnly(
     () => mockApi.createProject(project),
     () => api.post('/projects', project),
   ),
 );
 
 export const addScanTarget = createAsyncThunk('projects/addTarget', ({ projectId, target }) =>
-  callApi(
+  callMockOnly(
     () => mockApi.addScanTarget(projectId, target),
     () => api.post(`/projects/${projectId}/targets`, target),
   ),
