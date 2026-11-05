@@ -94,6 +94,15 @@ export const featurePermissions = [
     'プロジェクトとスキャン対象を閲覧できます。',
   ),
   permission('projects.create', 'projects', 'Create project', 'プロジェクトの作成', 'Add a new project.', '新しいプロジェクトを作成できます。'),
+  permission(
+    'projects.update',
+    'projects',
+    'Edit project',
+    'プロジェクトの編集',
+    "Change a project's details and status.",
+    'プロジェクトの詳細とステータスを変更できます。',
+  ),
+  permission('projects.delete', 'projects', 'Delete project', 'プロジェクトの削除', 'Delete a project.', 'プロジェクトを削除できます。'),
   permission('targets.add', 'projects', 'Add scan target', 'スキャン対象の追加', 'Add a target to a project.', 'プロジェクトに対象を追加できます。'),
   permission(
     'scans.read',

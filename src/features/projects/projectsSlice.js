@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { addLoadCases, loadState, replaceItem } from '../sliceHelpers';
-import { addScanTarget, createProject, fetchProjects } from './projectsThunks';
+import { addScanTarget, createProject, deleteProject, fetchProjects, updateProject } from './projectsThunks';
 
 const projectsSlice = createSlice({
   name: 'projects',
@@ -11,6 +11,12 @@ const projectsSlice = createSlice({
     builder
       .addCase(createProject.fulfilled, (state, action) => {
         state.items.unshift(action.payload);
+      })
+      .addCase(updateProject.fulfilled, (state, action) => {
+        state.items = replaceItem(state.items, action.payload);
+      })
+      .addCase(deleteProject.fulfilled, (state, action) => {
+        state.items = state.items.filter((project) => String(project.id) !== String(action.meta.arg));
       })
       .addCase(addScanTarget.fulfilled, (state, action) => {
         state.items = replaceItem(state.items, action.payload);

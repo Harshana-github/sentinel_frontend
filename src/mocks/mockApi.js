@@ -520,6 +520,37 @@ export async function createProject({ name, code, environment, description }) {
   return copy(withProjectSummary(project));
 }
 
+export async function updateProject(projectId, { name, environment, status, description }) {
+  await simulateLatency(500);
+  const user = requirePermission('projects.update');
+  const project = requireProject(user, projectId);
+
+  const trimmedName = name.trim();
+  const duplicate = db.projects.some(
+    (other) =>
+      other.id !== project.id && other.organizationId === project.organizationId && other.name.toLowerCase() === trimmedName.toLowerCase(),
+  );
+  if (duplicate) throw new Error(`Your organization already has a project named "${trimmedName}".`);
+
+  Object.assign(project, { name: trimmedName, environment, status, description: description.trim() });
+  logActivity('project', `Project ${project.name} updated`, project.organizationId);
+  return copy(withProjectSummary(project));
+}
+
+export async function deleteProject(projectId) {
+  await simulateLatency(400);
+  const user = requirePermission('projects.delete');
+  const project = requireProject(user, projectId);
+
+  // The demo looks up each scan's project, so its history goes with it.
+  db.projects = db.projects.filter((item) => item.id !== project.id);
+  db.scans = db.scans.filter((scan) => scan.projectId !== project.id);
+  db.findings = db.findings.filter((finding) => finding.projectId !== project.id);
+  db.assessments = db.assessments.filter((assessment) => assessment.projectId !== project.id);
+  logActivity('project', `Project ${project.name} deleted`, project.organizationId);
+  return { id: project.id };
+}
+
 export async function addScanTarget(projectId, { name, type, value }) {
   await simulateLatency(500);
   const user = requirePermission('targets.add');

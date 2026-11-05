@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Layers, Play, Plus } from 'lucide-react';
+import { Layers, Pencil, Play, Plus, Trash2 } from 'lucide-react';
 import { selectCurrentUser } from '../../features/auth/authSlice';
 import { selectFindingsState } from '../../features/findings/findingsSlice';
 import { fetchFindings } from '../../features/findings/findingsThunks';
 import { selectProjectById, selectProjectsState } from '../../features/projects/projectsSlice';
-import { fetchProjects } from '../../features/projects/projectsThunks';
+import { deleteProject, fetchProjects } from '../../features/projects/projectsThunks';
 import { isActiveScan, selectScansState } from '../../features/scans/scansSlice';
 import { fetchScans } from '../../features/scans/scansThunks';
 import AddTargetModal from '../../components/AddTargetModal';
@@ -15,12 +15,15 @@ import BarList from '../../components/BarList';
 import Card from '../../components/Card';
 import DataTable from '../../components/DataTable';
 import DetailList from '../../components/DetailList';
+import EditProjectModal from '../../components/EditProjectModal';
 import FindingsTable from '../../components/FindingsTable';
 import PageHeader from '../../components/PageHeader';
 import ScansTable from '../../components/ScansTable';
 import StartScanModal from '../../components/StartScanModal';
 import { EmptyState } from '../../components/StateMessage';
 import StatusBadge from '../../components/StatusBadge';
+import { useConfirm } from '../../components/ConfirmDialog';
+import { showToast } from '../../features/ui/uiSlice';
 import usePolling from '../../hooks/usePolling';
 import { useMasterList } from '../../features/masters/useMasterList';
 import { OPEN_FINDING_STATUSES, SEVERITIES } from '../../utils/constants';
@@ -37,11 +40,13 @@ export default function ProjectDetailPage() {
   const dispatch = useDispatch();
   const user = useSelector(selectCurrentUser);
   const navigate = useNavigate();
+  const confirm = useConfirm();
   const projects = useSelector(selectProjectsState);
   const project = useSelector((state) => selectProjectById(state, projectId));
   const scans = useSelector(selectScansState);
   const findings = useSelector(selectFindingsState);
   const [isAddTargetOpen, setIsAddTargetOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
   // { targetId } when the start-scan dialog is open, otherwise null.
   const [scanDialog, setScanDialog] = useState(null);
 
@@ -62,6 +67,23 @@ export default function ProjectDetailPage() {
 
   const refreshScans = useCallback(() => dispatch(fetchScans({ silent: true })), [dispatch]);
   usePolling(refreshScans, projectScans.some(isActiveScan));
+
+  async function handleDelete() {
+    const confirmed = await confirm({
+      title: t('projects.deleteTitle'),
+      message: t('projects.deleteMessage', { name: project.name }),
+      confirmLabel: t('common.delete'),
+      danger: true,
+    });
+    if (!confirmed) return;
+    try {
+      await dispatch(deleteProject(project.id)).unwrap();
+      dispatch(showToast({ message: t('projects.deleted', { name: project.name }) }));
+      navigate('/projects');
+    } catch (error) {
+      dispatch(showToast({ type: 'error', message: error.message }));
+    }
+  }
 
   const breadcrumbs = [{ label: t('projects.title'), to: '/projects' }, { label: project?.name ?? projectId }];
 
@@ -111,6 +133,18 @@ export default function ProjectDetailPage() {
         actions={
           project && (
             <>
+              {can(user, 'projects.delete') && (
+                <button type="button" className="btn btn-danger" onClick={handleDelete}>
+                  <Trash2 size={16} aria-hidden="true" />
+                  {t('common.delete')}
+                </button>
+              )}
+              {can(user, 'projects.update') && (
+                <button type="button" className="btn btn-secondary" onClick={() => setIsEditOpen(true)}>
+                  <Pencil size={16} aria-hidden="true" />
+                  {t('common.edit')}
+                </button>
+              )}
               {can(user, 'targets.add') && (
                 <button type="button" className="btn btn-secondary" onClick={() => setIsAddTargetOpen(true)} disabled={isArchived}>
                   <Plus size={16} aria-hidden="true" />
@@ -228,6 +262,7 @@ export default function ProjectDetailPage() {
         )}
       </AsyncContent>
 
+      {isEditOpen && project && <EditProjectModal project={project} onClose={() => setIsEditOpen(false)} />}
       {isAddTargetOpen && project && !isArchived && <AddTargetModal project={project} onClose={() => setIsAddTargetOpen(false)} />}
       {scanDialog && project && (
         <StartScanModal

@@ -16,6 +16,20 @@ export const createProject = createAsyncThunk('projects/create', (project) =>
   ),
 );
 
+export const updateProject = createAsyncThunk('projects/update', ({ projectId, changes }) =>
+  callApi(
+    () => mockApi.updateProject(projectId, changes),
+    () => api.patch(`/projects/${projectId}`, changes),
+  ),
+);
+
+export const deleteProject = createAsyncThunk('projects/delete', (projectId) =>
+  callApi(
+    () => mockApi.deleteProject(projectId),
+    () => api.delete(`/projects/${projectId}`),
+  ),
+);
+
 export const addScanTarget = createAsyncThunk('projects/addTarget', ({ projectId, target }) =>
   callApi(
     () => mockApi.addScanTarget(projectId, target),
